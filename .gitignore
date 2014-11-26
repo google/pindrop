@@ -4,6 +4,7 @@ bin/
 obj/
 tests/*_test
 *.bin
+*.a
 
 # CMake files
 CMakeCache.txt

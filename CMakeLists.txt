@@ -199,22 +199,58 @@ if(WIN32)
 endif()
 
 # Executable target.
-add_executable(audio_engine ${audio_engine_SRCS})
-# Additional flags for the target.
+add_library(audio_engine ${audio_engine_SRCS})
+
 # Dependencies for the executable target.
 add_dependencies(audio_engine generated_includes assets)
-target_link_libraries(audio_engine
-  ${SDL_LIBRARIES}
-  sdl_mixer
-  libvorbis
-  libogg)
+# target_link_libraries(audio_engine
+#   ${SDL_LIBRARIES}
+#   sdl_mixer
+#   libvorbis
+#   libogg)
+
+# gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
+# everything else.
+option(
+  gtest_force_shared_crt
+  "Use shared (DLL) run-time lib even when Google Test is built as static lib."
+  ON)
 
 # Tests.
-# if(NOT audio_engine_only_flatc)
-#   if(audio_engine_build_tests)
-#     add_subdirectory(${CMAKE_SOURCE_DIR}/tests)
-#   endif()
-# endif()
+if(NOT audio_engine_only_flatc AND audio_engine_build_tests)
+  set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
+  set(GTEST_LIBDIR "${dependencies_gtest_dir}")
+  add_subdirectory(${dependencies_gtest_dir} googletest)
+  include(${GTEST_LIBDIR}/cmake/internal_utils.cmake)
+  config_compiler_and_linker()
+  string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
+  string(REPLACE "-Wshadow" "" cxx_default "${cxx_default}")
+  string(REPLACE "-Wextra" "" cxx_default "${cxx_default}")
+
+  include_directories(${GUNIT_INCDIR}
+                      ${CMAKE_CURRENT_SOURCE_DIR}
+                      ${dependencies_flatbuffers_dir}/include)
+
+  # Common libraries for tests.
+  if(NOT MSVC)
+    find_package(Threads)
+  endif()
+
+  set (SDL_LIBRARIES SDL2-static)
+  if(WIN32)
+    set(SDL_LIBRARIES SDL2main;${SDL_LIBRARIES})
+  endif()
+
+  set(COMMON_TEST_LIBS "gtest;audio_engine;${SDL_LIBRARIES}")
+
+  function(test_executable name)
+    cxx_executable_with_flags(${name}_test "${cxx_default}"
+        "${COMMON_TEST_LIBS}" ${CMAKE_CURRENT_SOURCE_DIR}/src/${name}_test.cpp
+        ${ARGN})
+  endfunction()
+
+  test_executable(audio_engine)
+endif()
 
 # Create a zipped tar of all the necessary files to run the game.
 add_custom_target(export

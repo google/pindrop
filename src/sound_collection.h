@@ -15,9 +15,9 @@
 #ifndef FPL_AUDIO_COLLECTION
 #define FPL_AUDIO_COLLECTION
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace fpl {
 

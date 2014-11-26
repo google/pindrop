@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sound_collection.h"
+
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include "sound.h"
-#include "sound_collection.h"
-#include "sound_collection_def_generated.h"
+
+#include "SDL_log.h"
 #include "audio_engine.h"
 #include "flatbuffers/util.h"
-#include "SDL_log.h"
+#include "sound.h"
+#include "sound_collection_def_generated.h"
 
 namespace fpl {
 

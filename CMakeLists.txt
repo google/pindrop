@@ -134,18 +134,18 @@ add_custom_target(assets
 
 # AudioEngine source files.
 set(audio_engine_SRCS
+    include/audio_engine/audio_engine.h
     src/audio_engine.cpp
-    src/audio_engine.h
     src/bus.cpp
     src/bus.h
+    src/main.cpp
     src/sound.cpp
     src/sound.h
     src/sound_collection.cpp
-    src/sound_collection.h
-    src/main.cpp)
+    src/sound_collection.h)
 
 # Includes for this project.
-include_directories(src)
+include_directories(src include/audio_engine)
 if(WIN32)
   include_directories(external/include/windows)
 endif()

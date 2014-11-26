@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #include "sound.h"
+
+#include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "audio_engine.h"
-#include "SDL_log.h"
 
 namespace fpl {
 

@@ -16,10 +16,11 @@
 #define FPL_AUDIO_ENGINE_H_
 
 #include <vector>
+
+#include "SDL_log.h"
 #include "bus.h"
 #include "sound.h"
 #include "sound_collection.h"
-#include "SDL_log.h"
 #include "sound_collection_def_generated.h"
 
 #ifdef FPL_AUDIO_ENGINE_UNIT_TESTS

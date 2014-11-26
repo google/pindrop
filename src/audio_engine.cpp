@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "audio_engine.h"
+
 #include <algorithm>
+
 #include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "audio_config_generated.h"
-#include "audio_engine.h"
 #include "bus.h"
 #include "buses_generated.h"
+#include "flatbuffers/util.h"
 #include "sound.h"
 #include "sound_assets_generated.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
-#include "flatbuffers/util.h"
 
 namespace fpl {
 

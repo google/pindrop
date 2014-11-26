@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "bus.h"
+
 #include "buses_generated.h"
 
 namespace fpl {

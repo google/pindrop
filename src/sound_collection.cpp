@@ -27,8 +27,6 @@
 
 namespace fpl {
 
-typedef unsigned int WorldTime; // TODO: Remove this
-
 bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
                                              AudioEngine* audio_engine) {
   source_ = source;
@@ -51,9 +49,8 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
     sum_of_probabilities_ += entry->playback_probability();
   }
   if (!def->bus()) {
-    SoundId sound_id = def->id();
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Sound collection %i does not specify a bus", sound_id);
+                 "Sound collection %s does not specify a bus", def->name());
     return false;
   }
   if (audio_engine) {
@@ -66,16 +63,10 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
 }
 
 bool SoundCollection::LoadSoundCollectionDefFromFile(
-    const char* filename, AudioEngine* audio_engine) {
+    const std::string& filename, AudioEngine* audio_engine) {
   std::string source;
-  return flatbuffers::LoadFile(filename, false, &source) &&
+  return flatbuffers::LoadFile(filename.c_str(), false, &source) &&
       LoadSoundCollectionDef(source, audio_engine);
-}
-
-void SoundCollection::Unload() {
-  source_.clear();
-  sound_sources_.clear();
-  sum_of_probabilities_ = 0;
 }
 
 const SoundCollectionDef* SoundCollection::GetSoundCollectionDef() const {

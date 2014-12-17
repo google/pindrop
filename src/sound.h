@@ -27,7 +27,7 @@ typedef int ChannelId;
 // SoundSource is a base class for both SoundStreams and SoundBuffers.
 class SoundSource {
  public:
-  SoundSource(const AudioSampleSetEntry* entry)
+  explicit SoundSource(const AudioSampleSetEntry* entry)
       : audio_sample_set_entry_(entry) {}
   virtual ~SoundSource() {}
 
@@ -52,7 +52,7 @@ class SoundSource {
 // memory.
 class SoundBuffer : public SoundSource {
  public:
-  SoundBuffer(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
+  explicit SoundBuffer(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
   virtual ~SoundBuffer();
 
   virtual bool LoadFile(const char* filename);
@@ -69,7 +69,7 @@ class SoundBuffer : public SoundSource {
 // memory.
 class SoundStream : public SoundSource {
  public:
-  SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
+  explicit SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
   virtual ~SoundStream();
 
   virtual bool LoadFile(const char* filename);
@@ -85,3 +85,4 @@ class SoundStream : public SoundSource {
 }  // namespace fpl
 
 #endif  // PIE_NOON_SOUND_H_
+

@@ -15,6 +15,7 @@
 #include "audio_engine.h"
 
 #include <algorithm>
+#include <map>
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
@@ -23,13 +24,10 @@
 #include "buses_generated.h"
 #include "flatbuffers/util.h"
 #include "sound.h"
-#include "sound_assets_generated.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
 namespace fpl {
-
-typedef unsigned int WorldTime; // TODO: Remove this.
 
 const int kChannelFadeOutRateMs = 10;
 
@@ -87,12 +85,7 @@ AudioEngine::PlayingSound& AudioEngine::PlayingSound::operator=(
 }
 
 AudioEngine::~AudioEngine() {
-  for (size_t i = 0; i < collections_.size(); ++i) {
-    auto& collection = collections_[i];
-    if (collection) {
-      collection->Unload();
-    }
-  }
+  collection_map_.clear();
   Mix_CloseAudio();
 }
 
@@ -149,32 +142,40 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
     return false;
   }
 
-  // Load the list of assets.
-  std::string sound_assets_source;
-  if (!flatbuffers::LoadFile("sound_assets.bin", false, &sound_assets_source)) {
-    return false;
-  }
-
-  // Create a SoundCollection for each SoundCollectionDef
-  const SoundAssets* sound_assets = GetSoundAssets(sound_assets_source.c_str());
-  size_t sound_count = sound_assets->sounds()->Length();
-  collections_.resize(sound_count);
-  bool success = true;
-  for (size_t i = 0; i < sound_count; ++i) {
-    const char* filename = sound_assets->sounds()->Get(i)->c_str();
-    collections_[i].reset(new SoundCollection());
-    if (!collections_[i]->LoadSoundCollectionDefFromFile(filename, this)) {
-      // Don't return false if a sound collection fails to load, just null it
-      // out and move on to the next one.
-      collections_[i].reset(nullptr);
-      success = false;
-    }
-  }
-
   mute_ = false;
   master_gain_ = 1.0f;
 
+  return true;
+}
+
+bool AudioEngine::LoadSoundBank(const std::string& filename) {
+  bool success = true;
+  auto iter = sound_bank_map_.find(filename);
+  if (iter == sound_bank_map_.end()) {
+    auto& sound_bank = sound_bank_map_[filename];
+    sound_bank.reset(new SoundBank());
+    success = sound_bank->Initialize(filename, this);
+    if (success) {
+      sound_bank->ref_counter()->Increment();
+    }
+  } else {
+    iter->second->ref_counter()->Increment();
+  }
   return success;
+}
+
+void AudioEngine::UnloadSoundBank(const std::string& filename) {
+  auto iter = sound_bank_map_.find(filename);
+  if (iter == sound_bank_map_.end()) {
+    SDL_LogError(
+        SDL_LOG_CATEGORY_ERROR,
+        "Error while deinitializing SoundBank %s - sound bank not loaded.\n",
+        filename.c_str());
+    assert(0);
+  }
+  if (iter->second->ref_counter()->Decrement() == 0) {
+    iter->second->Deinitialize(this);
+  }
 }
 
 Bus* AudioEngine::FindBus(const char* name) {
@@ -204,15 +205,6 @@ bool AudioEngine::PopulateBuses(const char* list_name,
     }
   }
   return true;
-}
-
-SoundCollection* AudioEngine::GetSoundCollection(SoundId sound_id) {
-  if (sound_id >= static_cast<SoundId>(collections_.size())) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Can't play audio sample: invalid sound_id (%d)\n", sound_id);
-    return nullptr;
-  }
-  return collections_[sound_id].get();
 }
 
 static int AllocatedChannelCount() {
@@ -335,9 +327,11 @@ void AudioEngine::SetChannelGain(ChannelId channel_id, float volume) {
   }
 }
 
-ChannelId AudioEngine::PlaySound(SoundId sound_id) {
-  SoundCollection* collection = GetSoundCollection(sound_id);
+ChannelId AudioEngine::PlaySound(SoundHandle sound_handle) {
+  SoundCollection* collection = sound_handle;
   if (!collection) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                 "Cannot play sound: invalid sound handle\n");
     return kInvalidChannel;
   }
 
@@ -387,6 +381,38 @@ ChannelId AudioEngine::PlaySound(SoundId sound_id) {
   return new_channel;
 }
 
+ChannelId AudioEngine::PlaySound(const std::string& sound_name) {
+  SoundHandle handle = GetSoundHandle(sound_name);
+  if (handle) {
+    return PlaySound(handle);
+  } else {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                 "Cannot play sound: invalid name (%s)\n",
+                 sound_name.c_str());
+    return kInvalidChannel;
+  }
+}
+
+AudioEngine::SoundHandle AudioEngine::GetSoundHandle(
+    const std::string& sound_name) const {
+  auto iter = collection_map_.find(sound_name);
+  if (iter != collection_map_.end()) {
+    return iter->second.get();
+  } else {
+    return nullptr;
+  }
+}
+
+AudioEngine::SoundHandle AudioEngine::GetSoundHandleFromFile(
+    const std::string& filename) const {
+  auto iter = sound_id_map_.find(filename);
+  if (iter != sound_id_map_.end()) {
+    return GetSoundHandle(iter->second);
+  } else {
+    return nullptr;
+  }
+}
+
 void AudioEngine::Stop(ChannelId channel_id) {
   assert(channel_id != kInvalidChannel);
   // Fade out rather than halting to avoid clicks.
@@ -405,7 +431,6 @@ void AudioEngine::Stop(ChannelId channel_id) {
     }
   }
 }
-
 
 void AudioEngine::Pause(bool pause) {
   if (pause) {

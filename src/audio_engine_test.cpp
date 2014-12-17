@@ -66,9 +66,8 @@ class AudioEngineTests : public ::testing::Test {
       auto sound_def_buffer = fpl::CreateSoundCollectionDef(builder,
                                                             id, priority);
       builder.Finish(sound_def_buffer);
-      collections_.push_back(std::unique_ptr<fpl::SoundCollection>(
-          new fpl::SoundCollection()));
-      collections_.back()->LoadSoundCollectionDef(
+      collections_.push_back(fpl::SoundCollection());
+      collections_.back().LoadSoundCollectionDef(
           std::string(reinterpret_cast<const char*>(builder.GetBufferPointer()),
                       builder.GetSize()),
           nullptr);
@@ -77,17 +76,17 @@ class AudioEngineTests : public ::testing::Test {
   virtual void TearDown() {}
 
  protected:
-  fpl::AudioEngine::SoundCollections collections_;
+  std::vector<SoundCollection> collections_;
 };
 
 TEST_F(AudioEngineTests, IncreasingPriority) {
   std::vector<fpl::AudioEngine::PlayingSound> sounds;
-  sounds.push_back(AudioEngine::PlayingSound(collections_[0].get(), 0, 0));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[1].get(), 1, 1));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[2].get(), 2, 2));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[3].get(), 3, 3));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[4].get(), 4, 4));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[5].get(), 5, 5));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 0, 0));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 1, 1));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 2, 2));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[3], 3, 3));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[4], 4, 4));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[5], 5, 5));
   AudioEngine::PrioritizeChannels(&sounds);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
@@ -101,12 +100,12 @@ TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
   std::vector<AudioEngine::PlayingSound> sounds;
   // Sounds with the same priority but later start times should be higher
   // priority.
-  sounds.push_back(AudioEngine::PlayingSound(collections_[0].get(), 0, 1));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[0].get(), 1, 0));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[1].get(), 2, 1));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[1].get(), 3, 0));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[2].get(), 4, 1));
-  sounds.push_back(AudioEngine::PlayingSound(collections_[2].get(), 5, 0));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 0, 1));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 1, 0));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 2, 1));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 3, 0));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 4, 1));
+  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 5, 0));
   AudioEngine::PrioritizeChannels(&sounds);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
@@ -122,3 +121,4 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+

@@ -20,8 +20,6 @@
 
 namespace fpl {
 
-typedef unsigned int WorldTime; // TODO: Remove this
-
 const int kPlayStreamError = -1;
 const int kLoopForever = -1;
 const int kPlayOnce = 0;
@@ -47,7 +45,6 @@ bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   }
   return true;
 }
-
 
 void SoundBuffer::SetGain(ChannelId channel_id, float gain) {
   Mix_Volume(channel_id,

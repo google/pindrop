@@ -20,11 +20,11 @@
 namespace fpl {
 
 struct BusDef;
-typedef unsigned int WorldTime; // TODO: Remove this
+typedef int WorldTime; // TODO: Remove this
 
 class Bus {
  public:
-  Bus(const BusDef* bus_def);
+  explicit Bus(const BusDef* bus_def);
 
   // Return the bus definition.
   const BusDef* bus_def() const { return bus_def_; }

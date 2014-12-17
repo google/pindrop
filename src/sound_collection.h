@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "ref_counter.h"
+
 namespace fpl {
 
 struct SoundCollectionDef;
@@ -37,11 +39,8 @@ class SoundCollection {
                               AudioEngine* audio_engine);
 
   // Load the given flatbuffer binary file containing a SoundDef.
-  bool LoadSoundCollectionDefFromFile(const char* filename,
+  bool LoadSoundCollectionDefFromFile(const std::string& filename,
                                       AudioEngine* audio_engine);
-
-  // Unload the data associated with this Sound.
-  void Unload();
 
   // Return the SoundDef.
   const SoundCollectionDef* GetSoundCollectionDef() const;
@@ -52,6 +51,8 @@ class SoundCollection {
   // Return the bus this SoundCollection will play on.
   Bus* bus() { return bus_; }
 
+  RefCounter* ref_counter() { return &ref_counter_; }
+
  private:
   // The bus this SoundCollection will play on.
   Bus* bus_;
@@ -59,6 +60,8 @@ class SoundCollection {
   std::string source_;
   std::vector<std::unique_ptr<SoundSource>> sound_sources_;
   float sum_of_probabilities_;
+
+  RefCounter ref_counter_;
 };
 
 }  // namespace fpl

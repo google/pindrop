@@ -57,6 +57,12 @@ SOUND_PATH = os.path.join(ASSETS_PATH, 'sounds')
 # Directory where unprocessed sound flatbuffer data can be found.
 RAW_SOUND_PATH = os.path.join(RAW_ASSETS_PATH, 'sounds')
 
+# Directory where processed sound flatbuffer data can be found.
+SOUND_BANK_PATH = os.path.join(ASSETS_PATH, 'sound_banks')
+
+# Directory where unprocessed sound flatbuffer data can be found.
+RAW_SOUND_BANK_PATH = os.path.join(RAW_ASSETS_PATH, 'sound_banks')
+
 # Directory where unprocessed assets can be found.
 SCHEMA_PATH = os.path.join(PROJECT_ROOT, 'src', 'flatbufferschemas')
 
@@ -101,9 +107,9 @@ FLATBUFFERS_CONVERSION_DATA = [
         input_files=[os.path.join(RAW_ASSETS_PATH, 'buses.json')],
         output_path=ASSETS_PATH),
     FlatbuffersConversionData(
-        schema=os.path.join(SCHEMA_PATH, 'sound_assets.fbs'),
-        input_files=[os.path.join(RAW_ASSETS_PATH, 'sound_assets.json')],
-        output_path=ASSETS_PATH),
+        schema=os.path.join(SCHEMA_PATH, 'sound_bank_def.fbs'),
+        input_files=glob.glob(os.path.join(RAW_SOUND_BANK_PATH, '*.json')),
+        output_path=SOUND_BANK_PATH),
     FlatbuffersConversionData(
         schema=os.path.join(SCHEMA_PATH, 'sound_collection_def.fbs'),
         input_files=glob.glob(os.path.join(RAW_SOUND_PATH, '*.json')),

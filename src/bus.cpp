@@ -56,8 +56,7 @@ void Bus::UpdateDuckGain(WorldTime delta_time) {
       transition_percentage_ = 0.0f;
     }
   }
-  float duck_gain = Lerp(1.0f, bus_def_->duck_gain(),
-                                 transition_percentage_);
+  float duck_gain = Lerp(1.0f, bus_def_->duck_gain(), transition_percentage_);
   for (size_t i = 0; i < duck_buses_.size(); ++i) {
     Bus* bus = duck_buses_[i];
     bus->duck_gain_ = std::min(duck_gain, bus->duck_gain_);

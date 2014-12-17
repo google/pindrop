@@ -18,23 +18,23 @@ project(audio_engine)
 # Compile the game with the debug flag
 set(audio_engine_DEBUG ON)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 # Temporary files (like object files) created while compiling projects.
-set(tmp_dir ${CMAKE_BINARY_DIR}/obj)
+set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
 
 # Directory which contains the source for 3rd party libraries.
 get_filename_component(
-    third_party_root "${CMAKE_SOURCE_DIR}/../../../../external" REALPATH)
+    third_party_root "${CMAKE_CURRENT_SOURCE_DIR}/../../../../external" REALPATH)
 # Directory which contains source for FPL libraries.
 get_filename_component(
-    fpl_root "${CMAKE_SOURCE_DIR}/../../libs" REALPATH)
+    fpl_root "${CMAKE_CURRENT_SOURCE_DIR}/../../libs" REALPATH)
 
 # If the dependencies directory exists, assume this is the root directory for
 # all libraries required by this project.
-set(dependencies_root "${CMAKE_SOURCE_DIR}/dependencies")
+set(dependencies_root "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
 if(EXISTS "${dependencies_root}")
   set(third_party_root "${dependencies_root}")
   set(fpl_root "${dependencies_root}")
@@ -76,29 +76,29 @@ endfunction(install)
 # causing linker errors.
 add_definitions(-DHAVE_LIBC)
 add_definitions(-DHAVE_STDIO_H)
-set(BIN_DIR ${CMAKE_BINARY_DIR})
-set(CMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}/.)
+set(BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT audio_engine_only_flatc)
+if(NOT audio_engine_only_flatc AND NOT TARGET SDL2-static)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-if(NOT audio_engine_only_flatc)
+if(NOT audio_engine_only_flatc AND NOT TARGET libogg)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT audio_engine_only_flatc)
+if(NOT audio_engine_only_flatc AND NOT TARGET libvorbis)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT audio_engine_only_flatc)
+if(NOT audio_engine_only_flatc AND NOT TARGET sdl_mixer)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 
@@ -109,8 +109,8 @@ add_subdirectory("${dependencies_flatbuffers_dir}" ${tmp_dir}/flatbuffers)
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
 set(FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${CMAKE_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
-file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_SOURCE_DIR}/src/*.fbs)
+    ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
+file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
 # schema files.
@@ -125,12 +125,13 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
     DEPENDS flatc ${flatbuffers_schema})
   list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
 endforeach()
-add_custom_target(generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
+add_custom_target(audio_engine_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
-# Build rule that uses make to build the assets.
-add_custom_target(assets
-  COMMAND python ${CMAKE_SOURCE_DIR}/scripts/build_assets.py
-  DEPENDS flatc)
+# TODO(amablue): b/18809549 Add a simple example project to demonstrate how to
+# load assets and use the audio engine.
+# add_custom_target(assets
+#   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
+#   DEPENDS flatc)
 
 # AudioEngine source files.
 set(audio_engine_SRCS
@@ -139,8 +140,12 @@ set(audio_engine_SRCS
     src/bus.cpp
     src/bus.h
     src/main.cpp
+    src/ref_counter.cpp
+    src/ref_counter.h
     src/sound.cpp
     src/sound.h
+    src/sound_bank.cpp
+    src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h)
 
@@ -202,7 +207,7 @@ endif()
 add_library(audio_engine ${audio_engine_SRCS})
 
 # Dependencies for the executable target.
-add_dependencies(audio_engine generated_includes assets)
+add_dependencies(audio_engine audio_engine_generated_includes assets)
 # target_link_libraries(audio_engine
 #   ${SDL_LIBRARIES}
 #   sdl_mixer
@@ -251,9 +256,4 @@ if(NOT audio_engine_only_flatc AND audio_engine_build_tests)
 
   test_executable(audio_engine)
 endif()
-
-# Create a zipped tar of all the necessary files to run the game.
-add_custom_target(export
-  COMMAND python ${CMAKE_SOURCE_DIR}/scripts/export.py
-  DEPENDS audio_engine)
 

@@ -12,13 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace fpl;
+#ifndef FPL_REF_COUNTER_H_
+#define FPL_REF_COUNTER_H_
 
-table SoundAssets {
-  // The list of all SoundDef flatbuffers to load, ordered by SoundId.
-  // See pie_noon_common.fbs for the SoundId enum.
-  sounds:[string];
-}
+namespace fpl {
 
-root_type SoundAssets;
+class RefCounter {
+ public:
+  RefCounter() : count_(0) {}
+  int Increment();
+  int Decrement();
+  int count() const { return count_; }
+
+ private:
+  int count_;
+};
+
+}  // namespace fpl
+
+#endif  // FPL_REF_COUNTER_H_
 

@@ -12,13 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <iostream>
+#ifndef FPL_PLAYING_SOUND_H_
+#define FPL_PLAYING_SOUND_H_
 
 #include "audio_engine/audio_engine.h"
 
-int main(int argc, char* argv[]) {
-  (void)argc; (void)argv;
-  fpl::AudioEngine audio_engine;
-  std::cout << "Hello, world!" << std::endl;
-  return 0;
-}
+namespace fpl {
+
+// Represents a sample that is playing on a channel.
+struct PlayingSound {
+  PlayingSound(AudioEngine::SoundHandle handle,
+               AudioEngine::ChannelId cid,
+               WorldTime time);
+  PlayingSound(const PlayingSound& other);
+  PlayingSound& operator=(const PlayingSound& other);
+  ~PlayingSound();
+
+  AudioEngine::SoundHandle handle;
+  AudioEngine::ChannelId channel_id;
+  WorldTime start_time;
+};
+
+}  // namespace fpl
+
+#endif  // FPL_PLAYING_SOUND_H_
+

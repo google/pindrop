@@ -15,7 +15,8 @@
 #include "sound_bank.h"
 
 #include "SDL_log.h"
-#include "audio_engine.h"
+#include "audio_engine/audio_engine.h"
+#include "audio_engine_internal_state.h"
 #include "flatbuffers/util.h"
 #include "sound_bank_def_generated.h"
 
@@ -32,15 +33,14 @@ static bool InitializeSoundCollection(const std::string& filename,
   } else {
     // This is a new sound collection, load it and update it.
     std::unique_ptr<SoundCollection> collection(new SoundCollection());
-    if (!collection->LoadSoundCollectionDefFromFile(filename, audio_engine)) {
+    if (!collection->LoadSoundCollectionDefFromFile(filename,
+                                                    audio_engine->state())) {
       return false;
     }
     collection->ref_counter()->Increment();
 
-    AudioEngine::SoundCollectionMap& collection_map =
-        *audio_engine->sound_collection_map();
     std::string name = collection->GetSoundCollectionDef()->name()->c_str();
-    collection_map[name] = std::move(collection);
+    audio_engine->state()->sound_collection_map[name] = std::move(collection);
   }
   return true;
 }
@@ -63,20 +63,20 @@ bool SoundBank::Initialize(const std::string& filename,
 }
 
 static bool DeinitializeSoundCollection(
-    const char* filename, AudioEngine* audio_engine) {
-  auto id_iter = audio_engine->sound_id_map()->find(filename);
-  if (id_iter == audio_engine->sound_id_map()->end()) {
+    const char* filename, AudioEngineInternalState* state) {
+  auto id_iter = state->sound_id_map.find(filename);
+  if (id_iter == state->sound_id_map.end()) {
     return false;
   }
 
   std::string id = id_iter->second;
-  auto collection_iter = audio_engine->sound_collection_map()->find(id);
-  if (collection_iter == audio_engine->sound_collection_map()->end()) {
+  auto collection_iter = state->sound_collection_map.find(id);
+  if (collection_iter == state->sound_collection_map.end()) {
     return false;
   }
 
   if (collection_iter->second->ref_counter()->Decrement() == 0) {
-    audio_engine->sound_collection_map()->erase(collection_iter);
+    state->sound_collection_map.erase(collection_iter);
   }
   return true;
 }
@@ -84,7 +84,7 @@ static bool DeinitializeSoundCollection(
 void SoundBank::Deinitialize(AudioEngine* audio_engine) {
   for (size_t i = 0; i < sound_bank_def_->filenames()->size(); ++i) {
     const char* filename = sound_bank_def_->filenames()->Get(i)->c_str();
-    if (!DeinitializeSoundCollection(filename, audio_engine)) {
+    if (!DeinitializeSoundCollection(filename, audio_engine->state())) {
       SDL_LogError(
           SDL_LOG_CATEGORY_ERROR,
           "Error while deinitializing SoundCollection %s in SoundBank.\n",

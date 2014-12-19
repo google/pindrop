@@ -20,7 +20,8 @@
 #include <vector>
 
 #include "SDL_log.h"
-#include "audio_engine.h"
+#include "audio_engine/audio_engine.h"
+#include "audio_engine_internal_state.h"
 #include "flatbuffers/util.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
@@ -28,7 +29,7 @@
 namespace fpl {
 
 bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
-                                             AudioEngine* audio_engine) {
+                                             AudioEngineInternalState* state) {
   source_ = source;
   const SoundCollectionDef* def = GetSoundCollectionDef();
   unsigned int sample_count =
@@ -53,8 +54,8 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
                  "Sound collection %s does not specify a bus", def->name());
     return false;
   }
-  if (audio_engine) {
-    bus_ = audio_engine->FindBus(def->bus()->c_str());
+  if (state) {
+    bus_ = FindBus(state, def->bus()->c_str());
     if (!bus_) {
       return false;
     }
@@ -63,10 +64,10 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
 }
 
 bool SoundCollection::LoadSoundCollectionDefFromFile(
-    const std::string& filename, AudioEngine* audio_engine) {
+    const std::string& filename, AudioEngineInternalState* state) {
   std::string source;
   return flatbuffers::LoadFile(filename.c_str(), false, &source) &&
-      LoadSoundCollectionDef(source, audio_engine);
+      LoadSoundCollectionDef(source, state);
 }
 
 const SoundCollectionDef* SoundCollection::GetSoundCollectionDef() const {

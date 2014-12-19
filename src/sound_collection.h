@@ -25,7 +25,7 @@ namespace fpl {
 
 struct SoundCollectionDef;
 class SoundSource;
-class AudioEngine;
+class AudioEngineInternalState;
 class Bus;
 
 // SoundCollection represent an abstract sound (like a 'whoosh'), which contains
@@ -36,11 +36,11 @@ class SoundCollection {
  public:
   // Load the given flatbuffer data representing a SoundCollectionDef.
   bool LoadSoundCollectionDef(const std::string& source,
-                              AudioEngine* audio_engine);
+                              AudioEngineInternalState* state);
 
   // Load the given flatbuffer binary file containing a SoundDef.
   bool LoadSoundCollectionDefFromFile(const std::string& filename,
-                                      AudioEngine* audio_engine);
+                                      AudioEngineInternalState* state);
 
   // Return the SoundDef.
   const SoundCollectionDef* GetSoundCollectionDef() const;

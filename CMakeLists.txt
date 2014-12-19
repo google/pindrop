@@ -142,6 +142,8 @@ set(audio_engine_SRCS
     src/main.cpp
     src/ref_counter.cpp
     src/ref_counter.h
+    src/playing_sound.cpp
+    src/playing_sound.h
     src/sound.cpp
     src/sound.h
     src/sound_bank.cpp
@@ -150,7 +152,7 @@ set(audio_engine_SRCS
     src/sound_collection.h)
 
 # Includes for this project.
-include_directories(src include/audio_engine)
+include_directories(src include)
 if(WIN32)
   include_directories(external/include/windows)
 endif()

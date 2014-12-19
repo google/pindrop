@@ -18,8 +18,10 @@
 
 #include <vector>
 #include "SDL_mixer.h"
-#include "audio_engine.h"
+#include "audio_engine/audio_engine.h"
+#include "audio_engine_internal_state.h"
 #include "gtest/gtest.h"
+#include "playing_sound.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
@@ -61,10 +63,10 @@ class AudioEngineTests : public ::testing::Test {
     // Make a bunch of sound defs with various priorities.
     for (uint16_t i = 0; i < 6; ++i) {
       flatbuffers::FlatBufferBuilder builder;
-      auto id = static_cast<SoundId>(i);
+      auto name = builder.CreateString(std::to_string(i));
       float priority = static_cast<float>(i);
       auto sound_def_buffer = fpl::CreateSoundCollectionDef(builder,
-                                                            id, priority);
+                                                            name, priority);
       builder.Finish(sound_def_buffer);
       collections_.push_back(fpl::SoundCollection());
       collections_.back().LoadSoundCollectionDef(
@@ -80,14 +82,14 @@ class AudioEngineTests : public ::testing::Test {
 };
 
 TEST_F(AudioEngineTests, IncreasingPriority) {
-  std::vector<fpl::AudioEngine::PlayingSound> sounds;
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 0, 0));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 1, 1));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 2, 2));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[3], 3, 3));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[4], 4, 4));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[5], 5, 5));
-  AudioEngine::PrioritizeChannels(&sounds);
+  std::vector<PlayingSound> sounds;
+  sounds.push_back(PlayingSound(&collections_[0], 0, 0));
+  sounds.push_back(PlayingSound(&collections_[1], 1, 1));
+  sounds.push_back(PlayingSound(&collections_[2], 2, 2));
+  sounds.push_back(PlayingSound(&collections_[3], 3, 3));
+  sounds.push_back(PlayingSound(&collections_[4], 4, 4));
+  sounds.push_back(PlayingSound(&collections_[5], 5, 5));
+  PrioritizeChannels(&sounds);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
   EXPECT_EQ(2, sounds[3].channel_id);
@@ -97,16 +99,16 @@ TEST_F(AudioEngineTests, IncreasingPriority) {
 }
 
 TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
-  std::vector<AudioEngine::PlayingSound> sounds;
+  std::vector<PlayingSound> sounds;
   // Sounds with the same priority but later start times should be higher
   // priority.
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 0, 1));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[0], 1, 0));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 2, 1));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[1], 3, 0));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 4, 1));
-  sounds.push_back(AudioEngine::PlayingSound(&collections_[2], 5, 0));
-  AudioEngine::PrioritizeChannels(&sounds);
+  sounds.push_back(PlayingSound(&collections_[0], 0, 1));
+  sounds.push_back(PlayingSound(&collections_[0], 1, 0));
+  sounds.push_back(PlayingSound(&collections_[1], 2, 1));
+  sounds.push_back(PlayingSound(&collections_[1], 3, 0));
+  sounds.push_back(PlayingSound(&collections_[2], 4, 1));
+  sounds.push_back(PlayingSound(&collections_[2], 5, 0));
+  PrioritizeChannels(&sounds);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
   EXPECT_EQ(2, sounds[3].channel_id);

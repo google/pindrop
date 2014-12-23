@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_AUDIO_ENGINE_IMPL_H_
-#define FPL_AUDIO_ENGINE_IMPL_H_
+#ifndef PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
+#define PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 
 #include <vector>
 #include <map>
 
 #include "SDL_log.h"
-#include "audio_engine/audio_engine.h"
+#include "pindrop/audio_engine.h"
 #include "bus.h"
 #include "playing_sound.h"
 #include "sound.h"
@@ -27,7 +27,7 @@
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
-namespace fpl {
+namespace pindrop {
 
 struct AudioConfig;
 struct BusDefList;
@@ -80,7 +80,7 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 
 void PrioritizeChannels(std::vector<PlayingSound>* playing_sounds);
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_AUDIO_ENGINE_IMPL_H_
+#endif  // PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 

@@ -14,13 +14,12 @@
 // misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define FPL_AUDIO_ENGINE_UNIT_TESTS
-
 #include <vector>
+
 #include "SDL_mixer.h"
-#include "audio_engine/audio_engine.h"
 #include "audio_engine_internal_state.h"
 #include "gtest/gtest.h"
+#include "pindrop/audio_engine.h"
 #include "playing_sound.h"
 #include "sound.h"
 #include "sound_collection.h"
@@ -53,7 +52,7 @@ void Mix_Resume(int) {}
 void Mix_ResumeMusic() {}
 }
 
-namespace fpl {
+namespace pindrop {
 
 bool LoadFile(const char*, std::string*) { return false; }
 
@@ -65,10 +64,10 @@ class AudioEngineTests : public ::testing::Test {
       flatbuffers::FlatBufferBuilder builder;
       auto name = builder.CreateString(std::to_string(i));
       float priority = static_cast<float>(i);
-      auto sound_def_buffer = fpl::CreateSoundCollectionDef(builder,
-                                                            name, priority);
+      auto sound_def_buffer = pindrop::CreateSoundCollectionDef(builder,
+                                                                name, priority);
       builder.Finish(sound_def_buffer);
-      collections_.push_back(fpl::SoundCollection());
+      collections_.push_back(pindrop::SoundCollection());
       collections_.back().LoadSoundCollectionDef(
           std::string(reinterpret_cast<const char*>(builder.GetBufferPointer()),
                       builder.GetSize()),
@@ -117,7 +116,7 @@ TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
   EXPECT_EQ(5, sounds[0].channel_id);
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

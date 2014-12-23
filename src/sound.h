@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PIE_NOON_SOUND_H_
-#define PIE_NOON_SOUND_H_
+#ifndef PINDROP_SOUND_H_
+#define PINDROP_SOUND_H_
 
-#include "audio_engine/audio_engine.h"
+#include "pindrop/audio_engine.h"
 
 struct Mix_Chunk;
 typedef struct _Mix_Music Mix_Music;
 
-namespace fpl {
+namespace pindrop {
 
 struct AudioSampleSetEntry;
 
@@ -82,7 +82,7 @@ class SoundStream : public SoundSource {
   Mix_Music* data_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // PIE_NOON_SOUND_H_
+#endif  // PINDROP_SOUND_H_
 

@@ -15,12 +15,12 @@
 #include "sound_bank.h"
 
 #include "SDL_log.h"
-#include "audio_engine/audio_engine.h"
 #include "audio_engine_internal_state.h"
 #include "flatbuffers/util.h"
+#include "pindrop/audio_engine.h"
 #include "sound_bank_def_generated.h"
 
-namespace fpl {
+namespace pindrop {
 
 static bool InitializeSoundCollection(const std::string& filename,
                                       AudioEngine* audio_engine) {
@@ -94,5 +94,5 @@ void SoundBank::Deinitialize(AudioEngine* audio_engine) {
   }
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 

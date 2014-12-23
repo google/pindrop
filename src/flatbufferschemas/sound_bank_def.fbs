@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace fpl;
+namespace pindrop;
 
 // A SoundBankDef is a list of SoundCollection files to load. A SoundCollection
 // may be present in more than one SoundBank and can only be played once it

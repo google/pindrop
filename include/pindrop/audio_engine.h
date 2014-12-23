@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_AUDIO_ENGINE_H_
-#define FPL_AUDIO_ENGINE_H_
+#ifndef PINDROP_AUDIO_ENGINE_H_
+#define PINDROP_AUDIO_ENGINE_H_
 
 #include <string>
 
-namespace fpl {
+namespace pindrop {
 
 typedef int WorldTime; // TODO: Remove this
 
@@ -84,7 +84,7 @@ class AudioEngine {
   AudioEngineInternalState* state_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_AUDIO_ENGINE_H_
+#endif  // PINDROP_AUDIO_ENGINE_H_
 

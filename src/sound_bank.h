@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_SOUND_BANK_H_
-#define FPL_SOUND_BANK_H_
+#ifndef PINDROP_SOUND_BANK_H_
+#define PINDROP_SOUND_BANK_H_
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <map>
+
 #include "sound_collection.h"
 #include "ref_counter.h"
 
-namespace fpl {
+namespace pindrop {
 
 struct SoundBankDef;
 
@@ -45,7 +46,7 @@ class SoundBank {
   const SoundBankDef* sound_bank_def_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_SOUND_BANK_H_
+#endif  // PINDROP_SOUND_BANK_H_
 

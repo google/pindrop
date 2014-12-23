@@ -16,9 +16,9 @@
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
-#include "audio_engine/audio_engine.h"
+#include "pindrop/audio_engine.h"
 
-namespace fpl {
+namespace pindrop {
 
 const int kPlayStreamError = -1;
 const int kLoopForever = -1;
@@ -79,4 +79,5 @@ void SoundStream::SetGain(AudioEngine::ChannelId channel_id, float gain) {
   Mix_VolumeMusic(static_cast<int>(gain * static_cast<float>(MIX_MAX_VOLUME)));
 }
 
-}  // namespace fpl
+}  // namespace pindrop
+

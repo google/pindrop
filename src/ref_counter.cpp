@@ -16,7 +16,7 @@
 
 #include <cassert>
 
-namespace fpl {
+namespace pindrop {
 
 int RefCounter::Increment() {
   // TODO(amablue): b/18809543
@@ -30,5 +30,5 @@ int RefCounter::Decrement() {
   return --count_;
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 

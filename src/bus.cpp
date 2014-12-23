@@ -16,7 +16,7 @@
 
 #include "buses_generated.h"
 
-namespace fpl {
+namespace pindrop {
 
 static unsigned int kMillisecondsPerSecond = 1000;
 
@@ -82,4 +82,5 @@ void Bus::DecrementSoundCounter() {
   assert(sound_count_ >= 0);
 }
 
-}  // namespace fpl
+}  // namespace pindrop
+

@@ -20,13 +20,13 @@
 #include <vector>
 
 #include "SDL_log.h"
-#include "audio_engine/audio_engine.h"
 #include "audio_engine_internal_state.h"
 #include "flatbuffers/util.h"
+#include "pindrop/audio_engine.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
 
-namespace fpl {
+namespace pindrop {
 
 bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
                                              AudioEngineInternalState* state) {
@@ -72,7 +72,7 @@ bool SoundCollection::LoadSoundCollectionDefFromFile(
 
 const SoundCollectionDef* SoundCollection::GetSoundCollectionDef() const {
   assert(source_.size());
-  return fpl::GetSoundCollectionDef(source_.c_str());
+  return pindrop::GetSoundCollectionDef(source_.c_str());
 }
 
 SoundSource* SoundCollection::Select() const {
@@ -94,5 +94,5 @@ SoundSource* SoundCollection::Select() const {
   return sound_sources_.back().get();
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 

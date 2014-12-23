@@ -14,11 +14,11 @@
 
 #include "playing_sound.h"
 
-#include "audio_engine/audio_engine.h"
 #include "bus.h"
+#include "pindrop/audio_engine.h"
 #include "sound_collection.h"
 
-namespace fpl {
+namespace pindrop {
 
 PlayingSound::PlayingSound(AudioEngine::SoundHandle sound_handle,
                            AudioEngine::ChannelId cid,
@@ -64,5 +64,5 @@ PlayingSound& PlayingSound::operator=(const PlayingSound& other) {
   return *this;
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 

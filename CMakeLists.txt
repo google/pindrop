@@ -13,10 +13,10 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 2.8.12)
 
-project(audio_engine)
+project(pindrop)
 
 # Compile the game with the debug flag
-set(audio_engine_DEBUG ON)
+set(pindrop_DEBUG ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
@@ -61,10 +61,10 @@ set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer library.")
 
 # Option to enable / disable the test build.
-option(audio_engine_build_tests "Build tests for this project." ON)
+option(pindrop_build_tests "Build tests for this project." ON)
 
 # Option to only build flatc
-option(audio_engine_only_flatc "Only build FlatBuffers compiler." OFF)
+option(pindrop_only_flatc "Only build FlatBuffers compiler." OFF)
 
 # Include SDL in this project while working around SDL requirement of out of
 # tree builds.
@@ -81,24 +81,24 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT audio_engine_only_flatc AND NOT TARGET SDL2-static)
+if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-if(NOT audio_engine_only_flatc AND NOT TARGET libogg)
+if(NOT pindrop_only_flatc AND NOT TARGET libogg)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT audio_engine_only_flatc AND NOT TARGET libvorbis)
+if(NOT pindrop_only_flatc AND NOT TARGET libvorbis)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT audio_engine_only_flatc AND NOT TARGET sdl_mixer)
+if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 
@@ -125,7 +125,7 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
     DEPENDS flatc ${flatbuffers_schema})
   list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
 endforeach()
-add_custom_target(audio_engine_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
+add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
 # TODO(amablue): b/18809549 Add a simple example project to demonstrate how to
 # load assets and use the audio engine.
@@ -134,8 +134,8 @@ add_custom_target(audio_engine_generated_includes DEPENDS ${FLATBUFFERS_GENERATE
 #   DEPENDS flatc)
 
 # AudioEngine source files.
-set(audio_engine_SRCS
-    include/audio_engine/audio_engine.h
+set(pindrop_SRCS
+    include/pindrop/audio_engine.h
     src/audio_engine.cpp
     src/bus.cpp
     src/bus.h
@@ -193,7 +193,7 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
 
-if(audio_engine_DEBUG)
+if(pindrop_DEBUG)
   # if we want to define this, it needs to be only in debug builds
   #add_definitions(-D_DEBUG)
 endif()
@@ -206,11 +206,11 @@ if(WIN32)
 endif()
 
 # Executable target.
-add_library(audio_engine ${audio_engine_SRCS})
+add_library(pindrop ${pindrop_SRCS})
 
 # Dependencies for the executable target.
-add_dependencies(audio_engine audio_engine_generated_includes assets)
-# target_link_libraries(audio_engine
+add_dependencies(pindrop pindrop_generated_includes assets)
+# target_link_libraries(pindrop
 #   ${SDL_LIBRARIES}
 #   sdl_mixer
 #   libvorbis
@@ -224,7 +224,7 @@ option(
   ON)
 
 # Tests.
-if(NOT audio_engine_only_flatc AND audio_engine_build_tests)
+if(NOT pindrop_only_flatc AND pindrop_build_tests)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
   add_subdirectory(${dependencies_gtest_dir} googletest)
@@ -248,7 +248,7 @@ if(NOT audio_engine_only_flatc AND audio_engine_build_tests)
     set(SDL_LIBRARIES SDL2main;${SDL_LIBRARIES})
   endif()
 
-  set(COMMON_TEST_LIBS "gtest;audio_engine;${SDL_LIBRARIES}")
+  set(COMMON_TEST_LIBS "gtest;pindrop;${SDL_LIBRARIES}")
 
   function(test_executable name)
     cxx_executable_with_flags(${name}_test "${cxx_default}"

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_AUDIO_COLLECTION
-#define FPL_AUDIO_COLLECTION
+#ifndef PINDROP_AUDIO_COLLECTION_H_
+#define PINDROP_AUDIO_COLLECTION_H_
 
 #include <memory>
 #include <string>
@@ -21,7 +21,7 @@
 
 #include "ref_counter.h"
 
-namespace fpl {
+namespace pindrop {
 
 struct SoundCollectionDef;
 class SoundSource;
@@ -64,6 +64,7 @@ class SoundCollection {
   RefCounter ref_counter_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_AUDIO_COLLECTION
+#endif  // PINDROP_AUDIO_COLLECTION_H_
+

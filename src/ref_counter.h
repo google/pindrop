@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_REF_COUNTER_H_
-#define FPL_REF_COUNTER_H_
+#ifndef PINDROP_REF_COUNTER_H_
+#define PINDROP_REF_COUNTER_H_
 
-namespace fpl {
+namespace pindrop {
 
 class RefCounter {
  public:
@@ -28,7 +28,7 @@ class RefCounter {
   int count_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_REF_COUNTER_H_
+#endif  // PINDROP_REF_COUNTER_H_
 

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FPL_BUSES_H_
-#define FPL_BUSES_H_
+#ifndef PINDROP_BUSES_H_
+#define PINDROP_BUSES_H_
 
 #include <vector>
 
-namespace fpl {
+namespace pindrop {
 
 struct BusDef;
 typedef int WorldTime; // TODO: Remove this
@@ -82,6 +82,7 @@ class Bus {
   float transition_percentage_;
 };
 
-}  // namespace fpl
+}  // namespace pindrop
 
-#endif  // FPL_BUSES_H_
+#endif  // PINDROP_BUSES_H_
+

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "audio_engine/audio_engine.h"
+#include "pindrop/audio_engine.h"
 
 #include <algorithm>
 #include <map>
@@ -28,7 +28,7 @@
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
-namespace fpl {
+namespace pindrop {
 
 const int kChannelFadeOutRateMs = 10;
 
@@ -109,7 +109,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
     return false;
   }
   const BusDefList* bus_def_list =
-      fpl::GetBusDefList(state_->buses_source.c_str());
+      pindrop::GetBusDefList(state_->buses_source.c_str());
   state_->buses.reserve(bus_def_list->buses()->Length());
   for (size_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
     state_->buses.push_back(Bus(bus_def_list->buses()->Get(i)));
@@ -420,5 +420,5 @@ void AudioEngine::AdvanceFrame(WorldTime world_time) {
   }
 }
 
-}  // namespace fpl
+}  // namespace pindrop
 

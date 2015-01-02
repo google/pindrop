@@ -22,10 +22,10 @@ namespace pindrop {
 
 PlayingSound::PlayingSound(AudioEngine::SoundHandle sound_handle,
                            AudioEngine::ChannelId cid,
-                           WorldTime time)
+                           unsigned int frame)
     : handle(sound_handle),
       channel_id(cid),
-      start_time(time) {
+      frame_created(frame) {
   Bus* bus = handle->bus();
   if (bus) {
     bus->IncrementSoundCounter();
@@ -35,7 +35,7 @@ PlayingSound::PlayingSound(AudioEngine::SoundHandle sound_handle,
 PlayingSound::PlayingSound(const PlayingSound& other)
     : handle(other.handle),
       channel_id(other.channel_id),
-      start_time(other.start_time) {
+      frame_created(other.frame_created) {
   Bus* bus = handle->bus();
   if (bus) {
     bus->IncrementSoundCounter();
@@ -60,8 +60,18 @@ PlayingSound& PlayingSound::operator=(const PlayingSound& other) {
   }
   handle = other.handle;
   channel_id = other.channel_id;
-  start_time = other.start_time;
+  frame_created = other.frame_created;
   return *this;
+}
+
+int PlayingSoundComparitor(const PlayingSound& a, const PlayingSound& b) {
+  int result = SoundCollectionDefComparitor(
+      *a.handle->GetSoundCollectionDef(),
+      *b.handle->GetSoundCollectionDef());
+  if (result == 0) {
+    return b.frame_created - a.frame_created;
+  }
+  return result;
 }
 
 }  // namespace pindrop

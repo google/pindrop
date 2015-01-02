@@ -23,15 +23,23 @@ namespace pindrop {
 struct PlayingSound {
   PlayingSound(AudioEngine::SoundHandle handle,
                AudioEngine::ChannelId cid,
-               WorldTime time);
+               unsigned int frame);
   PlayingSound(const PlayingSound& other);
   PlayingSound& operator=(const PlayingSound& other);
   ~PlayingSound();
 
   AudioEngine::SoundHandle handle;
   AudioEngine::ChannelId channel_id;
-  WorldTime start_time;
+  unsigned int frame_created;
 };
+
+// Sort by priority. In the case of two sounds with the same priority, sort
+// the newer one as being higher priority. Higher priority elements have lower
+// indicies.
+//
+// TODO(amablue): This should actually have a boolean return value so that it
+// works with std::sort correctly.
+int PlayingSoundComparitor(const PlayingSound& a, const PlayingSound& b);
 
 }  // namespace pindrop
 

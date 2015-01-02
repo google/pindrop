@@ -18,8 +18,6 @@
 
 namespace pindrop {
 
-static unsigned int kMillisecondsPerSecond = 1000;
-
 template<class T, class T2>
 T Lerp(const T& range_start, const T& range_end, const T2& percent) {
   const T2 one_minus_percent = static_cast<T2>(1.0) - percent;
@@ -32,14 +30,12 @@ Bus::Bus(const BusDef* bus_def)
       sound_count_(0),
       transition_percentage_(0.0f) {}
 
-void Bus::UpdateDuckGain(WorldTime delta_time) {
+void Bus::UpdateDuckGain(float delta_time) {
   if (sound_count_ > 0 && transition_percentage_ <= 1.0f) {
     // Fading to duck gain.
     float fade_in_time = bus_def_->duck_fade_in_time();
     if (fade_in_time > 0) {
-      float delta_seconds =
-          delta_time * static_cast<float>(kMillisecondsPerSecond);
-      transition_percentage_ += delta_seconds / fade_in_time;
+      transition_percentage_ += delta_time / fade_in_time;
       transition_percentage_ = std::min(transition_percentage_, 1.0f);
     } else {
       transition_percentage_ = 1.0f;
@@ -48,9 +44,7 @@ void Bus::UpdateDuckGain(WorldTime delta_time) {
     // Fading to standard gain.
     float fade_out_time = bus_def_->duck_fade_out_time();
     if (fade_out_time > 0) {
-      float delta_seconds =
-          delta_time * static_cast<float>(kMillisecondsPerSecond);
-      transition_percentage_ -= delta_seconds / fade_out_time;
+      transition_percentage_ -= delta_time / fade_out_time;
       transition_percentage_ = std::max(transition_percentage_, 0.0f);
     } else {
       transition_percentage_ = 0.0f;

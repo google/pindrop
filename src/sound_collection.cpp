@@ -94,5 +94,16 @@ SoundSource* SoundCollection::Select() const {
   return sound_sources_.back().get();
 }
 
+int SoundCollectionDefComparitor(const SoundCollectionDef& a,
+                                 const SoundCollectionDef& b) {
+  // Since there can only be one stream playing, and that stream is independent
+  // of the buffer channels, always make it highest priority.
+  if (a.stream() || b.stream()) {
+    return b.stream() - a.stream();
+  } else {
+    return (b.priority()- a.priority()) < 0 ? -1 : 1;
+  }
+}
+
 }  // namespace pindrop
 

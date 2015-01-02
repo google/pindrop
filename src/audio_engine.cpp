@@ -196,35 +196,6 @@ static AudioEngine::ChannelId FindFreeChannel(bool stream) {
   return AudioEngine::kInvalidChannel;
 }
 
-static int SoundCollectionDefComparitor(const SoundCollectionDef* a,
-                                        const SoundCollectionDef* b) {
-  // Since there can only be one stream playing, and that stream is independent
-  // of the buffer channels, always make it highest priority.
-  if (a->stream() || b->stream()) {
-    return b->stream() - a->stream();
-  } else {
-    return (b->priority()- a->priority()) < 0 ? -1 : 1;
-  }
-}
-
-// Sort by priority. In the case of two sounds with the same priority, sort
-// the newer one as being higher priority. Higher priority elements have lower
-// indicies.
-static int PriorityComparitor(const PlayingSound& a, const PlayingSound& b) {
-  int result = SoundCollectionDefComparitor(
-      a.handle->GetSoundCollectionDef(),
-      b.handle->GetSoundCollectionDef());
-  if (result == 0) {
-    return b.start_time - a.start_time;
-  }
-  return result;
-}
-
-// Sort channels with highest priority first.
-void PrioritizeChannels(std::vector<PlayingSound>* playing_sounds) {
-  std::sort(playing_sounds->begin(), playing_sounds->end(), PriorityComparitor);
-}
-
 // Remove all sounds that are no longer playing.
 static void EraseFinishedSounds(AudioEngineInternalState* state) {
   state->playing_sounds.erase(std::remove_if(
@@ -303,12 +274,13 @@ AudioEngine::ChannelId AudioEngine::PlaySound(SoundHandle sound_handle) {
   // If there are no empty channels, clear out the one with the lowest
   // priority.
   if (new_channel == kInvalidChannel) {
-    PrioritizeChannels(&state_->playing_sounds);
+    std::sort(state_->playing_sounds.begin(), state_->playing_sounds.end(),
+              PlayingSoundComparitor);
     // If the lowest priority sound is lower than the new one, halt it and
     // remove it from our list. Otherwise, do nothing.
-    const SoundCollectionDef* new_def = collection->GetSoundCollectionDef();
-    const SoundCollectionDef* back_def =
-        state_->playing_sounds.back().handle->GetSoundCollectionDef();
+    const SoundCollectionDef& new_def = *collection->GetSoundCollectionDef();
+    const SoundCollectionDef& back_def =
+        *state_->playing_sounds.back().handle->GetSoundCollectionDef();
     if (SoundCollectionDefComparitor(new_def, back_def) < 0) {
       // Use the channel of the sound we're replacing.
       new_channel = state_->playing_sounds.back().channel_id;
@@ -334,7 +306,7 @@ AudioEngine::ChannelId AudioEngine::PlaySound(SoundHandle sound_handle) {
   // Attempt to play the sound.
   if (PlayCollection(*collection, new_channel)) {
     state_->playing_sounds.push_back(
-        PlayingSound(collection, new_channel, state_->world_time));
+        PlayingSound(collection, new_channel, state_->current_frame));
   }
 
   return new_channel;
@@ -401,9 +373,8 @@ void AudioEngine::Pause(bool pause) {
   }
 }
 
-void AudioEngine::AdvanceFrame(WorldTime world_time) {
-  WorldTime delta_time = world_time - state_->world_time;
-  state_->world_time = world_time;
+void AudioEngine::AdvanceFrame(float delta_time) {
+  ++state_->current_frame;
   for (size_t i = 0; i < state_->buses.size(); ++i) {
     state_->buses[i].ResetDuckGain();
   }

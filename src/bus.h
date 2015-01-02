@@ -20,7 +20,6 @@
 namespace pindrop {
 
 struct BusDef;
-typedef int WorldTime; // TODO: Remove this
 
 class Bus {
  public:
@@ -51,7 +50,7 @@ class Bus {
   void DecrementSoundCounter();
 
   // Apply appropriate duck gain to all ducked buses.
-  void UpdateDuckGain(WorldTime delta_time);
+  void UpdateDuckGain(float delta_time);
 
   // Recursively update the final gain of the bus.
   void UpdateGain(float parent_gain);

@@ -19,8 +19,6 @@
 
 namespace pindrop {
 
-typedef int WorldTime; // TODO: Remove this
-
 struct AudioConfig;
 class AudioEngineInternalState;
 class SoundCollection;
@@ -39,7 +37,7 @@ class AudioEngine {
   bool Initialize(const AudioConfig* config);
 
   // Update audio volume per channel each frame.
-  void AdvanceFrame(WorldTime world_time);
+  void AdvanceFrame(float delta_time);
 
   // Load a sound bank from a file.
   // Returns true on success.

@@ -73,7 +73,8 @@ struct AudioEngineInternalState {
   // A list of the currently playing sounds.
   std::vector<PlayingSound> playing_sounds;
 
-  WorldTime world_time;
+  // The current frame, i.e. the number of times AdvanceFrame has been called.
+  unsigned int current_frame;
 };
 
 Bus* FindBus(AudioEngineInternalState* state, const char* name);

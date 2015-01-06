@@ -104,23 +104,28 @@ endif()
 
 # Include FlatBuffers in this project.
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
-add_subdirectory("${dependencies_flatbuffers_dir}" ${tmp_dir}/flatbuffers)
+if(NOT TARGET flatc)
+  add_subdirectory("${dependencies_flatbuffers_dir}" ${tmp_dir}/flatbuffers)
+endif()
 
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
-set(FLATBUFFERS_GENERATED_INCLUDES_DIR
+set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
-file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.fbs)
+set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
+    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR} PARENT_SCOPE)
+file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
 # schema files.
 foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
   get_filename_component(filename ${flatbuffers_schema} NAME_WE)
   set(flatbuffers_include
-      ${FLATBUFFERS_GENERATED_INCLUDES_DIR}/${filename}_generated.h)
+    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}/${filename}_generated.h)
   add_custom_command(
     OUTPUT ${flatbuffers_include}
-    COMMAND flatc --gen-includes -o ${FLATBUFFERS_GENERATED_INCLUDES_DIR}
+    COMMAND flatc --gen-includes
+        -o ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
         -c ${flatbuffers_schema}
     DEPENDS flatc ${flatbuffers_schema})
   list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
@@ -156,9 +161,8 @@ include_directories(src include)
 if(WIN32)
   include_directories(external/include/windows)
 endif()
-include_directories(${dependencies_webp_distr_dir}/include)
+include_directories(${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
 include_directories(${dependencies_flatbuffers_dir}/include)
-include_directories(${FLATBUFFERS_GENERATED_INCLUDES_DIR})
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
 

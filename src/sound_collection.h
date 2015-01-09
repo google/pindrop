@@ -25,7 +25,7 @@ namespace pindrop {
 
 struct SoundCollectionDef;
 class SoundSource;
-class AudioEngineInternalState;
+struct AudioEngineInternalState;
 class Bus;
 
 // SoundCollection represent an abstract sound (like a 'whoosh'), which contains

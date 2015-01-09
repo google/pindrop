@@ -20,7 +20,7 @@
 namespace pindrop {
 
 struct AudioConfig;
-class AudioEngineInternalState;
+struct AudioEngineInternalState;
 class SoundCollection;
 
 class AudioEngine {

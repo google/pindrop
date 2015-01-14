@@ -64,14 +64,19 @@ PlayingSound& PlayingSound::operator=(const PlayingSound& other) {
   return *this;
 }
 
-int PlayingSoundComparitor(const PlayingSound& a, const PlayingSound& b) {
-  int result = SoundCollectionDefComparitor(
-      *a.handle->GetSoundCollectionDef(),
-      *b.handle->GetSoundCollectionDef());
-  if (result == 0) {
-    return b.frame_created - a.frame_created;
+bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b) {
+  const auto& a_def = *a.handle->GetSoundCollectionDef();
+  const auto& b_def = *b.handle->GetSoundCollectionDef();
+  // Check if `a_def` is higher priority.
+  if (SoundCollectionDefComparator(a_def, b_def)) {
+    return true;
+  // `a_def` is not higher priority, it could be equal or lower.
+  } else if (SoundCollectionDefComparator(b_def, a_def)) {
+    return false;
+  // `a_def` and `b_def` are equal prioity, compare frames created.
+  } else {
+    return a.frame_created < b.frame_created ;
   }
-  return result;
 }
 
 }  // namespace pindrop

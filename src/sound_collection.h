@@ -64,10 +64,8 @@ class SoundCollection {
   RefCounter ref_counter_;
 };
 
-// TODO(amablue): This should actually have a boolean return value so that it
-// works with std::sort correctly.
-int SoundCollectionDefComparitor(const SoundCollectionDef& a,
-                                 const SoundCollectionDef& b);
+bool SoundCollectionDefComparator(const SoundCollectionDef& a,
+                                  const SoundCollectionDef& b);
 
 }  // namespace pindrop
 

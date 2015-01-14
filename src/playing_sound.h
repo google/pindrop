@@ -36,10 +36,7 @@ struct PlayingSound {
 // Sort by priority. In the case of two sounds with the same priority, sort
 // the newer one as being higher priority. Higher priority elements have lower
 // indicies.
-//
-// TODO(amablue): This should actually have a boolean return value so that it
-// works with std::sort correctly.
-int PlayingSoundComparitor(const PlayingSound& a, const PlayingSound& b);
+bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b);
 
 }  // namespace pindrop
 

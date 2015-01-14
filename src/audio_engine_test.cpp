@@ -80,6 +80,43 @@ class AudioEngineTests : public ::testing::Test {
   std::vector<SoundCollection> collections_;
 };
 
+TEST_F(AudioEngineTests, SoundCollectionDefComparator) {
+  EXPECT_FALSE(SoundCollectionDefComparator(
+      *collections_[0].GetSoundCollectionDef(),
+      *collections_[0].GetSoundCollectionDef()));
+  EXPECT_FALSE(SoundCollectionDefComparator(
+      *collections_[0].GetSoundCollectionDef(),
+      *collections_[1].GetSoundCollectionDef()));
+  EXPECT_TRUE(SoundCollectionDefComparator(
+      *collections_[1].GetSoundCollectionDef(),
+      *collections_[0].GetSoundCollectionDef()));
+}
+
+TEST_F(AudioEngineTests, PlayingSoundComparator) {
+  // Same priority, same time.
+  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
+                                      PlayingSound(&collections_[0], 0, 100)));
+  // Different priority, same time.
+  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 100),
+                                     PlayingSound(&collections_[0], 0, 100)));
+  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
+                                      PlayingSound(&collections_[1], 0, 100)));
+  // Same priority, different time.
+  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
+                                     PlayingSound(&collections_[0], 0, 200)));
+  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 200),
+                                      PlayingSound(&collections_[0], 0, 100)));
+  // Different priority, different time.
+  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 200),
+                                     PlayingSound(&collections_[0], 0, 100)));
+  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
+                                      PlayingSound(&collections_[1], 0, 200)));
+  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 100),
+                                     PlayingSound(&collections_[0], 0, 200)));
+  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 200),
+                                      PlayingSound(&collections_[1], 0, 100)));
+}
+
 TEST_F(AudioEngineTests, IncreasingPriority) {
   std::vector<PlayingSound> sounds;
   sounds.push_back(PlayingSound(&collections_[0], 0, 0));
@@ -88,7 +125,7 @@ TEST_F(AudioEngineTests, IncreasingPriority) {
   sounds.push_back(PlayingSound(&collections_[3], 3, 3));
   sounds.push_back(PlayingSound(&collections_[4], 4, 4));
   sounds.push_back(PlayingSound(&collections_[5], 5, 5));
-  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparitor);
+  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparator);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
   EXPECT_EQ(2, sounds[3].channel_id);
@@ -107,7 +144,7 @@ TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
   sounds.push_back(PlayingSound(&collections_[1], 3, 0));
   sounds.push_back(PlayingSound(&collections_[2], 4, 1));
   sounds.push_back(PlayingSound(&collections_[2], 5, 0));
-  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparitor);
+  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparator);
   EXPECT_EQ(0, sounds[5].channel_id);
   EXPECT_EQ(1, sounds[4].channel_id);
   EXPECT_EQ(2, sounds[3].channel_id);

@@ -275,13 +275,13 @@ AudioEngine::ChannelId AudioEngine::PlaySound(SoundHandle sound_handle) {
   // priority.
   if (new_channel == kInvalidChannel) {
     std::sort(state_->playing_sounds.begin(), state_->playing_sounds.end(),
-              PlayingSoundComparitor);
+              PlayingSoundComparator);
     // If the lowest priority sound is lower than the new one, halt it and
     // remove it from our list. Otherwise, do nothing.
     const SoundCollectionDef& new_def = *collection->GetSoundCollectionDef();
     const SoundCollectionDef& back_def =
         *state_->playing_sounds.back().handle->GetSoundCollectionDef();
-    if (SoundCollectionDefComparitor(new_def, back_def) < 0) {
+    if (SoundCollectionDefComparator(new_def, back_def) < 0) {
       // Use the channel of the sound we're replacing.
       new_channel = state_->playing_sounds.back().channel_id;
       // Dispose of the lowest priority sound.

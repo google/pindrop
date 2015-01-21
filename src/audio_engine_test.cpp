@@ -19,6 +19,7 @@
 #include "SDL_mixer.h"
 #include "audio_engine_internal_state.h"
 #include "gtest/gtest.h"
+#include "intrusive_list.h"
 #include "pindrop/audio_engine.h"
 #include "playing_sound.h"
 #include "sound.h"
@@ -58,99 +59,71 @@ bool LoadFile(const char*, std::string*) { return false; }
 
 class AudioEngineTests : public ::testing::Test {
  protected:
+  AudioEngineTests() : collections_(), list_(), sounds_() {}
   virtual void SetUp() {
     // Make a bunch of sound defs with various priorities.
-    for (uint16_t i = 0; i < 6; ++i) {
+    for (uint16_t i = 0; i < kCollectionCount; ++i) {
+      pindrop::SoundCollection& collection = collections_[i];
+
       flatbuffers::FlatBufferBuilder builder;
       auto name = builder.CreateString(std::to_string(i));
       float priority = static_cast<float>(i);
       auto sound_def_buffer =
           pindrop::CreateSoundCollectionDef(builder, name, priority);
       builder.Finish(sound_def_buffer);
-      collections_.push_back(pindrop::SoundCollection());
-      collections_.back().LoadSoundCollectionDef(
+      collection.LoadSoundCollectionDef(
           std::string(reinterpret_cast<const char*>(builder.GetBufferPointer()),
                       builder.GetSize()),
           nullptr);
     }
+
+    list_.InsertAfter(&sounds_[0]);
+    sounds_[0].InsertAfter(&sounds_[1]);
+    sounds_[1].InsertAfter(&sounds_[2]);
+    sounds_[2].InsertAfter(&sounds_[3]);
+
+    sounds_[0].SetHandle(&collections_[2]);
+    sounds_[1].SetHandle(&collections_[1]);
+    sounds_[2].SetHandle(&collections_[1]);
+    sounds_[3].SetHandle(&collections_[0]);
   }
   virtual void TearDown() {}
 
  protected:
-  std::vector<SoundCollection> collections_;
+  static const std::size_t kCollectionCount = 3;
+  SoundCollection collections_[kCollectionCount];
+
+  TypedIntrusiveListNode<PlayingSound> list_;
+  static const std::size_t kSoundCount = 4;
+  PlayingSound sounds_[kSoundCount];
 };
 
-TEST_F(AudioEngineTests, SoundCollectionDefComparator) {
-  EXPECT_FALSE(
-      SoundCollectionDefComparator(*collections_[0].GetSoundCollectionDef(),
-                                   *collections_[0].GetSoundCollectionDef()));
-  EXPECT_FALSE(
-      SoundCollectionDefComparator(*collections_[0].GetSoundCollectionDef(),
-                                   *collections_[1].GetSoundCollectionDef()));
-  EXPECT_TRUE(
-      SoundCollectionDefComparator(*collections_[1].GetSoundCollectionDef(),
-                                   *collections_[0].GetSoundCollectionDef()));
+TEST_F(AudioEngineTests, FindInsertionPointAtHead) {
+  // New sound's priority is greater than highest priority.
+  EXPECT_EQ(list_.GetTerminator(), FindInsertionPoint(&list_, 2.5f));
 }
 
-TEST_F(AudioEngineTests, PlayingSoundComparator) {
-  // Same priority, same time.
-  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
-                                      PlayingSound(&collections_[0], 0, 100)));
-  // Different priority, same time.
-  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 100),
-                                     PlayingSound(&collections_[0], 0, 100)));
-  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
-                                      PlayingSound(&collections_[1], 0, 100)));
-  // Same priority, different time.
-  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
-                                     PlayingSound(&collections_[0], 0, 200)));
-  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 200),
-                                      PlayingSound(&collections_[0], 0, 100)));
-  // Different priority, different time.
-  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 200),
-                                     PlayingSound(&collections_[0], 0, 100)));
-  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 100),
-                                      PlayingSound(&collections_[1], 0, 200)));
-  EXPECT_TRUE(PlayingSoundComparator(PlayingSound(&collections_[1], 0, 100),
-                                     PlayingSound(&collections_[0], 0, 200)));
-  EXPECT_FALSE(PlayingSoundComparator(PlayingSound(&collections_[0], 0, 200),
-                                      PlayingSound(&collections_[1], 0, 100)));
+TEST_F(AudioEngineTests, FindInsertionPointWithEqualPriority) {
+  // New sound's priority is...
+  // ...equal to highest priority.
+  EXPECT_EQ(&sounds_[0], FindInsertionPoint(&list_, 2.0f));
+  // ...equal to a sound with the same priority as the previous sound.
+  EXPECT_EQ(&sounds_[2], FindInsertionPoint(&list_, 1.0f));
+  // ...equal to the lowest priority.
+  EXPECT_EQ(&sounds_[3], FindInsertionPoint(&list_, 0));
 }
 
-TEST_F(AudioEngineTests, IncreasingPriority) {
-  std::vector<PlayingSound> sounds;
-  sounds.push_back(PlayingSound(&collections_[0], 0, 0));
-  sounds.push_back(PlayingSound(&collections_[1], 1, 1));
-  sounds.push_back(PlayingSound(&collections_[2], 2, 2));
-  sounds.push_back(PlayingSound(&collections_[3], 3, 3));
-  sounds.push_back(PlayingSound(&collections_[4], 4, 4));
-  sounds.push_back(PlayingSound(&collections_[5], 5, 5));
-  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparator);
-  EXPECT_EQ(0, sounds[5].channel_id);
-  EXPECT_EQ(1, sounds[4].channel_id);
-  EXPECT_EQ(2, sounds[3].channel_id);
-  EXPECT_EQ(3, sounds[2].channel_id);
-  EXPECT_EQ(4, sounds[1].channel_id);
-  EXPECT_EQ(5, sounds[0].channel_id);
+TEST_F(AudioEngineTests, FindInsertionPointMiddlePriority) {
+  // New sound's priority is...
+  // ...between highest and second highest.
+  EXPECT_EQ(&sounds_[0], FindInsertionPoint(&list_, 1.5f));
+  // ...lower than a sound with the same priority as the previous sound.
+  EXPECT_EQ(&sounds_[2], FindInsertionPoint(&list_, 0.5));
 }
 
-TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
-  std::vector<PlayingSound> sounds;
-  // Sounds with the same priority but later start times should be higher
-  // priority.
-  sounds.push_back(PlayingSound(&collections_[0], 0, 1));
-  sounds.push_back(PlayingSound(&collections_[0], 1, 0));
-  sounds.push_back(PlayingSound(&collections_[1], 2, 1));
-  sounds.push_back(PlayingSound(&collections_[1], 3, 0));
-  sounds.push_back(PlayingSound(&collections_[2], 4, 1));
-  sounds.push_back(PlayingSound(&collections_[2], 5, 0));
-  std::sort(sounds.begin(), sounds.end(), PlayingSoundComparator);
-  EXPECT_EQ(0, sounds[5].channel_id);
-  EXPECT_EQ(1, sounds[4].channel_id);
-  EXPECT_EQ(2, sounds[3].channel_id);
-  EXPECT_EQ(3, sounds[2].channel_id);
-  EXPECT_EQ(4, sounds[1].channel_id);
-  EXPECT_EQ(5, sounds[0].channel_id);
+TEST_F(AudioEngineTests, FindInsertionPointLowest) {
+  // New sound's priority is less than the lowest prioity.
+  EXPECT_EQ(&sounds_[3], FindInsertionPoint(&list_, -1.0f));
 }
 
 }  // namespace pindrop

@@ -20,59 +20,21 @@
 
 namespace pindrop {
 
-PlayingSound::PlayingSound(AudioEngine::SoundHandle sound_handle,
-                           AudioEngine::ChannelId cid, unsigned int frame)
-    : handle(sound_handle), channel_id(cid), frame_created(frame) {
-  Bus* bus = handle->bus();
-  if (bus) {
-    bus->IncrementSoundCounter();
+void PlayingSound::Clear() {
+  if (handle_ && handle_->bus()) {
+    handle_->bus()->DecrementSoundCounter();
+    handle_ = nullptr;
   }
+  Remove();
 }
 
-PlayingSound::PlayingSound(const PlayingSound& other)
-    : handle(other.handle),
-      channel_id(other.channel_id),
-      frame_created(other.frame_created) {
-  Bus* bus = handle->bus();
-  if (bus) {
-    bus->IncrementSoundCounter();
+void PlayingSound::SetHandle(AudioEngine::SoundHandle handle) {
+  if (handle_ && handle_->bus()) {
+    handle_->bus()->DecrementSoundCounter();
   }
-}
-
-PlayingSound::~PlayingSound() {
-  Bus* bus = handle->bus();
-  if (bus) {
-    bus->DecrementSoundCounter();
-  }
-}
-
-PlayingSound& PlayingSound::operator=(const PlayingSound& other) {
-  Bus* bus = handle->bus();
-  if (bus) {
-    bus->DecrementSoundCounter();
-  }
-  Bus* other_bus = other.handle->bus();
-  if (other_bus) {
-    other_bus->IncrementSoundCounter();
-  }
-  handle = other.handle;
-  channel_id = other.channel_id;
-  frame_created = other.frame_created;
-  return *this;
-}
-
-bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b) {
-  const auto& a_def = *a.handle->GetSoundCollectionDef();
-  const auto& b_def = *b.handle->GetSoundCollectionDef();
-  // Check if `a_def` is higher priority.
-  if (SoundCollectionDefComparator(a_def, b_def)) {
-    return true;
-    // `a_def` is not higher priority, it could be equal or lower.
-  } else if (SoundCollectionDefComparator(b_def, a_def)) {
-    return false;
-    // `a_def` and `b_def` are equal prioity, compare frames created.
-  } else {
-    return a.frame_created < b.frame_created;
+  handle_ = handle;
+  if (handle_ && handle_->bus()) {
+    handle_->bus()->IncrementSoundCounter();
   }
 }
 

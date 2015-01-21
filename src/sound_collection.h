@@ -64,9 +64,6 @@ class SoundCollection {
   RefCounter ref_counter_;
 };
 
-bool SoundCollectionDefComparator(const SoundCollectionDef& a,
-                                  const SoundCollectionDef& b);
-
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_COLLECTION_H_

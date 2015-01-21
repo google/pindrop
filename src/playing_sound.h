@@ -16,26 +16,32 @@
 #define PINDROP_PLAYING_SOUND_H_
 
 #include "pindrop/audio_engine.h"
+#include "intrusive_list.h"
 
 namespace pindrop {
 
 // Represents a sample that is playing on a channel.
-struct PlayingSound {
-  PlayingSound(AudioEngine::SoundHandle handle, AudioEngine::ChannelId cid,
-               unsigned int frame);
-  PlayingSound(const PlayingSound& other);
-  PlayingSound& operator=(const PlayingSound& other);
-  ~PlayingSound();
+class PlayingSound : public TypedIntrusiveListNode<PlayingSound> {
+ public:
+  PlayingSound()
+      : TypedIntrusiveListNode<PlayingSound>(),
+        handle_(nullptr),
+        channel_id_(0) {}
 
-  AudioEngine::SoundHandle handle;
-  AudioEngine::ChannelId channel_id;
-  unsigned int frame_created;
+  void Clear();
+
+  void SetHandle(AudioEngine::SoundHandle handle);
+  AudioEngine::SoundHandle handle() const { return handle_; }
+
+  void set_channel_id(AudioEngine::ChannelId channel_id) {
+    channel_id_ = channel_id;
+  }
+  AudioEngine::ChannelId channel_id() const { return channel_id_; }
+
+ private:
+  AudioEngine::SoundHandle handle_;
+  AudioEngine::ChannelId channel_id_;
 };
-
-// Sort by priority. In the case of two sounds with the same priority, sort
-// the newer one as being higher priority. Higher priority elements have lower
-// indicies.
-bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b);
 
 }  // namespace pindrop
 

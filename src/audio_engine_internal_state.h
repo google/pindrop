@@ -84,4 +84,3 @@ void PrioritizeChannels(std::vector<PlayingSound>* playing_sounds);
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
-

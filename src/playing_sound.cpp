@@ -21,11 +21,8 @@
 namespace pindrop {
 
 PlayingSound::PlayingSound(AudioEngine::SoundHandle sound_handle,
-                           AudioEngine::ChannelId cid,
-                           unsigned int frame)
-    : handle(sound_handle),
-      channel_id(cid),
-      frame_created(frame) {
+                           AudioEngine::ChannelId cid, unsigned int frame)
+    : handle(sound_handle), channel_id(cid), frame_created(frame) {
   Bus* bus = handle->bus();
   if (bus) {
     bus->IncrementSoundCounter();
@@ -70,14 +67,13 @@ bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b) {
   // Check if `a_def` is higher priority.
   if (SoundCollectionDefComparator(a_def, b_def)) {
     return true;
-  // `a_def` is not higher priority, it could be equal or lower.
+    // `a_def` is not higher priority, it could be equal or lower.
   } else if (SoundCollectionDefComparator(b_def, a_def)) {
     return false;
-  // `a_def` and `b_def` are equal prioity, compare frames created.
+    // `a_def` and `b_def` are equal prioity, compare frames created.
   } else {
-    return a.frame_created < b.frame_created ;
+    return a.frame_created < b.frame_created;
   }
 }
 
 }  // namespace pindrop
-

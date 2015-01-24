@@ -70,4 +70,3 @@ bool SoundCollectionDefComparator(const SoundCollectionDef& a,
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_COLLECTION_H_
-

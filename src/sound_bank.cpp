@@ -62,8 +62,8 @@ bool SoundBank::Initialize(const std::string& filename,
   return success;
 }
 
-static bool DeinitializeSoundCollection(
-    const char* filename, AudioEngineInternalState* state) {
+static bool DeinitializeSoundCollection(const char* filename,
+                                        AudioEngineInternalState* state) {
   auto id_iter = state->sound_id_map.find(filename);
   if (id_iter == state->sound_id_map.end()) {
     return false;
@@ -95,4 +95,3 @@ void SoundBank::Deinitialize(AudioEngine* audio_engine) {
 }
 
 }  // namespace pindrop
-

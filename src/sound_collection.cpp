@@ -67,7 +67,7 @@ bool SoundCollection::LoadSoundCollectionDefFromFile(
     const std::string& filename, AudioEngineInternalState* state) {
   std::string source;
   return flatbuffers::LoadFile(filename.c_str(), false, &source) &&
-      LoadSoundCollectionDef(source, state);
+         LoadSoundCollectionDef(source, state);
 }
 
 const SoundCollectionDef* SoundCollection::GetSoundCollectionDef() const {
@@ -106,4 +106,3 @@ bool SoundCollectionDefComparator(const SoundCollectionDef& a,
 }
 
 }  // namespace pindrop
-

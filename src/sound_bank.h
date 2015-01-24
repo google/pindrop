@@ -33,8 +33,7 @@ class AudioEngine;
 
 class SoundBank {
  public:
-  bool Initialize(const std::string& filename,
-                  AudioEngine* audio_engine);
+  bool Initialize(const std::string& filename, AudioEngine* audio_engine);
 
   void Deinitialize(AudioEngine* audio_engine);
 
@@ -49,4 +48,3 @@ class SoundBank {
 }  // namespace pindrop
 
 #endif  // PINDROP_SOUND_BANK_H_
-

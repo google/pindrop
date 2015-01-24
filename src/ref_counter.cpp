@@ -31,4 +31,3 @@ int RefCounter::Decrement() {
 }
 
 }  // namespace pindrop
-

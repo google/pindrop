@@ -21,8 +21,7 @@ namespace pindrop {
 
 // Represents a sample that is playing on a channel.
 struct PlayingSound {
-  PlayingSound(AudioEngine::SoundHandle handle,
-               AudioEngine::ChannelId cid,
+  PlayingSound(AudioEngine::SoundHandle handle, AudioEngine::ChannelId cid,
                unsigned int frame);
   PlayingSound(const PlayingSound& other);
   PlayingSound& operator=(const PlayingSound& other);
@@ -41,4 +40,3 @@ bool PlayingSoundComparator(const PlayingSound& a, const PlayingSound& b);
 }  // namespace pindrop
 
 #endif  // PINDROP_PLAYING_SOUND_H_
-

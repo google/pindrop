@@ -39,8 +39,8 @@ bool SoundBuffer::Play(AudioEngine::ChannelId channel_id, bool loop) {
   int loops = loop ? kLoopForever : kPlayOnce;
   if (Mix_PlayChannel(channel_id, data_, loops) ==
       AudioEngine::kInvalidChannel) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Can't play sound: %s\n", Mix_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't play sound: %s\n",
+                 Mix_GetError());
     return false;
   }
   return true;
@@ -67,8 +67,8 @@ bool SoundStream::Play(AudioEngine::ChannelId channel_id, bool loop) {
                      // more than one channel of streaming audio.
   int loops = loop ? kLoopForever : kPlayOnce;
   if (Mix_PlayMusic(data_, loops) == kPlayStreamError) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Can't play music: %s\n", Mix_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't play music: %s\n",
+                 Mix_GetError());
     return false;
   }
   return true;
@@ -80,4 +80,3 @@ void SoundStream::SetGain(AudioEngine::ChannelId channel_id, float gain) {
 }
 
 }  // namespace pindrop
-

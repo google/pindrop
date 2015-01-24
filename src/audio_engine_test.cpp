@@ -64,8 +64,8 @@ class AudioEngineTests : public ::testing::Test {
       flatbuffers::FlatBufferBuilder builder;
       auto name = builder.CreateString(std::to_string(i));
       float priority = static_cast<float>(i);
-      auto sound_def_buffer = pindrop::CreateSoundCollectionDef(builder,
-                                                                name, priority);
+      auto sound_def_buffer =
+          pindrop::CreateSoundCollectionDef(builder, name, priority);
       builder.Finish(sound_def_buffer);
       collections_.push_back(pindrop::SoundCollection());
       collections_.back().LoadSoundCollectionDef(
@@ -81,15 +81,15 @@ class AudioEngineTests : public ::testing::Test {
 };
 
 TEST_F(AudioEngineTests, SoundCollectionDefComparator) {
-  EXPECT_FALSE(SoundCollectionDefComparator(
-      *collections_[0].GetSoundCollectionDef(),
-      *collections_[0].GetSoundCollectionDef()));
-  EXPECT_FALSE(SoundCollectionDefComparator(
-      *collections_[0].GetSoundCollectionDef(),
-      *collections_[1].GetSoundCollectionDef()));
-  EXPECT_TRUE(SoundCollectionDefComparator(
-      *collections_[1].GetSoundCollectionDef(),
-      *collections_[0].GetSoundCollectionDef()));
+  EXPECT_FALSE(
+      SoundCollectionDefComparator(*collections_[0].GetSoundCollectionDef(),
+                                   *collections_[0].GetSoundCollectionDef()));
+  EXPECT_FALSE(
+      SoundCollectionDefComparator(*collections_[0].GetSoundCollectionDef(),
+                                   *collections_[1].GetSoundCollectionDef()));
+  EXPECT_TRUE(
+      SoundCollectionDefComparator(*collections_[1].GetSoundCollectionDef(),
+                                   *collections_[0].GetSoundCollectionDef()));
 }
 
 TEST_F(AudioEngineTests, PlayingSoundComparator) {
@@ -155,8 +155,7 @@ TEST_F(AudioEngineTests, SamePriorityDifferentStartTimes) {
 
 }  // namespace pindrop
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-

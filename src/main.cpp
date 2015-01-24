@@ -17,7 +17,8 @@
 #include "pindrop/audio_engine.h"
 
 int main(int argc, char* argv[]) {
-  (void)argc; (void)argv;
+  (void)argc;
+  (void)argv;
   pindrop::AudioEngine audio_engine;
   std::cout << "Hello, world!" << std::endl;
   return 0;

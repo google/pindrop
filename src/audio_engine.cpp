@@ -47,10 +47,10 @@ AudioEngine::~AudioEngine() {
 }
 
 Bus* FindBus(AudioEngineInternalState* state, const char* name) {
-  auto it = std::find_if(state->buses.begin(), state->buses.end(),
-                         [name](const Bus& bus) {
-    return strcmp(bus.bus_def()->name()->c_str(), name) == 0;
-  });
+  auto it = std::find_if(
+      state->buses.begin(), state->buses.end(), [name](const Bus& bus) {
+        return strcmp(bus.bus_def()->name()->c_str(), name) == 0;
+      });
   if (it != state->buses.end()) {
     return &*it;
   } else {
@@ -68,8 +68,8 @@ static bool PopulateBuses(AudioEngineInternalState* state,
     if (bus) {
       output->push_back(bus);
     } else {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                   "Unknown bus \"%s\" listed in %s.\n", bus_name, list_name);
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown bus \"%s\" listed in %s.\n",
+                   bus_name, list_name);
       return false;
     }
   }
@@ -81,8 +81,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   state_ = new AudioEngineInternalState();
 
   // Initialize audio engine.
-  if (Mix_OpenAudio(config->output_frequency(),
-                    AUDIO_S16LSB,
+  if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
                     config->output_channels(),
                     config->output_buffer_size()) != 0) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't open audio stream\n");
@@ -119,12 +118,12 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   for (size_t i = 0; i < state_->buses.size(); ++i) {
     Bus& bus = state_->buses[i];
     const BusDef* def = bus.bus_def();
-    if (!PopulateBuses(
-            state_, "child_buses", def->child_buses(), &bus.child_buses())) {
+    if (!PopulateBuses(state_, "child_buses", def->child_buses(),
+                       &bus.child_buses())) {
       return false;
     }
-    if (!PopulateBuses(
-            state_, "duck_buses", def->duck_buses(), &bus.duck_buses())) {
+    if (!PopulateBuses(state_, "duck_buses", def->duck_buses(),
+                       &bus.duck_buses())) {
       return false;
     }
   }
@@ -198,21 +197,21 @@ static AudioEngine::ChannelId FindFreeChannel(bool stream) {
 
 // Remove all sounds that are no longer playing.
 static void EraseFinishedSounds(AudioEngineInternalState* state) {
-  state->playing_sounds.erase(std::remove_if(
-      state->playing_sounds.begin(), state->playing_sounds.end(),
-      [](const PlayingSound& playing_sound) {
-        return !AudioEngine::Playing(playing_sound.channel_id);
-      }),
+  state->playing_sounds.erase(
+      std::remove_if(state->playing_sounds.begin(), state->playing_sounds.end(),
+                     [](const PlayingSound& playing_sound) {
+                       return !AudioEngine::Playing(playing_sound.channel_id);
+                     }),
       state->playing_sounds.end());
 }
 
 // Remove all streams.
 static void EraseStreams(AudioEngineInternalState* state) {
-  state->playing_sounds.erase(std::remove_if(
-      state->playing_sounds.begin(), state->playing_sounds.end(),
-      [](const PlayingSound& playing_sound) {
-        return playing_sound.channel_id == kStreamChannel;
-      }),
+  state->playing_sounds.erase(
+      std::remove_if(state->playing_sounds.begin(), state->playing_sounds.end(),
+                     [](const PlayingSound& playing_sound) {
+                       return playing_sound.channel_id == kStreamChannel;
+                     }),
       state->playing_sounds.end());
 }
 
@@ -221,7 +220,7 @@ static bool PlayCollection(const SoundCollection& collection,
   SoundSource* source = collection.Select();
   const SoundCollectionDef& def = *collection.GetSoundCollectionDef();
   const float gain =
-    source->audio_sample_set_entry().audio_sample()->gain() * def.gain();
+      source->audio_sample_set_entry().audio_sample()->gain() * def.gain();
   source->SetGain(channel_id, gain);
   if (source->Play(channel_id, def.loop() != 0)) {
     return true;
@@ -318,8 +317,7 @@ AudioEngine::ChannelId AudioEngine::PlaySound(const std::string& sound_name) {
     return PlaySound(handle);
   } else {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Cannot play sound: invalid name (%s)\n",
-                 sound_name.c_str());
+                 "Cannot play sound: invalid name (%s)\n", sound_name.c_str());
     return kInvalidChannel;
   }
 }
@@ -350,15 +348,14 @@ void AudioEngine::Stop(ChannelId channel_id) {
   if (channel_id == kStreamChannel) {
     int return_value = Mix_FadeOutMusic(kChannelFadeOutRateMs);
     if (return_value != 0) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                   "Error stopping music: %s\n", Mix_GetError());
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping music: %s\n",
+                   Mix_GetError());
     }
   } else {
     int return_value = Mix_FadeOutChannel(channel_id, kChannelFadeOutRateMs);
     if (return_value != 0) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                   "Error stopping channel %d: %s\n", channel_id,
-                   Mix_GetError());
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping channel %d: %s\n",
+                   channel_id, Mix_GetError());
     }
   }
 }
@@ -392,4 +389,3 @@ void AudioEngine::AdvanceFrame(float delta_time) {
 }
 
 }  // namespace pindrop
-

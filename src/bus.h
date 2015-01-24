@@ -84,4 +84,3 @@ class Bus {
 }  // namespace pindrop
 
 #endif  // PINDROP_BUSES_H_
-

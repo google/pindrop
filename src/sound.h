@@ -85,4 +85,3 @@ class SoundStream : public SoundSource {
 }  // namespace pindrop
 
 #endif  // PINDROP_SOUND_H_
-

@@ -87,6 +87,8 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 PlayingSound* FindInsertionPoint(TypedIntrusiveListNode<PlayingSound>* list,
                                  float priority);
 
+bool LoadFile(const char *filename, std::string *dest);
+
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_

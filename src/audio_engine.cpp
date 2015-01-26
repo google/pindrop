@@ -23,7 +23,6 @@
 #include "audio_engine_internal_state.h"
 #include "bus.h"
 #include "buses_generated.h"
-#include "flatbuffers/util.h"
 #include "intrusive_list.h"
 #include "sound.h"
 #include "sound_collection.h"
@@ -41,6 +40,19 @@ const AudioEngine::ChannelId kAllChannels = -1;
 static const AudioEngine::ChannelId kStreamChannel = -100;
 
 const AudioEngine::ChannelId AudioEngine::kInvalidChannel = -1;
+
+bool LoadFile(const char *filename, std::string *dest) {
+  auto handle = SDL_RWFromFile(filename, "rb");
+  if (!handle) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "LoadFile fail on %s", filename);
+    return false;
+  }
+  size_t len = static_cast<size_t>(SDL_RWsize(handle));
+  dest->assign(len + 1, 0);
+  size_t rlen = SDL_RWread(handle, &(*dest)[0], 1, len);
+  SDL_RWclose(handle);
+  return len == rlen && len > 0;
+}
 
 AudioEngine::~AudioEngine() {
   delete state_;
@@ -115,7 +127,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
                      config->mixer_channels());
 
   // Load the audio buses.
-  if (!flatbuffers::LoadFile("buses.bin", false, &state_->buses_source)) {
+  if (!LoadFile("buses.bin", &state_->buses_source)) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't load audio bus file.\n");
     return false;
   }

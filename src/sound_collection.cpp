@@ -21,7 +21,6 @@
 
 #include "SDL_log.h"
 #include "audio_engine_internal_state.h"
-#include "flatbuffers/util.h"
 #include "pindrop/audio_engine.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
@@ -57,6 +56,9 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
   if (state) {
     bus_ = FindBus(state, def->bus()->c_str());
     if (!bus_) {
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                   "Sound collection %s specifies an unknown bus: %s",
+                   def->name(), def->bus()->c_str());
       return false;
     }
   }
@@ -66,7 +68,7 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
 bool SoundCollection::LoadSoundCollectionDefFromFile(
     const std::string& filename, AudioEngineInternalState* state) {
   std::string source;
-  return flatbuffers::LoadFile(filename.c_str(), false, &source) &&
+  return LoadFile(filename.c_str(), &source) &&
          LoadSoundCollectionDef(source, state);
 }
 

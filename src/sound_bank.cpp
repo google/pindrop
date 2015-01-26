@@ -16,7 +16,6 @@
 
 #include "SDL_log.h"
 #include "audio_engine_internal_state.h"
-#include "flatbuffers/util.h"
 #include "pindrop/audio_engine.h"
 #include "sound_bank_def_generated.h"
 
@@ -48,8 +47,7 @@ static bool InitializeSoundCollection(const std::string& filename,
 bool SoundBank::Initialize(const std::string& filename,
                            AudioEngine* audio_engine) {
   bool success = true;
-  if (!flatbuffers::LoadFile(filename.c_str(), false,
-                             &sound_bank_def_source_)) {
+  if (!LoadFile(filename.c_str(), &sound_bank_def_source_)) {
     return false;
   }
   sound_bank_def_ = GetSoundBankDef(sound_bank_def_source_.c_str());

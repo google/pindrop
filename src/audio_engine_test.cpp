@@ -55,8 +55,6 @@ void Mix_ResumeMusic() {}
 
 namespace pindrop {
 
-bool LoadFile(const char*, std::string*) { return false; }
-
 class AudioEngineTests : public ::testing::Test {
  protected:
   AudioEngineTests() : collections_(), list_(), sounds_() {}

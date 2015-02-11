@@ -41,7 +41,7 @@ static const AudioEngine::ChannelId kStreamChannel = -100;
 
 const AudioEngine::ChannelId AudioEngine::kInvalidChannel = -1;
 
-bool LoadFile(const char *filename, std::string *dest) {
+bool LoadFile(const char* filename, std::string* dest) {
   auto handle = SDL_RWFromFile(filename, "rb");
   if (!handle) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "LoadFile fail on %s", filename);
@@ -123,8 +123,8 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
 
   // Number of sound that can be played simutaniously.
   Mix_AllocateChannels(config->mixer_channels());
-  InitializeFreeList(&state_->playing_sounds_free_list, &state_->playing_sounds,
-                     config->mixer_channels());
+  InitializeFreeList(&state_->playing_sounds_free_list,
+                     &state_->playing_sound_memory, config->mixer_channels());
 
   // Load the audio buses.
   if (!LoadFile("buses.bin", &state_->buses_source)) {
@@ -133,9 +133,9 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   }
   const BusDefList* bus_def_list =
       pindrop::GetBusDefList(state_->buses_source.c_str());
-  state_->buses.reserve(bus_def_list->buses()->Length());
+  state_->buses.resize(bus_def_list->buses()->Length());
   for (size_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
-    state_->buses.push_back(Bus(bus_def_list->buses()->Get(i)));
+    state_->buses[i].Initialize(bus_def_list->buses()->Get(i));
   }
 
   // Set up the children and ducking pointers.
@@ -194,38 +194,19 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
   }
 }
 
-static int AllocatedChannelCount() {
-  // Passing negative values returns the number of allocated channels.
-  return Mix_AllocateChannels(-1);
-}
-
-static int PlayingChannelCount() {
-  // Passing negative values returns the number of playing channels.
-  return Mix_Playing(-1);
-}
-
 // Remove all sounds that are no longer playing.
 static void EraseFinishedSounds(AudioEngineInternalState* state) {
-  TypedIntrusiveListNode<PlayingSound>& list = state->playing_sounds_list;
-  PlayingSound* next;
-  for (PlayingSound* sound = list.GetNext(); sound != list.GetTerminator();
-       sound = next) {
-    next = sound->GetNext();
+  IntrusiveListNode& list = state->playing_sound_list;
+  IntrusiveListNode* next;
+  for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
+       node = next) {
+    next = node->GetNext();
+    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
     if (!AudioEngine::Playing(sound->channel_id())) {
       state->playing_sounds_free_list.push_back(sound);
       sound->Clear();
     }
   }
-}
-
-// Remove all streams.
-static void EraseStreams(AudioEngineInternalState* state) {
-  state->playing_sounds.erase(
-      std::remove_if(state->playing_sounds.begin(), state->playing_sounds.end(),
-                     [](const PlayingSound& playing_sound) {
-                       return playing_sound.channel_id() == kStreamChannel;
-                     }),
-      state->playing_sounds.end());
 }
 
 static bool PlayCollection(const SoundCollection& collection,
@@ -239,15 +220,6 @@ static bool PlayCollection(const SoundCollection& collection,
     return true;
   }
   return false;
-}
-
-static void Halt(AudioEngine::ChannelId channel_id) {
-  assert(channel_id != AudioEngine::kInvalidChannel);
-  if (channel_id == kStreamChannel) {
-    Mix_HaltMusic();
-  } else {
-    Mix_HaltChannel(channel_id);
-  }
 }
 
 bool AudioEngine::Playing(ChannelId channel_id) {
@@ -271,45 +243,46 @@ static void SetChannelGain(AudioEngine::ChannelId channel_id, float volume) {
 
 static AudioEngine::ChannelId PlayStream(AudioEngineInternalState* state,
                                          SoundHandle sound_handle) {
-  (void)state;
+  state->playing_sound_stream.SetHandle(sound_handle);
   if (!PlayCollection(*sound_handle, kStreamChannel)) {
+    state->playing_sound_stream.Clear();
     return AudioEngine::kInvalidChannel;
   }
   return kStreamChannel;
 }
 
-PlayingSound* FindInsertionPoint(TypedIntrusiveListNode<PlayingSound>* list,
-                                 float priority) {
-  PlayingSound* sound;
-  for (sound = list->GetPrevious(); sound != list->GetTerminator();
-       sound = sound->GetPrevious()) {
+PlayingSound* FindInsertionPoint(IntrusiveListNode* list, float priority) {
+  IntrusiveListNode* node;
+  for (node = list->GetPrevious(); node != list->GetTerminator();
+       node = node->GetPrevious()) {
+    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
     float sound_priority = sound->handle()->GetSoundCollectionDef()->priority();
     if (sound_priority >= priority) {
       break;
     }
   }
-  return sound;
+  return PlayingSound::GetInstanceFromPriorityNode(node);
 }
 
 static PlayingSound* FindFreePlayingSound(
-    TypedIntrusiveListNode<PlayingSound>* list, PlayingSound* insertion_point,
+    IntrusiveListNode* list, PlayingSound* insertion_point,
     std::vector<PlayingSound*>& free_list) {
   PlayingSound* new_sound = nullptr;
   // Grab a free PlayingSound if there is one.
   if (free_list.size()) {
     new_sound = free_list.back();
     free_list.pop_back();
-    insertion_point->InsertAfter(new_sound);
-  } else if (insertion_point != list->GetTerminator()) {
+    insertion_point->priority_node()->InsertAfter(new_sound->priority_node());
+  } else if (insertion_point->priority_node() != list->GetTerminator()) {
     // If there are no free sounds, and the new sound is not the lowest priority
     // sound, evict the lowest priority sound.
-    new_sound = list->GetPrevious();
+    IntrusiveListNode* node = list->GetPrevious();
+    new_sound = PlayingSound::GetInstanceFromPriorityNode(node);
     Mix_HaltChannel(new_sound->channel_id());
 
     // Move it to a new spot in the list if it needs to be moved.
-    if (insertion_point != new_sound) {
-      new_sound->Remove();
-      insertion_point->InsertAfter(new_sound);
+    if (insertion_point->priority_node() != node) {
+      insertion_point->priority_node()->InsertAfter(node->Remove());
     }
   }
   return new_sound;
@@ -319,12 +292,12 @@ static AudioEngine::ChannelId PlayBuffer(AudioEngineInternalState* state,
                                          SoundHandle sound_handle) {
   // Find where it belongs in the list.
   PlayingSound* insertion_point =
-      FindInsertionPoint(&state->playing_sounds_list,
+      FindInsertionPoint(&state->playing_sound_list,
                          sound_handle->GetSoundCollectionDef()->priority());
 
   // Decide which PlayingSound object to use.
   PlayingSound* new_sound =
-      FindFreePlayingSound(&state->playing_sounds_list, insertion_point,
+      FindFreePlayingSound(&state->playing_sound_list, insertion_point,
                            state->playing_sounds_free_list);
 
   // The sound could not be added to the list; not high enough priority.
@@ -433,9 +406,10 @@ void AudioEngine::AdvanceFrame(float delta_time) {
   if (state_->master_bus) {
     state_->master_bus->UpdateGain(state_->mute ? 0.0f : state_->master_gain);
   }
-  TypedIntrusiveListNode<PlayingSound>& list = state_->playing_sounds_list;
-  for (PlayingSound* sound = list.GetNext(); sound != list.GetTerminator();
-       sound = sound->GetNext()) {
+  IntrusiveListNode& list = state_->playing_sound_list;
+  for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
+       node = node->GetNext()) {
+    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
     SetChannelGain(sound->channel_id(), sound->handle()->bus()->gain());
   }
 }

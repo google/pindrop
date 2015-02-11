@@ -71,9 +71,12 @@ struct AudioEngineInternalState {
   SoundBankMap sound_bank_map;
 
   // A list of the currently playing sounds.
-  TypedIntrusiveListNode<PlayingSound> playing_sounds_list;
-  std::vector<PlayingSound> playing_sounds;
+  IntrusiveListNode playing_sound_list;
+  std::vector<PlayingSound> playing_sound_memory;
   std::vector<PlayingSound*> playing_sounds_free_list;
+
+  // We only ever play one stream, so store that separately.
+  PlayingSound playing_sound_stream;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;
@@ -84,10 +87,9 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 
 // Given a playing sound, find where a new sound with the given priority should
 // be inserted into the list.
-PlayingSound* FindInsertionPoint(TypedIntrusiveListNode<PlayingSound>* list,
-                                 float priority);
+PlayingSound* FindInsertionPoint(IntrusiveListNode* list, float priority);
 
-bool LoadFile(const char *filename, std::string *dest);
+bool LoadFile(const char* filename, std::string* dest);
 
 }  // namespace pindrop
 

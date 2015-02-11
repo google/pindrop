@@ -75,10 +75,10 @@ class AudioEngineTests : public ::testing::Test {
           nullptr);
     }
 
-    list_.InsertAfter(&sounds_[0]);
-    sounds_[0].InsertAfter(&sounds_[1]);
-    sounds_[1].InsertAfter(&sounds_[2]);
-    sounds_[2].InsertAfter(&sounds_[3]);
+    list_.InsertAfter(sounds_[0].priority_node());
+    sounds_[0].priority_node()->InsertAfter(sounds_[1].priority_node());
+    sounds_[1].priority_node()->InsertAfter(sounds_[2].priority_node());
+    sounds_[2].priority_node()->InsertAfter(sounds_[3].priority_node());
 
     sounds_[0].SetHandle(&collections_[2]);
     sounds_[1].SetHandle(&collections_[1]);
@@ -91,14 +91,15 @@ class AudioEngineTests : public ::testing::Test {
   static const std::size_t kCollectionCount = 3;
   SoundCollection collections_[kCollectionCount];
 
-  TypedIntrusiveListNode<PlayingSound> list_;
+  IntrusiveListNode list_;
   static const std::size_t kSoundCount = 4;
   PlayingSound sounds_[kSoundCount];
 };
 
 TEST_F(AudioEngineTests, FindInsertionPointAtHead) {
   // New sound's priority is greater than highest priority.
-  EXPECT_EQ(list_.GetTerminator(), FindInsertionPoint(&list_, 2.5f));
+  EXPECT_EQ(PlayingSound::GetInstanceFromPriorityNode(list_.GetTerminator()),
+            FindInsertionPoint(&list_, 2.5f));
 }
 
 TEST_F(AudioEngineTests, FindInsertionPointWithEqualPriority) {

@@ -16,6 +16,7 @@
 #define PINDROP_BUSES_H_
 
 #include <vector>
+#include "intrusive_list.h"
 
 namespace pindrop {
 
@@ -23,7 +24,13 @@ struct BusDef;
 
 class Bus {
  public:
-  explicit Bus(const BusDef* bus_def);
+  Bus()
+      : bus_def_(nullptr),
+        duck_gain_(1.0f),
+        playing_sound_list_(),
+        transition_percentage_(0.0f) {}
+
+  void Initialize(const BusDef* bus_def);
 
   // Return the bus definition.
   const BusDef* bus_def() const { return bus_def_; }
@@ -46,8 +53,10 @@ class Bus {
   // When a sound begins playing or finishes playing, the sound counter should
   // be incremented or decremented appropriately to track whether or not to
   // apply the duck gain.
-  void IncrementSoundCounter();
-  void DecrementSoundCounter();
+  IntrusiveListNode& playing_sound_list() { return playing_sound_list_; }
+  const IntrusiveListNode& playing_sound_list() const {
+    return playing_sound_list_;
+  }
 
   // Apply appropriate duck gain to all ducked buses.
   void UpdateDuckGain(float delta_time);
@@ -74,7 +83,7 @@ class Bus {
   float gain_;
 
   // Keeps track of how many sounds are being played on this bus.
-  int sound_count_;
+  IntrusiveListNode playing_sound_list_;
 
   // If a sound is playing on this bus, all duck_buses_ should lower in volume
   // over time. This tracks how far we are into that transition.
@@ -84,3 +93,4 @@ class Bus {
 }  // namespace pindrop
 
 #endif  // PINDROP_BUSES_H_
+

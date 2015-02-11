@@ -155,13 +155,13 @@ class IntrusiveListNode {
     return false;
   }
 
- private:
   // Initialize the list node.
   void Initialize() {
     next_ = this;
     prev_ = this;
   }
 
+ private:
 #if PINDROP_INTRUSIVE_LIST_VALIDATE
   std::uint32_t magic_;
 #endif  // PINDROP_INTRUSIVE_LIST_VALIDATE
@@ -175,48 +175,52 @@ class IntrusiveListNode {
 #endif  // PINDROP_INTRUSIVE_LIST_VALIDATE
 };
 
-// Declares the member function GetListNode() of Class to retrieve a pointer
-// to NodeMemberName.
-// See #_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR()
-#define PINDROP_INTRUSIVE_GET_NODE(NodeMemberName)                             \
-  IntrusiveListNode* GetListNode() { return &NodeMemberName; }                 \
-  const IntrusiveListNode* GetListNode() const { return &NodeMemberName; }
+// Declares a member function to retrieve a pointer to NodeMemberName.
+#define PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(NodeMemberName, FunctionName) \
+  IntrusiveListNode* FunctionName() { return &NodeMemberName; }           \
+  const IntrusiveListNode* FunctionName() const { return &NodeMemberName; }
+
+// Declares a member function GetListNode() to retrieve a pointer to
+// NodeMemberName.
+#define PINDROP_INTRUSIVE_GET_NODE(NodeMemberName) \
+  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(NodeMemberName, GetListNode)
 
 // Declares the member function FunctionName of Class to retrieve a pointer
-// to a Class instance from a list node pointer.   NodeMemberName references
+// to a Class instance from a list node pointer.  NodeMemberName references
 // the name of the IntrusiveListNode member of Class.
-#define PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(Class, NodeMemberName,  \
-                                                       FunctionName)           \
-  static Class* FunctionName(IntrusiveListNode* node) {                        \
-    Class* cls = nullptr;                                                      \
-    /* This effectively performs offsetof(Class, NodeMemberName) */            \
-    /* which ends up in the undefined behavior realm of C++ but in */          \
-    /* practice this works with most compilers. */                             \
-    return reinterpret_cast<Class*>(                                           \
-        reinterpret_cast<std::uint8_t*>(node) -                                \
-        reinterpret_cast<std::uint8_t*>(&cls->NodeMemberName));                \
-  }                                                                            \
-                                                                               \
-  static const Class* FunctionName(const IntrusiveListNode* node) {            \
-    return FunctionName(const_cast<IntrusiveListNode*>(node));                 \
+#define PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(Class, NodeMemberName, \
+                                                       FunctionName)          \
+  static Class* FunctionName(IntrusiveListNode* node) {                       \
+    Class* cls = nullptr;                                                     \
+    /* This effectively performs offsetof(Class, NodeMemberName) */           \
+    /* which ends up in the undefined behavior realm of C++ but in */         \
+    /* practice this works with most compilers. */                            \
+    return reinterpret_cast<Class*>(                                          \
+        reinterpret_cast<std::uint8_t*>(node) -                               \
+        reinterpret_cast<std::uint8_t*>(&cls->NodeMemberName));               \
+  }                                                                           \
+                                                                              \
+  static const Class* FunctionName(const IntrusiveListNode* node) {           \
+    return FunctionName(const_cast<IntrusiveListNode*>(node));                \
   }
 
 // Declares the member function GetInstanceFromListNode() of Class to retrieve
 // a pointer to a Class instance from a list node pointer.  NodeMemberName
 // reference the name of the IntrusiveListNode member of Class.
-#define PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS(Class, NodeMemberName)           \
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(Class, NodeMemberName,        \
+#define PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS(Class, NodeMemberName)    \
+  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(Class, NodeMemberName, \
                                                  GetInstanceFromListNode)
 
 // Declares the macro to iterate over a typed intrusive list.
-#define PINDROP_INTRUSIVE_LIST_NODE_ITERATOR(type, listptr, iteidentifier_,    \
-                                             statement) {                      \
-    type* terminator = (listptr).GetTerminator();                              \
-    for (type* iteidentifier_ = (listptr).GetNext();                           \
-         iteidentifier_ != terminator;                                         \
-         iteidentifier_ = iteidentifier_->GetNext()) {                         \
-      statement;                                                               \
-    }                                                                          \
+#define PINDROP_INTRUSIVE_LIST_NODE_ITERATOR(type, listptr, iteidentifier_, \
+                                             statement)                     \
+  {                                                                         \
+    type* terminator = (listptr).GetTerminator();                           \
+    for (type* iteidentifier_ = (listptr).GetNext();                        \
+         iteidentifier_ != terminator;                                      \
+         iteidentifier_ = iteidentifier_->GetNext()) {                      \
+      statement;                                                            \
+    }                                                                       \
   }
 
 // TypedIntrusiveListNode which supports inserting an object into a single

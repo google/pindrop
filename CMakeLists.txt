@@ -144,6 +144,7 @@ set(pindrop_SRCS
     src/audio_engine.cpp
     src/bus.cpp
     src/bus.h
+    src/intrusive_list.h
     src/main.cpp
     src/ref_counter.cpp
     src/ref_counter.h

@@ -21,12 +21,10 @@
 namespace pindrop {
 
 // Represents a sample that is playing on a channel.
-class PlayingSound : public TypedIntrusiveListNode<PlayingSound> {
+class PlayingSound {
  public:
   PlayingSound()
-      : TypedIntrusiveListNode<PlayingSound>(),
-        handle_(nullptr),
-        channel_id_(0) {}
+      : handle_(nullptr), channel_id_(0), priority_node_(), bus_node_() {}
 
   void Clear();
 
@@ -38,11 +36,23 @@ class PlayingSound : public TypedIntrusiveListNode<PlayingSound> {
   }
   AudioEngine::ChannelId channel_id() const { return channel_id_; }
 
+  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(priority_node_, priority_node);
+  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(PlayingSound, priority_node_,
+                                                 GetInstanceFromPriorityNode);
+
+  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(bus_node_, bus_node);
+  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(PlayingSound, bus_node_,
+                                                 GetInstanceFromBusNode);
+
  private:
   AudioEngine::SoundHandle handle_;
   AudioEngine::ChannelId channel_id_;
+
+  IntrusiveListNode priority_node_;
+  IntrusiveListNode bus_node_;
 };
 
 }  // namespace pindrop
 
 #endif  // PINDROP_PLAYING_SOUND_H_
+

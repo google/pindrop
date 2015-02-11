@@ -24,14 +24,16 @@ T Lerp(const T& range_start, const T& range_end, const T2& percent) {
   return range_start * one_minus_percent + range_end * percent;
 }
 
-Bus::Bus(const BusDef* bus_def)
-    : bus_def_(bus_def),
-      duck_gain_(1.0f),
-      sound_count_(0),
-      transition_percentage_(0.0f) {}
+void Bus::Initialize(const BusDef* bus_def) {
+  // Make sure we only initiliaze once.
+  assert(bus_def_ == nullptr);
+  bus_def_ = bus_def;
+  playing_sound_list_.Initialize();
+}
 
 void Bus::UpdateDuckGain(float delta_time) {
-  if (sound_count_ > 0 && transition_percentage_ <= 1.0f) {
+  bool playing = !playing_sound_list_.IsEmpty();
+  if (playing && transition_percentage_ <= 1.0f) {
     // Fading to duck gain.
     float fade_in_time = bus_def_->duck_fade_in_time();
     if (fade_in_time > 0) {
@@ -40,7 +42,7 @@ void Bus::UpdateDuckGain(float delta_time) {
     } else {
       transition_percentage_ = 1.0f;
     }
-  } else if (sound_count_ == 0 && transition_percentage_ >= 0.0f) {
+  } else if (!playing && transition_percentage_ >= 0.0f) {
     // Fading to standard gain.
     float fade_out_time = bus_def_->duck_fade_out_time();
     if (fade_out_time > 0) {
@@ -67,11 +69,5 @@ void Bus::UpdateGain(float parent_gain) {
   }
 }
 
-void Bus::IncrementSoundCounter() { ++sound_count_; }
-
-void Bus::DecrementSoundCounter() {
-  --sound_count_;
-  assert(sound_count_ >= 0);
-}
-
 }  // namespace pindrop
+

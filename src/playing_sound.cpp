@@ -17,25 +17,25 @@
 #include "bus.h"
 #include "pindrop/audio_engine.h"
 #include "sound_collection.h"
+#include "intrusive_list.h"
 
 namespace pindrop {
 
 void PlayingSound::Clear() {
-  if (handle_ && handle_->bus()) {
-    handle_->bus()->DecrementSoundCounter();
-    handle_ = nullptr;
-  }
-  Remove();
+  handle_ = nullptr;
+  priority_node_.Remove();
+  bus_node_.Remove();
 }
 
 void PlayingSound::SetHandle(AudioEngine::SoundHandle handle) {
   if (handle_ && handle_->bus()) {
-    handle_->bus()->DecrementSoundCounter();
+    bus_node_.Remove();
   }
   handle_ = handle;
   if (handle_ && handle_->bus()) {
-    handle_->bus()->IncrementSoundCounter();
+    handle_->bus()->playing_sound_list().InsertAfter(&bus_node_);
   }
 }
 
 }  // namespace pindrop
+

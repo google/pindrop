@@ -17,6 +17,12 @@
 
 #include <string>
 
+#define PINDROP_VERSION_MAJOR 1
+#define PINDROP_VERSION_MINOR 0
+#define PINDROP_VERSION_REVISION 0
+#define PINDROP_STRING_EXPAND(X) #X
+#define PINDROP_STRING(X) PINDROP_STRING_EXPAND(X)
+
 namespace pindrop {
 
 struct AudioConfig;
@@ -81,6 +87,18 @@ class AudioEngine {
  private:
   AudioEngineInternalState* state_;
 };
+
+// Weak linkage is culled by VS & doesn't work on cygwin.
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+
+extern volatile __attribute__((weak)) const char *pindrop_version_string;
+volatile __attribute__((weak)) const char *pindrop_version_string =
+  "pindrop "
+  PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
+  PINDROP_STRING(PINDROP_VERSION_MINOR) "."
+  PINDROP_STRING(PINDROP_VERSION_REVISION);
+
+#endif  // !defined(_WIN32) && !defined(__CYGWIN__)
 
 }  // namespace pindrop
 

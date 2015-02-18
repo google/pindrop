@@ -28,7 +28,19 @@
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
+#define PINDROP_VERSION_MAJOR 1
+#define PINDROP_VERSION_MINOR 0
+#define PINDROP_VERSION_REVISION 0
+#define PINDROP_STRING_EXPAND(X) #X
+#define PINDROP_STRING(X) PINDROP_STRING_EXPAND(X)
+
 namespace pindrop {
+
+static const char *kPindropVersionString =
+  "pindrop "
+  PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
+  PINDROP_STRING(PINDROP_VERSION_MINOR) "."
+  PINDROP_STRING(PINDROP_VERSION_REVISION);
 
 const int kChannelFadeOutRateMs = 10;
 
@@ -106,6 +118,7 @@ static void InitializeFreeList(
 bool AudioEngine::Initialize(const AudioConfig* config) {
   // Construct internals.
   state_ = new AudioEngineInternalState();
+  state_->version_string = kPindropVersionString;
 
   // Initialize audio engine.
   if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
@@ -412,6 +425,10 @@ void AudioEngine::AdvanceFrame(float delta_time) {
     PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
     SetChannelGain(sound->channel_id(), sound->handle()->bus()->gain());
   }
+}
+
+const char* AudioEngine::version_string() const {
+  return state_->version_string;
 }
 
 }  // namespace pindrop

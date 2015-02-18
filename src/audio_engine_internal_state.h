@@ -80,6 +80,8 @@ struct AudioEngineInternalState {
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;
+
+  const char* version_string;
 };
 
 // Find a bus with the given name.

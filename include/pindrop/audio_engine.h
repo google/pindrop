@@ -82,6 +82,8 @@ class AudioEngine {
   // Pauses all playing sounds and streams.
   void Pause(bool pause);
 
+  const char* version_string() const;
+
   AudioEngineInternalState* state() { return state_; }
 
  private:

@@ -16,6 +16,7 @@
 #define PINDROP_BUSES_H_
 
 #include <vector>
+
 #include "intrusive_list.h"
 
 namespace pindrop {

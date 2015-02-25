@@ -32,6 +32,9 @@ table AudioConfig {
 
   // Number of channels to allocate for mixing.
   mixer_channels:uint;
+
+  // The maximum number of listeners you need.
+  max_listeners:uint;
 }
 
 root_type AudioConfig;

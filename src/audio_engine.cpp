@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <map>
+#include <iostream>
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
@@ -23,7 +24,10 @@
 #include "audio_engine_internal_state.h"
 #include "bus.h"
 #include "buses_generated.h"
+#include "channel_internal_state.h"
 #include "intrusive_list.h"
+#include "listener_internal_state.h"
+#include "mathfu/constants.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
@@ -36,22 +40,13 @@
 
 namespace pindrop {
 
-static const char *kPindropVersionString =
-  "pindrop "
-  PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
-  PINDROP_STRING(PINDROP_VERSION_MINOR) "."
-  PINDROP_STRING(PINDROP_VERSION_REVISION);
-
-const int kChannelFadeOutRateMs = 10;
-
-// Special value for SDL_Mixer that indicates an operation should be applied to
-// all channels.
-const AudioEngine::ChannelId kAllChannels = -1;
-
-// Special value representing an audio stream.
-static const AudioEngine::ChannelId kStreamChannel = -100;
-
-const AudioEngine::ChannelId AudioEngine::kInvalidChannel = -1;
+// clang-format off
+static const char* kPindropVersionString =
+    "pindrop "
+    PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
+    PINDROP_STRING(PINDROP_VERSION_MINOR) "."
+    PINDROP_STRING(PINDROP_VERSION_REVISION);
+// clang-format on
 
 bool LoadFile(const char* filename, std::string* dest) {
   auto handle = SDL_RWFromFile(filename, "rb");
@@ -101,17 +96,27 @@ static bool PopulateBuses(AudioEngineInternalState* state,
   return true;
 }
 
-static void InitializeFreeList(
-    std::vector<PlayingSound*>* playing_sounds_free_list,
-    std::vector<PlayingSound>* playing_sounds, unsigned int list_size) {
+static void InitializeChannelFreeList(
+    std::vector<ChannelInternalState*>* channel_state_free_list,
+    std::vector<ChannelInternalState>* channels, unsigned int list_size) {
   // We do our own tracking of audio channels so that when a new sound is
   // played we can determine if one of the currently playing channels is lower
   // priority so that we can drop it.
-  playing_sounds->resize(list_size);
-  playing_sounds_free_list->reserve(list_size);
+  channels->resize(list_size);
+  channel_state_free_list->reserve(list_size);
   for (size_t i = 0; i < list_size; ++i) {
-    (*playing_sounds)[i].set_channel_id(static_cast<AudioEngine::ChannelId>(i));
-    playing_sounds_free_list->push_back(&(*playing_sounds)[i]);
+    (*channels)[i].set_channel_id(static_cast<ChannelId>(i));
+    channel_state_free_list->push_back(&(*channels)[i]);
+  }
+}
+
+static void InitializeListenerFreeList(
+    std::vector<ListenerInternalState*>* listener_state_free_list,
+    std::vector<ListenerInternalState>* listeners, unsigned int list_size) {
+  listeners->resize(list_size);
+  listener_state_free_list->reserve(list_size);
+  for (size_t i = 0; i < list_size; ++i) {
+    listener_state_free_list->push_back(&(*listeners)[i]);
   }
 }
 
@@ -134,10 +139,17 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error initializing Ogg support\n");
   }
 
-  // Number of sound that can be played simutaniously.
+  // Initialize the channel internal data.
   Mix_AllocateChannels(config->mixer_channels());
-  InitializeFreeList(&state_->playing_sounds_free_list,
-                     &state_->playing_sound_memory, config->mixer_channels());
+  InitializeChannelFreeList(&state_->channel_state_free_list,
+                            &state_->channel_state_memory,
+                            config->mixer_channels());
+  state_->stream_channel_state.set_channel_id(kStreamChannelId);
+
+  // Initialize the listener internal data.
+  InitializeListenerFreeList(&state_->listener_state_free_list,
+                             &state_->listener_state_memory,
+                             config->max_listeners());
 
   // Load the audio buses.
   if (!LoadFile("buses.bin", &state_->buses_source)) {
@@ -207,23 +219,8 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
   }
 }
 
-// Remove all sounds that are no longer playing.
-static void EraseFinishedSounds(AudioEngineInternalState* state) {
-  IntrusiveListNode& list = state->playing_sound_list;
-  IntrusiveListNode* next;
-  for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
-       node = next) {
-    next = node->GetNext();
-    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
-    if (!AudioEngine::Playing(sound->channel_id())) {
-      state->playing_sounds_free_list.push_back(sound);
-      sound->Clear();
-    }
-  }
-}
-
 static bool PlayCollection(const SoundCollection& collection,
-                           AudioEngine::ChannelId channel_id) {
+                           ChannelId channel_id) {
   SoundSource* source = collection.Select();
   const SoundCollectionDef& def = *collection.GetSoundCollectionDef();
   const float gain =
@@ -235,169 +232,179 @@ static bool PlayCollection(const SoundCollection& collection,
   return false;
 }
 
-bool AudioEngine::Playing(ChannelId channel_id) {
-  assert(channel_id != kInvalidChannel);
-  if (channel_id == kStreamChannel) {
-    return Mix_PlayingMusic() != 0;
-  } else {
-    return Mix_Playing(channel_id) != 0;
-  }
-}
-
-static void SetChannelGain(AudioEngine::ChannelId channel_id, float volume) {
-  assert(channel_id != AudioEngine::kInvalidChannel);
+static void SetChannelGain(ChannelId channel_id, float volume) {
+  assert(channel_id != kInvalidChannelId);
   int mix_volume = static_cast<int>(volume * MIX_MAX_VOLUME);
-  if (channel_id == kStreamChannel) {
+  if (channel_id == kStreamChannelId) {
     Mix_VolumeMusic(mix_volume);
   } else {
     Mix_Volume(channel_id, mix_volume);
   }
 }
 
-static AudioEngine::ChannelId PlayStream(AudioEngineInternalState* state,
-                                         SoundHandle sound_handle) {
-  state->playing_sound_stream.SetHandle(sound_handle);
-  if (!PlayCollection(*sound_handle, kStreamChannel)) {
-    state->playing_sound_stream.Clear();
-    return AudioEngine::kInvalidChannel;
+static ChannelInternalState* PlayStream(AudioEngineInternalState* state,
+                                        SoundHandle sound_handle, float gain) {
+  // TODO: Add prioritization by gain for streams, like we have for buffers.
+  (void)gain;
+  if (!PlayCollection(*sound_handle, kStreamChannelId)) {
+    state->stream_channel_state.Clear();
+    return nullptr;
   }
-  return kStreamChannel;
+  state->stream_channel_state.SetHandle(sound_handle);
+  return &state->stream_channel_state;
 }
 
-PlayingSound* FindInsertionPoint(IntrusiveListNode* list, float priority) {
+ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
+                                         float priority) {
   IntrusiveListNode* node;
   for (node = list->GetPrevious(); node != list->GetTerminator();
        node = node->GetPrevious()) {
-    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
-    float sound_priority = sound->handle()->GetSoundCollectionDef()->priority();
-    if (sound_priority >= priority) {
+    ChannelInternalState* channel =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    if (channel->Priority() >= priority) {
       break;
     }
   }
-  return PlayingSound::GetInstanceFromPriorityNode(node);
+  return ChannelInternalState::GetInstanceFromPriorityNode(node);
 }
 
-static PlayingSound* FindFreePlayingSound(
-    IntrusiveListNode* list, PlayingSound* insertion_point,
-    std::vector<PlayingSound*>& free_list) {
-  PlayingSound* new_sound = nullptr;
-  // Grab a free PlayingSound if there is one.
+static ChannelInternalState* FindFreeChannelInternalState(
+    IntrusiveListNode* list, ChannelInternalState* insertion_point,
+    std::vector<ChannelInternalState*>& free_list) {
+  ChannelInternalState* new_channel = nullptr;
+  // Grab a free ChannelInternalState if there is one.
   if (free_list.size()) {
-    new_sound = free_list.back();
+    new_channel = free_list.back();
     free_list.pop_back();
-    insertion_point->priority_node()->InsertAfter(new_sound->priority_node());
+    insertion_point->priority_node()->InsertAfter(new_channel->priority_node());
   } else if (insertion_point->priority_node() != list->GetTerminator()) {
     // If there are no free sounds, and the new sound is not the lowest priority
     // sound, evict the lowest priority sound.
     IntrusiveListNode* node = list->GetPrevious();
-    new_sound = PlayingSound::GetInstanceFromPriorityNode(node);
-    Mix_HaltChannel(new_sound->channel_id());
+    new_channel = ChannelInternalState::GetInstanceFromPriorityNode(node);
+    Mix_HaltChannel(new_channel->channel_id());
 
     // Move it to a new spot in the list if it needs to be moved.
     if (insertion_point->priority_node() != node) {
       insertion_point->priority_node()->InsertAfter(node->Remove());
     }
   }
-  return new_sound;
+  return new_channel;
 }
 
-static AudioEngine::ChannelId PlayBuffer(AudioEngineInternalState* state,
-                                         SoundHandle sound_handle) {
+static ChannelInternalState* PlayBuffer(AudioEngineInternalState* state,
+                                        SoundHandle sound_handle, float gain) {
   // Find where it belongs in the list.
-  PlayingSound* insertion_point =
-      FindInsertionPoint(&state->playing_sound_list,
-                         sound_handle->GetSoundCollectionDef()->priority());
+  float priority = gain * sound_handle->GetSoundCollectionDef()->priority();
+  ChannelInternalState* insertion_point =
+      FindInsertionPoint(&state->playing_channel_list, priority);
 
-  // Decide which PlayingSound object to use.
-  PlayingSound* new_sound =
-      FindFreePlayingSound(&state->playing_sound_list, insertion_point,
-                           state->playing_sounds_free_list);
+  // Decide which ChannelInternalState object to use.
+  ChannelInternalState* new_channel = FindFreeChannelInternalState(
+      &state->playing_channel_list, insertion_point,
+      state->channel_state_free_list);
 
   // The sound could not be added to the list; not high enough priority.
-  if (new_sound == nullptr) {
-    return AudioEngine::kInvalidChannel;
+  if (new_channel == nullptr) {
+    return nullptr;
   }
 
   // Now that we have our new sound, set the data on it and update the next
   // pointers.
-  new_sound->SetHandle(sound_handle);
+  new_channel->SetHandle(sound_handle);
 
   // Attempt to play the sound.
-  if (!PlayCollection(*sound_handle, new_sound->channel_id())) {
+  if (!PlayCollection(*sound_handle, new_channel->channel_id())) {
     // Error playing the sound, put it back in the free list.
-    state->playing_sounds_free_list.push_back(new_sound);
-    new_sound->Clear();
-    return AudioEngine::kInvalidChannel;
+    state->channel_state_free_list.push_back(new_channel);
+    new_channel->Clear();
+    return nullptr;
   }
-
-  return new_sound->channel_id();
+  return new_channel;
 }
 
-AudioEngine::ChannelId AudioEngine::PlaySound(SoundHandle sound_handle) {
+Channel AudioEngine::PlaySound(SoundHandle sound_handle) {
+  return PlaySound(sound_handle, mathfu::kZeros3f);
+}
+
+Channel AudioEngine::PlaySound(SoundHandle sound_handle,
+                               const mathfu::Vector<float, 3>& location) {
   SoundCollection* collection = sound_handle;
   if (!collection) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                  "Cannot play sound: invalid sound handle\n");
-    return kInvalidChannel;
+    return Channel(nullptr);
   }
   bool stream = collection->GetSoundCollectionDef()->stream() != 0;
+  float channel_gain = CalculateGain(
+      state_->listener_list, sound_handle->GetSoundCollectionDef(), location);
+  float bus_gain = sound_handle->bus()->gain();
+  float final_gain = channel_gain * bus_gain;
+  ChannelInternalState* new_channel;
   if (stream) {
-    return PlayStream(state_, sound_handle);
+    new_channel = PlayStream(state_, sound_handle, final_gain);
   } else {
-    return PlayBuffer(state_, sound_handle);
+    new_channel = PlayBuffer(state_, sound_handle, final_gain);
   }
+  if (new_channel) {
+    new_channel->set_gain(final_gain);
+    SetChannelGain(new_channel->channel_id(), new_channel->gain());
+  }
+  return Channel(new_channel);
 }
 
-AudioEngine::ChannelId AudioEngine::PlaySound(const std::string& sound_name) {
+Channel AudioEngine::PlaySound(const std::string& sound_name,
+                               const mathfu::Vector<float, 3>& location) {
   SoundHandle handle = GetSoundHandle(sound_name);
   if (handle) {
-    return PlaySound(handle);
+    return PlaySound(handle, location);
   } else {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                  "Cannot play sound: invalid name (%s)\n", sound_name.c_str());
-    return kInvalidChannel;
+    return Channel(nullptr);
   }
 }
 
-AudioEngine::SoundHandle AudioEngine::GetSoundHandle(
-    const std::string& sound_name) const {
+Channel AudioEngine::PlaySound(const std::string& sound_name) {
+  return PlaySound(sound_name, mathfu::kZeros3f);
+}
+
+SoundHandle AudioEngine::GetSoundHandle(const std::string& sound_name) const {
   auto iter = state_->sound_collection_map.find(sound_name);
-  if (iter != state_->sound_collection_map.end()) {
-    return iter->second.get();
-  } else {
+  if (iter == state_->sound_collection_map.end()) {
     return nullptr;
   }
+  return iter->second.get();
 }
 
-AudioEngine::SoundHandle AudioEngine::GetSoundHandleFromFile(
+SoundHandle AudioEngine::GetSoundHandleFromFile(
     const std::string& filename) const {
   auto iter = state_->sound_id_map.find(filename);
-  if (iter != state_->sound_id_map.end()) {
-    return GetSoundHandle(iter->second);
-  } else {
+  if (iter == state_->sound_id_map.end()) {
     return nullptr;
   }
+  return GetSoundHandle(iter->second);
 }
 
-void AudioEngine::Stop(ChannelId channel_id) {
-  assert(channel_id != kInvalidChannel);
-  // Fade out rather than halting to avoid clicks.
-  if (channel_id == kStreamChannel) {
-    int return_value = Mix_FadeOutMusic(kChannelFadeOutRateMs);
-    if (return_value != 0) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping music: %s\n",
-                   Mix_GetError());
-    }
-  } else {
-    int return_value = Mix_FadeOutChannel(channel_id, kChannelFadeOutRateMs);
-    if (return_value != 0) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping channel %d: %s\n",
-                   channel_id, Mix_GetError());
-    }
+Listener AudioEngine::AddListener() {
+  if (state_->listener_state_free_list.empty()) {
+    return Listener(nullptr);
   }
+  ListenerInternalState* listener = state_->listener_state_free_list.back();
+  state_->listener_state_free_list.pop_back();
+  return Listener(listener);
+}
+
+void AudioEngine::RemoveListener(Listener* listener) {
+  assert(listener->Valid() && listener->state()->InList());
+  listener->state()->Remove();
+  state_->listener_state_free_list.push_back(listener->state());
 }
 
 void AudioEngine::Pause(bool pause) {
+  // Special value for SDL_Mixer that indicates an operation should be applied
+  // to all channels.
+  const ChannelId kAllChannels = -1;
   if (pause) {
     Mix_Pause(kAllChannels);
     Mix_PauseMusic();
@@ -407,9 +414,99 @@ void AudioEngine::Pause(bool pause) {
   }
 }
 
+static void EraseFinishedSounds(AudioEngine* engine) {
+  AudioEngineInternalState* state = engine->state();
+  IntrusiveListNode& list = state->playing_channel_list;
+  IntrusiveListNode* next;
+  for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
+       node = next) {
+    next = node->GetNext();
+    ChannelInternalState* channel_state =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    Channel channel(channel_state);
+    if (!channel.Playing()) {
+      state->channel_state_free_list.push_back(channel_state);
+      channel_state->Clear();
+    }
+  }
+}
+
+float BestListener(ListenerInternalState** best_listener,
+                   TypedIntrusiveListNode<ListenerInternalState>& listeners,
+                   const mathfu::Vector<float, 3>& location) {
+  assert(!listeners.IsEmpty());
+
+  ListenerInternalState* listener = listeners.GetNext();
+  mathfu::Vector<float, 3> delta = listener->location() - location;
+  float distance_squared = delta.LengthSquared();
+  *best_listener = listener;
+
+  for (listener = listener->GetNext(); listener != listeners.GetTerminator();
+       listener = listener->GetNext()) {
+    delta = listener->location() - location;
+    float delta_magnitude = delta.LengthSquared();
+    if (delta_magnitude < distance_squared) {
+      *best_listener = listener;
+      distance_squared = delta_magnitude;
+    }
+  }
+  return distance_squared;
+}
+
+inline float Square(float f) { return f * f; }
+
+float AttenuationCurve(float point, float lower_bound, float upper_bound,
+                       float curve_factor) {
+  assert(lower_bound <= point && point <= upper_bound && curve_factor >= 0.0f);
+  float distance = point - lower_bound;
+  float range = upper_bound - lower_bound;
+  return distance / ((range - distance) * (curve_factor - 1.0f) + range);
+}
+
+float CalculatePositionalAttenuation(float distance_squared,
+                                     const SoundCollectionDef* def) {
+  if (distance_squared < Square(def->min_audible_radius()) ||
+      distance_squared > Square(def->max_audible_radius())) {
+    return 0.0f;
+  }
+  float distance = std::sqrt(distance_squared);
+  if (distance < def->roll_in_radius()) {
+    return AttenuationCurve(distance, def->min_audible_radius(),
+                            def->roll_in_radius(), def->roll_in_curve_factor());
+  } else if (distance > def->roll_out_radius()) {
+    return 1.0f - AttenuationCurve(distance, def->roll_out_radius(),
+                                   def->max_audible_radius(),
+                                   def->roll_out_curve_factor());
+  } else {
+    return 1.0f;
+  }
+}
+
+float CalculateGain(TypedIntrusiveListNode<ListenerInternalState>& listeners,
+                    const SoundCollectionDef* def,
+                    const mathfu::Vector<float, 3>& location) {
+  if (def->mode() == Mode_Nonpositional || listeners.IsEmpty()) {
+    return def->gain();
+  } else {
+    ListenerInternalState* listener;
+    float distance_squared = BestListener(&listener, listeners, location);
+    return def->gain() * CalculatePositionalAttenuation(distance_squared, def);
+  }
+}
+
+static void UpdateChannel(ChannelInternalState* channel,
+                          AudioEngineInternalState* state) {
+  float channel_gain = CalculateGain(state->listener_list,
+                                     channel->handle()->GetSoundCollectionDef(),
+                                     channel->location());
+  float bus_gain = channel->handle()->bus()->gain();
+  channel->set_gain(channel_gain * bus_gain);
+  SetChannelGain(channel->channel_id(), channel->gain());
+}
+
 void AudioEngine::AdvanceFrame(float delta_time) {
   ++state_->current_frame;
-  EraseFinishedSounds(state_);
+  EraseFinishedSounds(this);
   for (size_t i = 0; i < state_->buses.size(); ++i) {
     state_->buses[i].ResetDuckGain();
   }
@@ -419,12 +516,21 @@ void AudioEngine::AdvanceFrame(float delta_time) {
   if (state_->master_bus) {
     state_->master_bus->UpdateGain(state_->mute ? 0.0f : state_->master_gain);
   }
-  IntrusiveListNode& list = state_->playing_sound_list;
+  IntrusiveListNode& list = state_->playing_channel_list;
   for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
        node = node->GetNext()) {
-    PlayingSound* sound = PlayingSound::GetInstanceFromPriorityNode(node);
-    SetChannelGain(sound->channel_id(), sound->handle()->bus()->gain());
+    ChannelInternalState* channel =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    UpdateChannel(channel, state_);
   }
+  UpdateChannel(&state_->stream_channel_state, state_);
+  list.Sort([](const IntrusiveListNode& a, const IntrusiveListNode& b) -> bool {
+    const ChannelInternalState* channel_a =
+        ChannelInternalState::GetInstanceFromPriorityNode(&a);
+    const ChannelInternalState* channel_b =
+        ChannelInternalState::GetInstanceFromPriorityNode(&b);
+    return channel_a->Priority() < channel_b->Priority();
+  });
 }
 
 const char* AudioEngine::version_string() const {
@@ -432,3 +538,4 @@ const char* AudioEngine::version_string() const {
 }
 
 }  // namespace pindrop
+

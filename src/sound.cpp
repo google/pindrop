@@ -35,10 +35,9 @@ bool SoundBuffer::LoadFile(const char* filename) {
   return data_ != nullptr;
 }
 
-bool SoundBuffer::Play(AudioEngine::ChannelId channel_id, bool loop) {
+bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   int loops = loop ? kLoopForever : kPlayOnce;
-  if (Mix_PlayChannel(channel_id, data_, loops) ==
-      AudioEngine::kInvalidChannel) {
+  if (Mix_PlayChannel(channel_id, data_, loops) == kInvalidChannelId) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't play sound: %s\n",
                  Mix_GetError());
     return false;
@@ -46,7 +45,7 @@ bool SoundBuffer::Play(AudioEngine::ChannelId channel_id, bool loop) {
   return true;
 }
 
-void SoundBuffer::SetGain(AudioEngine::ChannelId channel_id, float gain) {
+void SoundBuffer::SetGain(ChannelId channel_id, float gain) {
   Mix_Volume(channel_id,
              static_cast<int>(gain * static_cast<float>(MIX_MAX_VOLUME)));
 }
@@ -62,7 +61,7 @@ bool SoundStream::LoadFile(const char* filename) {
   return data_ != nullptr;
 }
 
-bool SoundStream::Play(AudioEngine::ChannelId channel_id, bool loop) {
+bool SoundStream::Play(ChannelId channel_id, bool loop) {
   (void)channel_id;  // SDL_mixer does not currently support
                      // more than one channel of streaming audio.
   int loops = loop ? kLoopForever : kPlayOnce;
@@ -74,7 +73,7 @@ bool SoundStream::Play(AudioEngine::ChannelId channel_id, bool loop) {
   return true;
 }
 
-void SoundStream::SetGain(AudioEngine::ChannelId channel_id, float gain) {
+void SoundStream::SetGain(ChannelId channel_id, float gain) {
   (void)channel_id;
   Mix_VolumeMusic(static_cast<int>(gain * static_cast<float>(MIX_MAX_VOLUME)));
 }

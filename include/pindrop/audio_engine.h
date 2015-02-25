@@ -16,6 +16,8 @@
 #define PINDROP_AUDIO_ENGINE_H_
 
 #include <string>
+#include <vector>
+#include "mathfu/vector_3.h"
 
 #define PINDROP_VERSION_MAJOR 1
 #define PINDROP_VERSION_MINOR 0
@@ -25,18 +27,55 @@
 
 namespace pindrop {
 
+class Channel;
+class ChannelInternalState;
+class ListenerInternalState;
+class SoundCollection;
 struct AudioConfig;
 struct AudioEngineInternalState;
-class SoundCollection;
+
+typedef SoundCollection* SoundHandle;
+typedef size_t ListenerId;
+
+extern const Channel kInvalidChannel;
+
+class Listener {
+ public:
+  Listener(ListenerInternalState* state) : state_(state) {}
+
+  bool Valid() const;
+
+  mathfu::Vector<float, 3> location() const;
+  void set_location(const mathfu::Vector<float, 3>& location);
+
+  ListenerInternalState* state() { return state_; }
+
+ private:
+  ListenerInternalState* state_;
+};
+
+class Channel {
+ public:
+  Channel(ChannelInternalState* state) : state_(state) {}
+
+  bool valid() const { return state_ != nullptr; }
+
+  // Checks if the sound playing on a given channel is playing
+  bool Playing() const;
+
+  // Stop a channel.
+  void Stop();
+
+  // Sets or gets the location of a playing sound.
+  const mathfu::Vector<float, 3> location() const;
+  void set_location(const mathfu::Vector<float, 3>& location);
+
+ private:
+  ChannelInternalState* state_;
+};
 
 class AudioEngine {
  public:
-  typedef int ChannelId;
-
-  static const ChannelId kInvalidChannel;
-
-  typedef SoundCollection* SoundHandle;
-
   AudioEngine() : state_(nullptr) {}
   ~AudioEngine();
 
@@ -58,19 +97,6 @@ class AudioEngine {
   // Get a SoundHandle given its filename.
   SoundHandle GetSoundHandleFromFile(const std::string& filename) const;
 
-  // Play a sound associated with the given sound_handle.
-  // Returns the channel the sound is played on.
-  // Playing a SoundHandle is faster while passing the sound by sound_id incurs
-  // a map lookup.
-  ChannelId PlaySound(SoundHandle sound_handle);
-  ChannelId PlaySound(const std::string& sound_id);
-
-  // Checks if the sound playing on a given channel is playing
-  static bool Playing(ChannelId channel_id);
-
-  // Stop a channel.
-  void Stop(ChannelId channel_id);
-
   // Adjusts the gain on the master bus.
   void set_master_gain(float master_gain);
   float master_gain();
@@ -82,6 +108,20 @@ class AudioEngine {
   // Pauses all playing sounds and streams.
   void Pause(bool pause);
 
+  Listener AddListener();
+  void RemoveListener(Listener* listener);
+
+  // Play a sound associated with the given sound_handle.
+  // Returns the channel the sound is played on.
+  // Playing a SoundHandle is faster while passing the sound by sound_id incurs
+  // a map lookup.
+  Channel PlaySound(SoundHandle sound_handle);
+  Channel PlaySound(SoundHandle sound_handle,
+                    const mathfu::Vector<float, 3>& location);
+  Channel PlaySound(const std::string& sound_id);
+  Channel PlaySound(const std::string& sound_id,
+                    const mathfu::Vector<float, 3>& location);
+
   const char* version_string() const;
 
   AudioEngineInternalState* state() { return state_; }
@@ -89,18 +129,6 @@ class AudioEngine {
  private:
   AudioEngineInternalState* state_;
 };
-
-// Weak linkage is culled by VS & doesn't work on cygwin.
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-
-extern volatile __attribute__((weak)) const char *pindrop_version_string;
-volatile __attribute__((weak)) const char *pindrop_version_string =
-  "pindrop "
-  PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
-  PINDROP_STRING(PINDROP_VERSION_MINOR) "."
-  PINDROP_STRING(PINDROP_VERSION_REVISION);
-
-#endif  // !defined(_WIN32) && !defined(__CYGWIN__)
 
 }  // namespace pindrop
 

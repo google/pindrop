@@ -24,8 +24,7 @@ namespace pindrop {
 static bool InitializeSoundCollection(const std::string& filename,
                                       AudioEngine* audio_engine) {
   // Find the ID.
-  AudioEngine::SoundHandle handle =
-      audio_engine->GetSoundHandleFromFile(filename);
+  SoundHandle handle = audio_engine->GetSoundHandleFromFile(filename);
   if (handle) {
     // We've seen this ID before, update it.
     handle->ref_counter()->Increment();

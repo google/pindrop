@@ -16,6 +16,7 @@
 #define PINDROP_SOUND_H_
 
 #include "pindrop/audio_engine.h"
+#include "channel_internal_state.h"
 
 struct Mix_Chunk;
 typedef struct _Mix_Music Mix_Music;
@@ -35,10 +36,10 @@ class SoundSource {
   virtual bool LoadFile(const char* filename) = 0;
 
   // Play this sound on the given channel, and loop if necessary.
-  virtual bool Play(AudioEngine::ChannelId channel_id, bool loop) = 0;
+  virtual bool Play(ChannelId channel_id, bool loop) = 0;
 
   // Set the gain of the given channel.
-  virtual void SetGain(AudioEngine::ChannelId channel_id, float gain) = 0;
+  virtual void SetGain(ChannelId channel_id, float gain) = 0;
 
   const AudioSampleSetEntry& audio_sample_set_entry() {
     return *audio_sample_set_entry_;
@@ -57,9 +58,9 @@ class SoundBuffer : public SoundSource {
 
   virtual bool LoadFile(const char* filename);
 
-  virtual bool Play(AudioEngine::ChannelId channel_id, bool loop);
+  virtual bool Play(ChannelId channel_id, bool loop);
 
-  virtual void SetGain(AudioEngine::ChannelId channel_id, float gain);
+  virtual void SetGain(ChannelId channel_id, float gain);
 
  private:
   Mix_Chunk* data_;
@@ -74,9 +75,9 @@ class SoundStream : public SoundSource {
 
   virtual bool LoadFile(const char* filename);
 
-  virtual bool Play(AudioEngine::ChannelId channel_id, bool loop);
+  virtual bool Play(ChannelId channel_id, bool loop);
 
-  virtual void SetGain(AudioEngine::ChannelId channel_id, float gain);
+  virtual void SetGain(ChannelId channel_id, float gain);
 
  private:
   Mix_Music* data_;

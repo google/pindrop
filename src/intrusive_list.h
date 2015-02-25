@@ -15,8 +15,8 @@
 #ifndef PINDROP_INTRUSIVE_LIST_H_
 #define PINDROP_INTRUSIVE_LIST_H_
 
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
 namespace pindrop {
 
@@ -95,6 +95,25 @@ class IntrusiveListNode {
     node->prev_ = prev_;
     prev_->next_ = node;
     prev_ = node;
+  }
+
+  template <class Comparitor>
+  void Sort(Comparitor comparitor) {
+    // Sort using insertion sort.
+    // http://en.wikipedia.org/wiki/Insertion_sort
+    IntrusiveListNode* next;
+    for (IntrusiveListNode* i = GetNext()->GetNext(); i != GetTerminator();
+         i = next) {
+      // Cache the `next` node because `i` might move.
+      next = i->GetNext();
+      IntrusiveListNode* j = i;
+      while (j != GetNext() && comparitor(*i, *j->GetPrevious())) {
+        j = j->GetPrevious();
+      }
+      if (i != j) {
+        j->InsertBefore(i->Remove());
+      }
+    }
   }
 
   // Get the terminator of the list.
@@ -267,6 +286,24 @@ class TypedIntrusiveListNode {
   void InsertBefore(T* const obj) {
     assert(obj);
     GetListNode()->InsertBefore(obj->GetListNode());
+  }
+
+  template <class Comparitor>
+  void Sort(Comparitor comparitor) {
+    // Sort using insertion sort.
+    // http://en.wikipedia.org/wiki/Insertion_sort
+    T* next;
+    for (T* i = GetNext()->GetNext(); i != GetTerminator(); i = next) {
+      // Cache the `next` node because `i` might move.
+      next = i->GetNext();
+      T* j = i;
+      while (j != GetNext() && comparitor(*i, *j->GetPrevious())) {
+        j = j->GetPrevious();
+      }
+      if (i != j) {
+        j->InsertBefore(i->Remove());
+      }
+    }
   }
 
   // Get the next object in the list.

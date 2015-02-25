@@ -19,9 +19,9 @@
 #include <map>
 
 #include "SDL_log.h"
-#include "pindrop/audio_engine.h"
 #include "bus.h"
-#include "playing_sound.h"
+#include "channel_internal_state.h"
+#include "pindrop/audio_engine.h"
 #include "sound.h"
 #include "sound_bank.h"
 #include "sound_collection.h"
@@ -71,12 +71,17 @@ struct AudioEngineInternalState {
   SoundBankMap sound_bank_map;
 
   // A list of the currently playing sounds.
-  IntrusiveListNode playing_sound_list;
-  std::vector<PlayingSound> playing_sound_memory;
-  std::vector<PlayingSound*> playing_sounds_free_list;
+  IntrusiveListNode playing_channel_list;
+  std::vector<ChannelInternalState> channel_state_memory;
+  std::vector<ChannelInternalState*> channel_state_free_list;
+
+  // The list of listeners.
+  TypedIntrusiveListNode<ListenerInternalState> listener_list;
+  std::vector<ListenerInternalState> listener_state_memory;
+  std::vector<ListenerInternalState*> listener_state_free_list;
 
   // We only ever play one stream, so store that separately.
-  PlayingSound playing_sound_stream;
+  ChannelInternalState stream_channel_state;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;
@@ -89,7 +94,39 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 
 // Given a playing sound, find where a new sound with the given priority should
 // be inserted into the list.
-PlayingSound* FindInsertionPoint(IntrusiveListNode* list, float priority);
+ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
+                                         float priority);
+
+// Given a list of listener and a location, find which listener is closest.
+// Additionally, return the square of the distance between the closest listener
+// and the location.
+float BestListener(ListenerInternalState** best_listener,
+                   TypedIntrusiveListNode<ListenerInternalState>& listeners,
+                   const mathfu::Vector<float, 3>& location);
+
+// This will take a point between lower_bound and upper_bound and use it to
+// calculate an attenuation multiplier. The curve_factor can be adjusted based
+// on how rapidly the attenuation should change with distance.
+//
+// A curve_factor of 1.0 means the attenuation will adjust linearly with
+// distance.
+//
+// A curve_factor greater than 1.0 means the attenuation will change gently at
+// first, then rapidly approach its target.
+//
+// A fractional curve_factor between 0.0 and 1.0 means the attenuation will
+// change rapidly at first, then gently approach its target.
+float AttenuationCurve(float point, float lower_bound, float upper_bound,
+                       float curve_factor);
+
+// Determine whether the sound can be heard at all. If it can, apply the roll
+// in gain, roll out gain, or norminal gain appropriately.
+float CalculatePositionalAttenuation(float distance_squared,
+                                     const SoundCollectionDef* def);
+
+float CalculateGain(TypedIntrusiveListNode<ListenerInternalState>& listeners,
+                    const SoundCollectionDef* def,
+                    const mathfu::Vector<float, 3>& location);
 
 bool LoadFile(const char* filename, std::string* dest);
 

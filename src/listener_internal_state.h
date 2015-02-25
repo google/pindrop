@@ -12,39 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_SOUND_BANK_H_
-#define PINDROP_SOUND_BANK_H_
-
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "ref_counter.h"
-#include "sound_collection.h"
+#include "intrusive_list.h"
+#include "mathfu/constants.h"
+#include "mathfu/vector_3.h"
 
 namespace pindrop {
 
-struct SoundBankDef;
-
-typedef int SoundId;
-
-class AudioEngine;
-
-class SoundBank {
+class ListenerInternalState
+    : public TypedIntrusiveListNode<ListenerInternalState> {
  public:
-  bool Initialize(const std::string& filename, AudioEngine* audio_engine);
+  ListenerInternalState() : location_(mathfu::kZeros3f) {}
 
-  void Deinitialize(AudioEngine* audio_engine);
-
-  RefCounter* ref_counter() { return &ref_counter_; }
+  mathfu::Vector<float, 3> location() const {
+    return mathfu::Vector<float, 3>(location_);
+  }
+  void set_location(const mathfu::Vector<float, 3>& location) {
+    location_ = location;
+  }
 
  private:
-  RefCounter ref_counter_;
-  std::string sound_bank_def_source_;
-  const SoundBankDef* sound_bank_def_;
+  mathfu::VectorPacked<float, 3> location_;
 };
 
 }  // namespace pindrop
 
-#endif  // PINDROP_SOUND_BANK_H_

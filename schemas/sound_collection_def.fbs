@@ -14,6 +14,14 @@
 
 namespace pindrop;
 
+// Nonpositional sounds are always played at their regular gain.
+// Positional sounds have their gain adjusted based on the distance to a
+// listener.
+enum Mode : byte {
+  Nonpositional,
+  Positional
+}
+
 // Reference to audio data (a sample) and basic attributes that affect its
 // playback at runtime.
 table AudioSample {
@@ -63,6 +71,38 @@ table SoundCollectionDef {
   // Whether this sound should be streamed or loaded into a buffer.
   // Generally music is streamed and sound effects are loaded into a buffer.
   stream:bool = false;
+
+  // Whether this sound should grow louder or quieter based on distance.
+  // Nonpositional sounds are always played at their regular gain.
+  // Positional sounds have their gain adjusted based on the distance to a
+  // listener.
+  mode:Mode = Nonpositional;
+
+  // The minimum or maximum distance from which this sound can be heard. This
+  // only applies to spatial sounds.
+  min_audible_radius:float = 0.0;
+  max_audible_radius:float = 0.0;
+
+  // When the distance between the listener and the sound source is between the
+  // min_audible_radius and the roll_in_radius or between the roll_out_radius
+  // and the max_audbile_radius attenuation will be applied based on the
+  // distance.
+  roll_in_radius:float = 0.0;
+  roll_out_radius:float = 0.0;
+
+  // The curve factor can be adjusted based on how rapidly the attenuation
+  // should change with distance.
+  //
+  // A curve factor of 1.0 means the attenuation will adjust linearly with
+  // distance.
+  //
+  // A curve factor greater than 1.0 means the attenuation will change gently
+  // at first, then rapidly approach its target.
+  //
+  // A fractional curve factor between 0.0 and 1.0 means the attenuation will
+  // change rapidly at first, then gently approach its target.
+  roll_in_curve_factor:float = 2.0;
+  roll_out_curve_factor:float = 0.5;
 }
 
 root_type SoundCollectionDef;

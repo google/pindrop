@@ -45,6 +45,8 @@ set(dependencies_gtest_dir "${fpl_root}/googletest"
     CACHE PATH "Directory containing the GoogleTest library.")
 set(dependencies_flatbuffers_dir "${fpl_root}/flatbuffers"
     CACHE PATH "Directory containing the Flatbuffers library.")
+set(dependencies_mathfu_dir "${fpl_root}/mathfu"
+    CACHE PATH "Directory containing the MathFu library.")
 set(dependencies_sdl_dir "${third_party_root}/sdl"
     CACHE PATH "Directory containing the SDL library.")
 set(dependencies_libogg_cmake_dir "${CMAKE_MODULE_PATH}/libogg"
@@ -102,6 +104,11 @@ if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 
+# Include MathFu in this project with test and benchmark builds disabled.
+set(mathfu_build_benchmarks OFF CACHE BOOL "")
+set(mathfu_build_tests OFF CACHE BOOL "")
+add_subdirectory(${dependencies_mathfu_dir} ${tmp_dir}/mathfu)
+
 # Include FlatBuffers in this project.
 set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
 if(NOT TARGET flatc)
@@ -144,12 +151,15 @@ set(pindrop_SRCS
     src/audio_engine.cpp
     src/bus.cpp
     src/bus.h
+    src/channel.cpp
+    src/channel_internal_state.cpp
+    src/channel_internal_state.h
     src/intrusive_list.h
+    src/listener.cpp
+    src/listener_internal_state.h
     src/main.cpp
     src/ref_counter.cpp
     src/ref_counter.h
-    src/playing_sound.cpp
-    src/playing_sound.h
     src/sound.cpp
     src/sound.h
     src/sound_bank.cpp
@@ -212,14 +222,10 @@ endif()
 
 # Executable target.
 add_library(pindrop ${pindrop_SRCS})
+mathfu_configure_flags(pindrop)
 
 # Dependencies for the executable target.
 add_dependencies(pindrop pindrop_generated_includes assets)
-# target_link_libraries(pindrop
-#   ${SDL_LIBRARIES}
-#   sdl_mixer
-#   libvorbis
-#   libogg)
 
 # gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
 # everything else.
@@ -253,14 +259,14 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests)
     set(SDL_LIBRARIES SDL2main;${SDL_LIBRARIES})
   endif()
 
-  set(COMMON_TEST_LIBS "gtest;pindrop;${SDL_LIBRARIES}")
-
-  function(test_executable name)
+  function(test_executable name libs)
     cxx_executable_with_flags(${name}_test "${cxx_default}"
-        "${COMMON_TEST_LIBS}" ${CMAKE_CURRENT_SOURCE_DIR}/src/${name}_test.cpp
+        "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/src/${name}_test.cpp
         ${ARGN})
+    mathfu_configure_flags(${name}_test)
   endfunction()
 
-  test_executable(audio_engine)
+  test_executable(audio_engine "gtest;pindrop;${SDL_LIBRARIES}")
+  test_executable(intrusive_list "gtest")
 endif()
 

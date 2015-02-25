@@ -20,13 +20,14 @@
 #include <vector>
 
 #include "ref_counter.h"
+#include "sound.h"
 
 namespace pindrop {
 
-struct SoundCollectionDef;
+class Bus;
 class SoundSource;
 struct AudioEngineInternalState;
-class Bus;
+struct SoundCollectionDef;
 
 // SoundCollection represent an abstract sound (like a 'whoosh'), which contains
 // a number of pieces of audio with weighted probabilities to choose between
@@ -34,6 +35,13 @@ class Bus;
 // Sounds or Music
 class SoundCollection {
  public:
+  SoundCollection()
+      : bus_(nullptr),
+        source_(),
+        sound_sources_(),
+        sum_of_probabilities_(0.0f),
+        ref_counter_() {}
+
   // Load the given flatbuffer data representing a SoundCollectionDef.
   bool LoadSoundCollectionDef(const std::string& source,
                               AudioEngineInternalState* state);

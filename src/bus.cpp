@@ -15,14 +15,9 @@
 #include "bus.h"
 
 #include "buses_generated.h"
+#include "mathfu/utilities.h"
 
 namespace pindrop {
-
-template <class T, class T2>
-T Lerp(const T& range_start, const T& range_end, const T2& percent) {
-  const T2 one_minus_percent = static_cast<T2>(1.0) - percent;
-  return range_start * one_minus_percent + range_end * percent;
-}
 
 void Bus::Initialize(const BusDef* bus_def) {
   // Make sure we only initiliaze once.
@@ -52,7 +47,8 @@ void Bus::UpdateDuckGain(float delta_time) {
       transition_percentage_ = 0.0f;
     }
   }
-  float duck_gain = Lerp(1.0f, bus_def_->duck_gain(), transition_percentage_);
+  float duck_gain =
+      mathfu::Lerp(1.0f, bus_def_->duck_gain(), transition_percentage_);
   for (size_t i = 0; i < duck_buses_.size(); ++i) {
     Bus* bus = duck_buses_[i];
     bus->duck_gain_ = std::min(duck_gain, bus->duck_gain_);

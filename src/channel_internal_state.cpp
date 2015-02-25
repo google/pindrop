@@ -12,39 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_SOUND_BANK_H_
-#define PINDROP_SOUND_BANK_H_
+#include "channel_internal_state.h"
 
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "ref_counter.h"
+#include "bus.h"
+#include "intrusive_list.h"
+#include "pindrop/audio_engine.h"
 #include "sound_collection.h"
+#include "sound_collection_def_generated.h"
 
 namespace pindrop {
 
-struct SoundBankDef;
+void ChannelInternalState::Clear() {
+  handle_ = nullptr;
+  priority_node_.Remove();
+  bus_node_.Remove();
+}
 
-typedef int SoundId;
+void ChannelInternalState::SetHandle(SoundHandle handle) {
+  if (handle_ && handle_->bus()) {
+    bus_node_.Remove();
+  }
+  handle_ = handle;
+  if (handle_ && handle_->bus()) {
+    handle_->bus()->playing_sound_list().InsertAfter(&bus_node_);
+  }
+}
 
-class AudioEngine;
-
-class SoundBank {
- public:
-  bool Initialize(const std::string& filename, AudioEngine* audio_engine);
-
-  void Deinitialize(AudioEngine* audio_engine);
-
-  RefCounter* ref_counter() { return &ref_counter_; }
-
- private:
-  RefCounter ref_counter_;
-  std::string sound_bank_def_source_;
-  const SoundBankDef* sound_bank_def_;
-};
+float ChannelInternalState::Priority() const {
+  assert(handle_);
+  return gain_ * handle_->GetSoundCollectionDef()->priority();
+}
 
 }  // namespace pindrop
 
-#endif  // PINDROP_SOUND_BANK_H_

@@ -19,9 +19,6 @@
 namespace pindrop {
 
 int RefCounter::Increment() {
-  // TODO(amablue): b/18809543
-  // Track the code locations that are responsible for holding a reference to
-  // the object
   return ++count_;
 }
 

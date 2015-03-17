@@ -19,7 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := pindrop
 LOCAL_ARM_MODE := arm
 LOCAL_STATIC_LIBRARIES :=
-LOCAL_SHARED_LIBRARIES := SDL2 SDL2_mixer
+LOCAL_SHARED_LIBRARIES := libmathfu SDL2 SDL2_mixer
 
 PINDROP_RELATIVE_DIR := ..
 PINDROP_DIR := $(LOCAL_PATH)/$(PINDROP_RELATIVE_DIR)
@@ -44,7 +44,10 @@ LOCAL_C_INCLUDES := \
 LOCAL_SRC_FILES := \
   $(PINDROP_RELATIVE_DIR)/src/audio_engine.cpp \
   $(PINDROP_RELATIVE_DIR)/src/bus.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/playing_sound.cpp \
+  $(PINDROP_RELATIVE_DIR)/src/channel.cpp \
+  $(PINDROP_RELATIVE_DIR)/src/channel_internal_state.cpp \
+  $(PINDROP_RELATIVE_DIR)/src/listener.cpp \
+  $(PINDROP_RELATIVE_DIR)/src/main.cpp \
   $(PINDROP_RELATIVE_DIR)/src/ref_counter.cpp \
   $(PINDROP_RELATIVE_DIR)/src/sound.cpp \
   $(PINDROP_RELATIVE_DIR)/src/sound_bank.cpp \
@@ -75,3 +78,4 @@ $(call import-add-path,$(DEPENDENCIES_FLATBUFFERS_DIR)/..)
 
 $(call import-module,flatbuffers/android/jni)
 
+$(call import-module,mathfu/jni)

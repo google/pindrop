@@ -241,16 +241,6 @@ static bool PlayCollection(const SoundCollection& collection,
   return false;
 }
 
-static void SetChannelGain(ChannelId channel_id, float volume) {
-  assert(channel_id != kInvalidChannelId);
-  int mix_volume = static_cast<int>(volume * MIX_MAX_VOLUME);
-  if (channel_id == kStreamChannelId) {
-    Mix_VolumeMusic(mix_volume);
-  } else {
-    Mix_Volume(channel_id, mix_volume);
-  }
-}
-
 static ChannelInternalState* PlayStream(AudioEngineInternalState* state,
                                         SoundHandle sound_handle, float gain) {
   // TODO: Add prioritization by gain for streams, like we have for buffers.
@@ -356,8 +346,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
     new_channel = PlayBuffer(state_, sound_handle, final_gain);
   }
   if (new_channel) {
-    new_channel->set_gain(final_gain);
-    SetChannelGain(new_channel->channel_id(), new_channel->gain());
+    new_channel->SetGain(final_gain);
   }
   return Channel(new_channel);
 }
@@ -414,7 +403,7 @@ void AudioEngine::RemoveListener(Listener* listener) {
 void AudioEngine::Pause(bool pause) {
   // Special value for SDL_Mixer that indicates an operation should be applied
   // to all channels.
-  const ChannelId kAllChannels = -1;
+  static const ChannelId kAllChannels = -1;
   if (pause) {
     Mix_Pause(kAllChannels);
     Mix_PauseMusic();
@@ -512,8 +501,7 @@ static void UpdateChannel(ChannelInternalState* channel,
                                      channel->handle()->GetSoundCollectionDef(),
                                      channel->location());
   float bus_gain = channel->handle()->bus()->gain();
-  channel->set_gain(channel_gain * bus_gain);
-  SetChannelGain(channel->channel_id(), channel->gain());
+  channel->SetGain(channel_gain * bus_gain);
 }
 
 void AudioEngine::AdvanceFrame(float delta_time) {

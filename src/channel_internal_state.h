@@ -54,8 +54,18 @@ class ChannelInternalState {
     return mathfu::Vector<float, 3>(location_);
   }
 
-  void set_gain(const float gain) { gain_ = gain; }
-  float gain() const { return gain_; }
+  // Check if this channel is currently playing audio.
+  bool Playing() const;
+
+  // Set and query the current gain of this channel.
+  void SetGain(const float gain);
+  float Gain() const;
+
+  // Immediately stop the audio. May cause clicking.
+  void Halt();
+
+  // Fade out over the specified number of milliseconds.
+  void FadeOut(int milliseconds);
 
   float Priority() const;
 
@@ -74,8 +84,6 @@ class ChannelInternalState {
   ChannelId channel_id_;
 
   mathfu::VectorPacked<float, 3> location_;
-
-  float gain_;
 
   IntrusiveListNode priority_node_;
   IntrusiveListNode bus_node_;

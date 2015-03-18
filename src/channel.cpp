@@ -14,55 +14,28 @@
 
 #include "pindrop/audio_engine.h"
 
-#include "SDL_log.h"
-#include "SDL_mixer.h"
 #include "channel_internal_state.h"
 
 namespace pindrop {
 
 const Channel kInvalidChannel(nullptr);
 
-const int kChannelFadeOutRateMs = 10;
+const int kFadeOutDurationMs = 10;
 
 bool Channel::Playing() const {
   assert(valid());
-  if (state_->channel_id() == kStreamChannelId) {
-    return Mix_PlayingMusic() != 0;
-  } else {
-    return Mix_Playing(state_->channel_id()) != 0;
-  }
+  return state_->Playing();
 }
 
 void Channel::Stop() {
   assert(valid());
-  // Fade out rather than halting to avoid clicks.
-  if (state_->channel_id() == kStreamChannelId) {
-    // SDL_Mixer will not fade out channels with a volume of 0.
-    // Manually halt channels in this case.
-    int volume = Mix_VolumeMusic(-1);
-    if (volume == 0) {
-      Mix_HaltMusic();
-    } else {
-      int result = Mix_FadeOutMusic(kChannelFadeOutRateMs);
-      if (result == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping music: %s\n",
-                     Mix_GetError());
-      }
-    }
+  // Fade out rather than halting to avoid clicks.  However, SDL_Mixer will
+  // not fade out channels with a volume of 0.  Manually halt channels in this
+  // case.
+  if (state_->Gain() == 0.0f) {
+    state_->Halt();
   } else {
-    // SDL_Mixer will not fade out channels with a volume of 0.
-    // Manually halt channels in this case.
-    int volume = Mix_Volume(state_->channel_id(), -1);
-    if (volume == 0) {
-      Mix_HaltChannel(state_->channel_id());
-    } else {
-      int result =
-          Mix_FadeOutChannel(state_->channel_id(), kChannelFadeOutRateMs);
-      if (result == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error stopping channel %d: %s\n",
-                     state_->channel_id(), Mix_GetError());
-      }
-    }
+    state_->FadeOut(kFadeOutDurationMs);
   }
 }
 

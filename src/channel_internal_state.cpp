@@ -14,6 +14,8 @@
 
 #include "channel_internal_state.h"
 
+#include "SDL_log.h"
+#include "SDL_mixer.h"
 #include "bus.h"
 #include "intrusive_list.h"
 #include "pindrop/audio_engine.h"
@@ -21,6 +23,8 @@
 #include "sound_collection_def_generated.h"
 
 namespace pindrop {
+
+const int kChannelFadeOutDurationMs = 10;
 
 void ChannelInternalState::Clear() {
   handle_ = nullptr;
@@ -38,9 +42,58 @@ void ChannelInternalState::SetHandle(SoundHandle handle) {
   }
 }
 
+bool ChannelInternalState::Playing() const {
+  if (channel_id_ == kStreamChannelId) {
+    return Mix_PlayingMusic() != 0;
+  } else {
+    return Mix_Playing(channel_id_) != 0;
+  }
+}
+
+void ChannelInternalState::SetGain(const float gain) {
+  int mix_volume = static_cast<int>(gain * MIX_MAX_VOLUME);
+  if (channel_id_ == kStreamChannelId) {
+    Mix_VolumeMusic(mix_volume);
+  } else {
+    Mix_Volume(channel_id_, mix_volume);
+  }
+}
+
+float ChannelInternalState::Gain() const {
+  // Special value to query volume rather than set volume.
+  static const int kQueryVolume = -1;
+  int volume;
+  if (channel_id_ == kStreamChannelId) {
+    volume = Mix_VolumeMusic(kQueryVolume);
+  } else {
+    volume = Mix_Volume(channel_id_, kQueryVolume);
+  }
+  return volume / static_cast<float>(MIX_MAX_VOLUME);
+}
+
+void ChannelInternalState::Halt() {
+  if (channel_id_ == kStreamChannelId) {
+    Mix_HaltMusic();
+  } else {
+    Mix_HaltChannel(channel_id_);
+  }
+}
+
+void ChannelInternalState::FadeOut(int milliseconds) {
+  int channels_halted;
+  if (channel_id_ == kStreamChannelId) {
+    channels_halted = Mix_FadeOutMusic(milliseconds);
+  } else {
+    channels_halted = Mix_FadeOutChannel(channel_id_, milliseconds);
+  }
+  if (channels_halted == 0) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error halting channel %i\n");
+  }
+}
+
 float ChannelInternalState::Priority() const {
   assert(handle_);
-  return gain_ * handle_->GetSoundCollectionDef()->priority();
+  return Gain() * handle_->GetSoundCollectionDef()->priority();
 }
 
 }  // namespace pindrop

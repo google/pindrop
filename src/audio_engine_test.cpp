@@ -43,8 +43,8 @@ int Mix_FadeOutChannel(int, int) { return 0; }
 int Mix_PlayMusic(Mix_Music*, int) { return 0; }
 int Mix_Playing(int) { return 0; }
 int Mix_PlayingMusic() { return 0; }
-int Mix_Volume(int, int) { return 0; }
-int Mix_VolumeMusic(int) { return 0; }
+int Mix_Volume(int, int) { return MIX_MAX_VOLUME; }
+int Mix_VolumeMusic(int) { return MIX_MAX_VOLUME; }
 void Mix_CloseAudio() {}
 void Mix_FreeChunk(Mix_Chunk*) {}
 void Mix_FreeMusic(Mix_Music*) {}
@@ -89,10 +89,10 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
     channels_[2].SetHandle(&collections_[1]);
     channels_[3].SetHandle(&collections_[0]);
 
-    channels_[0].set_gain(1.0f);
-    channels_[1].set_gain(1.0f);
-    channels_[2].set_gain(1.0f);
-    channels_[3].set_gain(1.0f);
+    channels_[0].SetGain(1.0f);
+    channels_[1].SetGain(1.0f);
+    channels_[2].SetGain(1.0f);
+    channels_[3].SetGain(1.0f);
   }
   virtual void TearDown() {}
 

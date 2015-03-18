@@ -158,11 +158,11 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   // Initialize the listener internal data.
   InitializeListenerFreeList(&state_->listener_state_free_list,
                              &state_->listener_state_memory,
-                             config->max_listeners());
+                             config->listeners());
 
   // Load the audio buses.
-  if (!LoadFile("buses.bin", &state_->buses_source)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't load audio bus file.\n");
+  if (!LoadFile(config->bus_file()->c_str(), &state_->buses_source)) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load audio bus file.\n");
     return false;
   }
   const BusDefList* bus_def_list =

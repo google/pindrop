@@ -30,11 +30,14 @@ table AudioConfig {
   // Bytes used per output sample.
   output_buffer_size:uint;
 
-  // Number of channels to allocate for mixing.
+  // The number of channels to allocate for mixing.
   mixer_channels:uint;
 
-  // The maximum number of listeners you need.
-  max_listeners:uint;
+  // The number of listeners to allocate.
+  listeners:uint;
+
+  // The location of the bus definition file.
+  bus_file:string;
 }
 
 root_type AudioConfig;

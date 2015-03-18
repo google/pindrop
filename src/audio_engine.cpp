@@ -401,11 +401,12 @@ Listener AudioEngine::AddListener() {
   }
   ListenerInternalState* listener = state_->listener_state_free_list.back();
   state_->listener_state_free_list.pop_back();
+  state_->listener_list.InsertBefore(listener);
   return Listener(listener);
 }
 
 void AudioEngine::RemoveListener(Listener* listener) {
-  assert(listener->Valid() && listener->state()->InList());
+  assert(listener->Valid());
   listener->state()->Remove();
   state_->listener_state_free_list.push_back(listener->state());
 }
@@ -494,12 +495,14 @@ float CalculatePositionalAttenuation(float distance_squared,
 float CalculateGain(TypedIntrusiveListNode<ListenerInternalState>& listeners,
                     const SoundCollectionDef* def,
                     const mathfu::Vector<float, 3>& location) {
-  if (def->mode() == Mode_Nonpositional || listeners.IsEmpty()) {
+  if (def->mode() == Mode_Nonpositional) {
     return def->gain();
-  } else {
+  } else if (!listeners.IsEmpty()) {
     ListenerInternalState* listener;
     float distance_squared = BestListener(&listener, listeners, location);
     return def->gain() * CalculatePositionalAttenuation(distance_squared, def);
+  } else {
+    return 0.0f;
   }
 }
 
@@ -532,7 +535,9 @@ void AudioEngine::AdvanceFrame(float delta_time) {
         ChannelInternalState::GetInstanceFromPriorityNode(node);
     UpdateChannel(channel, state_);
   }
-  UpdateChannel(&state_->stream_channel_state, state_);
+  if (state_->stream_channel_state.handle()) {
+    UpdateChannel(&state_->stream_channel_state, state_);
+  }
   list.Sort([](const IntrusiveListNode& a, const IntrusiveListNode& b) -> bool {
     const ChannelInternalState* channel_a =
         ChannelInternalState::GetInstanceFromPriorityNode(&a);

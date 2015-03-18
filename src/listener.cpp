@@ -20,10 +20,12 @@ namespace pindrop {
 bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
 
 mathfu::Vector<float, 3> Listener::location() const {
+  assert(Valid());
   return state_->location();
 }
 
 void Listener::set_location(const mathfu::Vector<float, 3>& location) {
+  assert(Valid());
   state_->set_location(location);
 }
 

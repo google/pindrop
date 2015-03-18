@@ -120,6 +120,15 @@ static void InitializeListenerFreeList(
   }
 }
 
+bool AudioEngine::Initialize(const char* config_file) {
+  std::string audio_config_source;
+  if (!LoadFile(config_file, &audio_config_source)) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load audio config file.\n");
+    return false;
+  }
+  return Initialize(GetAudioConfig(audio_config_source.c_str()));
+}
+
 bool AudioEngine::Initialize(const AudioConfig* config) {
   // Construct internals.
   state_ = new AudioEngineInternalState();
@@ -129,7 +138,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
                     config->output_channels(),
                     config->output_buffer_size()) != 0) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't open audio stream\n");
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not open audio stream\n");
     return false;
   }
 

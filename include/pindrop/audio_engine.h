@@ -79,6 +79,10 @@ class AudioEngine {
   AudioEngine() : state_(nullptr) {}
   ~AudioEngine();
 
+  // Initialize the audio engine.
+  // You may either initlize with a pointer to the AudioConfig structure or the
+  // file containing the AudioConfig flatbuffer.
+  bool Initialize(const char* config_file);
   bool Initialize(const AudioConfig* config);
 
   // Update audio volume per channel each frame.

@@ -139,11 +139,10 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
 endforeach()
 add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
-# TODO(amablue): b/18809549 Add a simple example project to demonstrate how to
-# load assets and use the audio engine.
-# add_custom_target(assets
-#   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
-#   DEPENDS flatc)
+message(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_target(assets
+  COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
+  DEPENDS flatc)
 
 # AudioEngine source files.
 set(pindrop_SRCS
@@ -166,6 +165,8 @@ set(pindrop_SRCS
     src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h)
+
+set(pindrop_demo_SRCS src/main.cpp)
 
 # Includes for this project.
 include_directories(src include)
@@ -226,6 +227,15 @@ mathfu_configure_flags(pindrop)
 
 # Dependencies for the executable target.
 add_dependencies(pindrop pindrop_generated_includes assets)
+
+add_executable(pindrop_demo ${pindrop_demo_SRCS})
+target_link_libraries(pindrop_demo
+  pindrop
+  ${SDL_LIBRARIES}
+  sdl_mixer
+  libvorbis
+  libogg)
+mathfu_configure_flags(pindrop_demo)
 
 # gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
 # everything else.

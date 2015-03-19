@@ -38,6 +38,7 @@ const char* kListenerTexture = "assets/textures/listener.bmp";
 const char* kSoundHandleName = "my_sounds";
 
 typedef mathfu::Vector<float, 2> Vector2f;
+typedef mathfu::Vector<int, 2> Vector2i;
 
 struct IconState {
   IconState() : location(mathfu::kZeros2f), velocity(mathfu::kZeros2f) {}
@@ -214,18 +215,18 @@ void DemoState::UpdateIcons(float delta_time) {
 void TextureRect(SDL_Rect* rect, const Vector2f& location,
                  SDL_Texture* texture) {
   SDL_QueryTexture(texture, nullptr, nullptr, &rect->w, &rect->h);
-  rect->x = location.x() - rect->w / 2;
-  rect->y = location.y() - rect->h / 2;
+  rect->x = static_cast<int>(location.x() - rect->w / 2);
+  rect->y = static_cast<int>(location.y() - rect->h / 2);
 }
 
 void DemoState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
-  SDL_Rect rect = { 0, 0, 0, 0 };
+  SDL_Rect rect = {0, 0, 0, 0};
   TextureRect(&rect, icon_state.location, texture);
   SDL_RenderCopy(renderer_, texture, nullptr, &rect);
 }
 
 void DemoState::DrawInstructions() {
-  SDL_Rect rect = { 0, 0, 0, 0 };
+  SDL_Rect rect = {0, 0, 0, 0};
   SDL_QueryTexture(instructions_texture_, nullptr, nullptr, &rect.w, &rect.h);
   SDL_RenderCopy(renderer_, instructions_texture_, nullptr, &rect);
 }
@@ -253,7 +254,7 @@ void DemoState::HandleInput() {
         break;
       }
       case SDL_MOUSEBUTTONDOWN: {
-        Vector2f mouse_location(event.button.x, event.button.y);
+        Vector2f mouse_location(Vector2i(event.button.x, event.button.y));
         if (event.button.button == SDL_BUTTON_LEFT) {
           new_channel_location_ = mouse_location;
         } else {
@@ -262,17 +263,17 @@ void DemoState::HandleInput() {
         break;
       }
       case SDL_MOUSEBUTTONUP: {
-        Vector2f mouse_location(event.button.x, event.button.y);
+        Vector2f mouse_location(Vector2i(event.button.x, event.button.y));
         SDL_Texture* texture;
 
         texture = channel_texture_;
-        auto channel_iter =
-            find_if(channel_icons_.begin(), channel_icons_.end(),
-                    [mouse_location, texture](const ChannelIcon& icon) {
-                      SDL_Rect rect;
-                      TextureRect(&rect, icon.location, texture);
-                      return RectContains(rect, mouse_location);
-                    });
+        auto channel_iter = std::find_if(
+            channel_icons_.begin(), channel_icons_.end(),
+            [mouse_location, texture](const ChannelIcon& icon) -> bool {
+              SDL_Rect rect;
+              TextureRect(&rect, icon.location, texture);
+              return RectContains(rect, mouse_location);
+            });
         if (channel_iter != channel_icons_.end()) {
           channel_iter->channel.Stop();
           channel_icons_.erase(channel_iter);
@@ -280,13 +281,13 @@ void DemoState::HandleInput() {
         }
 
         texture = listener_texture_;
-        auto listener_iter =
-            find_if(listener_icons_.begin(), listener_icons_.end(),
-                    [mouse_location, texture](const ListenerIcon& icon) {
-                      SDL_Rect rect;
-                      TextureRect(&rect, icon.location, texture);
-                      return RectContains(rect, mouse_location);
-                    });
+        auto listener_iter = std::find_if(
+            listener_icons_.begin(), listener_icons_.end(),
+            [mouse_location, texture](const ListenerIcon& icon) -> bool {
+              SDL_Rect rect;
+              TextureRect(&rect, icon.location, texture);
+              return RectContains(rect, mouse_location);
+            });
         if (listener_iter != listener_icons_.end()) {
           audio_engine_.RemoveListener(&listener_iter->listener);
           listener_icons_.erase(listener_iter);
@@ -333,8 +334,8 @@ void DemoState::AdvanceFrame(float delta_time) {
 }
 
 void DemoState::Run() {
-  Uint32 previous_time = 0.0f;
-  Uint32 time = 0.0f;
+  Uint32 previous_time = 0;
+  Uint32 time = 0;
   while (!quit_) {
     previous_time = time;
     time = SDL_GetTicks();

@@ -1,0 +1,53 @@
+{
+  "name": "my_sounds",
+  "bus": "master",
+  "mode": "Positional",
+  "loop": true,
+  "priority": 1.0,
+  "audio_sample_set": [
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_01.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_02.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_03.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_04.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_05.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_06.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_07.ogg"
+      }
+    },
+    {
+      "audio_sample": {
+        "filename": "assets/sounds/throw_08.ogg"
+      }
+    }
+  ],
+  "gain": 0.5,
+  "max_audible_radius": 200.0,
+  "roll_out_radius": 25.0,
+  "roll_out_curve_factor": 0.5
+}

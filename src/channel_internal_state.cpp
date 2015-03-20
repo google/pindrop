@@ -24,8 +24,6 @@
 
 namespace pindrop {
 
-const int kChannelFadeOutDurationMs = 10;
-
 void ChannelInternalState::Clear() {
   handle_ = nullptr;
   priority_node_.Remove();

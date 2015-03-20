@@ -15,8 +15,9 @@
 #include "pindrop/pindrop.h"
 
 #include <algorithm>
-#include <map>
+#include <cmath>
 #include <iostream>
+#include <map>
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"

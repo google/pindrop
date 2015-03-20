@@ -105,8 +105,14 @@ static void InitializeChannelFreeList(
   channels->resize(list_size);
   channel_state_free_list->reserve(list_size);
   for (size_t i = 0; i < list_size; ++i) {
-    (*channels)[i].set_channel_id(static_cast<ChannelId>(i));
-    channel_state_free_list->push_back(&(*channels)[i]);
+    ChannelInternalState& channel = (*channels)[i];
+    channel_state_free_list->push_back(&channel);
+    channel.set_channel_id(static_cast<ChannelId>(i));
+    // Because the channels are in a vector they may have been copy constructed.
+    // Intrusive lists misbehave in these cases, so they need to be
+    // reinitialized.
+    channel.bus_node()->Initialize();
+    channel.priority_node()->Initialize();
   }
 }
 
@@ -116,7 +122,12 @@ static void InitializeListenerFreeList(
   listeners->resize(list_size);
   listener_state_free_list->reserve(list_size);
   for (size_t i = 0; i < list_size; ++i) {
-    listener_state_free_list->push_back(&(*listeners)[i]);
+    ListenerInternalState& listener = (*listeners)[i];
+    listener_state_free_list->push_back(&listener);
+    // Because the listeners are in a vector they may have been copy
+    // constructed.  Intrusive lists misbehave in these cases, so they need to
+    // be reinitialized.
+    listener.GetListNode()->Initialize();
   }
 }
 

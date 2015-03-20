@@ -140,7 +140,7 @@ endforeach()
 add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
 message(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-add_custom_target(assets
+add_custom_target(pindrop_demo_assets
   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
   DEPENDS flatc)
 
@@ -226,7 +226,7 @@ add_library(pindrop ${pindrop_SRCS})
 mathfu_configure_flags(pindrop)
 
 # Dependencies for the executable target.
-add_dependencies(pindrop pindrop_generated_includes assets)
+add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
 
 add_executable(pindrop_demo ${pindrop_demo_SRCS})
 target_link_libraries(pindrop_demo

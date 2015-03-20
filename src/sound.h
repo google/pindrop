@@ -38,9 +38,6 @@ class SoundSource {
   // Play this sound on the given channel, and loop if necessary.
   virtual bool Play(ChannelId channel_id, bool loop) = 0;
 
-  // Set the gain of the given channel.
-  virtual void SetGain(ChannelId channel_id, float gain) = 0;
-
   const AudioSampleSetEntry& audio_sample_set_entry() {
     return *audio_sample_set_entry_;
   }
@@ -60,8 +57,6 @@ class SoundBuffer : public SoundSource {
 
   virtual bool Play(ChannelId channel_id, bool loop);
 
-  virtual void SetGain(ChannelId channel_id, float gain);
-
  private:
   Mix_Chunk* data_;
 };
@@ -76,8 +71,6 @@ class SoundStream : public SoundSource {
   virtual bool LoadFile(const char* filename);
 
   virtual bool Play(ChannelId channel_id, bool loop);
-
-  virtual void SetGain(ChannelId channel_id, float gain);
 
  private:
   Mix_Music* data_;

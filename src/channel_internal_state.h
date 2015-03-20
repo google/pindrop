@@ -21,6 +21,8 @@
 
 namespace pindrop {
 
+class SoundSource;
+
 typedef int ChannelId;
 
 // Special value representing an invalid stream.
@@ -53,6 +55,9 @@ class ChannelInternalState {
   mathfu::Vector<float, 3> location() const {
     return mathfu::Vector<float, 3>(location_);
   }
+
+  // Play a sound on this channel.
+  bool Play(SoundSource* source, bool loop);
 
   // Check if this channel is currently playing audio.
   bool Playing() const;

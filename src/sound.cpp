@@ -37,17 +37,8 @@ bool SoundBuffer::LoadFile(const char* filename) {
 
 bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   int loops = loop ? kLoopForever : kPlayOnce;
-  if (Mix_PlayChannel(channel_id, data_, loops) == kInvalidChannelId) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't play sound: %s\n",
-                 Mix_GetError());
-    return false;
-  }
-  return true;
-}
+  return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
 
-void SoundBuffer::SetGain(ChannelId channel_id, float gain) {
-  Mix_Volume(channel_id,
-             static_cast<int>(gain * static_cast<float>(MIX_MAX_VOLUME)));
 }
 
 SoundStream::~SoundStream() {
@@ -65,17 +56,8 @@ bool SoundStream::Play(ChannelId channel_id, bool loop) {
   (void)channel_id;  // SDL_mixer does not currently support
                      // more than one channel of streaming audio.
   int loops = loop ? kLoopForever : kPlayOnce;
-  if (Mix_PlayMusic(data_, loops) == kPlayStreamError) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Can't play music: %s\n",
-                 Mix_GetError());
-    return false;
-  }
-  return true;
-}
+  return Mix_PlayMusic(data_, loops) != kPlayStreamError;
 
-void SoundStream::SetGain(ChannelId channel_id, float gain) {
-  (void)channel_id;
-  Mix_VolumeMusic(static_cast<int>(gain * static_cast<float>(MIX_MAX_VOLUME)));
 }
 
 }  // namespace pindrop

@@ -42,6 +42,15 @@ void ChannelInternalState::SetHandle(SoundHandle handle) {
   }
 }
 
+bool ChannelInternalState::Play(SoundSource* source, bool loop) {
+  if (!source->Play(channel_id_, loop)) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not play sound %s\n",
+                 Mix_GetError());
+    return false;
+  }
+  return true;
+}
+
 bool ChannelInternalState::Playing() const {
   if (channel_id_ == kStreamChannelId) {
     return Mix_PlayingMusic() != 0;

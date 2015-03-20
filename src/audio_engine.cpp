@@ -240,23 +240,23 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
 }
 
 static bool PlayCollection(const SoundCollection& collection,
-                           ChannelId channel_id) {
+                           ChannelInternalState* channel) {
   SoundSource* source = collection.Select();
   const SoundCollectionDef& def = *collection.GetSoundCollectionDef();
+  if (!channel->Play(source, def.loop())) {
+    return false;
+  }
   const float gain =
       source->audio_sample_set_entry().audio_sample()->gain() * def.gain();
-  source->SetGain(channel_id, gain);
-  if (source->Play(channel_id, def.loop() != 0)) {
-    return true;
-  }
-  return false;
+  channel->SetGain(gain);
+  return true;
 }
 
 static ChannelInternalState* PlayStream(AudioEngineInternalState* state,
                                         SoundHandle sound_handle, float gain) {
   // TODO: Add prioritization by gain for streams, like we have for buffers.
   (void)gain;
-  if (!PlayCollection(*sound_handle, kStreamChannelId)) {
+  if (!PlayCollection(*sound_handle, &state->stream_channel_state)) {
     state->stream_channel_state.Clear();
     return nullptr;
   }
@@ -324,7 +324,7 @@ static ChannelInternalState* PlayBuffer(AudioEngineInternalState* state,
   new_channel->SetHandle(sound_handle);
 
   // Attempt to play the sound.
-  if (!PlayCollection(*sound_handle, new_channel->channel_id())) {
+  if (!PlayCollection(*sound_handle, new_channel)) {
     // Error playing the sound, put it back in the free list.
     state->channel_state_free_list.push_back(new_channel);
     new_channel->Clear();

@@ -18,7 +18,7 @@
 #include "SDL_mixer.h"
 #include "bus.h"
 #include "intrusive_list.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 

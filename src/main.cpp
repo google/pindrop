@@ -21,7 +21,7 @@
 #include "mathfu/constants.h"
 #include "mathfu/vector_2.h"
 #include "mathfu/vector_3.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 
 const int kScreenWidth = 640;
 const int kScreenHeight = 480;

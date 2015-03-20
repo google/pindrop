@@ -146,7 +146,7 @@ add_custom_target(assets
 
 # AudioEngine source files.
 set(pindrop_SRCS
-    include/pindrop/audio_engine.h
+    include/pindrop/pindrop.h
     src/audio_engine.cpp
     src/bus.cpp
     src/bus.h

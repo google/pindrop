@@ -15,7 +15,7 @@
 #ifndef PINDROP_SOUND_H_
 #define PINDROP_SOUND_H_
 
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 #include "channel_internal_state.h"
 
 struct Mix_Chunk;

@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 #include "intrusive_list.h"
 #include "listener_internal_state.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"

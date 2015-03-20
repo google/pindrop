@@ -16,7 +16,7 @@
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 
 namespace pindrop {
 

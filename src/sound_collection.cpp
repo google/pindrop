@@ -21,7 +21,7 @@
 
 #include "SDL_log.h"
 #include "audio_engine_internal_state.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
 

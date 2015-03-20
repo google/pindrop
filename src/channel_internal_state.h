@@ -17,7 +17,7 @@
 
 #include "intrusive_list.h"
 #include "mathfu/vector_3.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 
 namespace pindrop {
 

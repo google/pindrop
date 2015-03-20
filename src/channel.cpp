@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 
 #include "channel_internal_state.h"
 

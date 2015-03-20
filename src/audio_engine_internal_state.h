@@ -21,7 +21,7 @@
 #include "SDL_log.h"
 #include "bus.h"
 #include "channel_internal_state.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 #include "sound.h"
 #include "sound_bank.h"
 #include "sound_collection.h"

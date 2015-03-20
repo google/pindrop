@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "listener_internal_state.h"
-#include "pindrop/audio_engine.h"
+#include "pindrop/pindrop.h"
 
 namespace pindrop {
 

@@ -55,7 +55,11 @@ bool ChannelInternalState::Play(SoundSource* source, bool loop) {
 
 bool ChannelInternalState::Playing() const {
   if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    return Mix_PlayingMusicCh(channel_id_) != 0;
+#else
     return Mix_PlayingMusic() != 0;
+#endif  // PINDROP_MULTISTREAM
   } else {
     return Mix_Playing(channel_id_) != 0;
   }
@@ -64,7 +68,11 @@ bool ChannelInternalState::Playing() const {
 void ChannelInternalState::SetGain(const float gain) {
   int mix_volume = static_cast<int>(gain * MIX_MAX_VOLUME);
   if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    Mix_VolumeMusicCh(channel_id_, mix_volume);
+#else
     Mix_VolumeMusic(mix_volume);
+#endif  // PINDROP_MULTISTREAM
   } else {
     Mix_Volume(channel_id_, mix_volume);
   }
@@ -75,7 +83,11 @@ float ChannelInternalState::Gain() const {
   static const int kQueryVolume = -1;
   int volume;
   if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    volume = Mix_VolumeMusicCh(channel_id_, kQueryVolume);
+#else
     volume = Mix_VolumeMusic(kQueryVolume);
+#endif  // PINDROP_MULTISTREAM
   } else {
     volume = Mix_Volume(channel_id_, kQueryVolume);
   }
@@ -84,7 +96,11 @@ float ChannelInternalState::Gain() const {
 
 void ChannelInternalState::Halt() {
   if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    Mix_HaltMusicCh(channel_id_);
+#else
     Mix_HaltMusic();
+#endif  // PINDROP_MULTISTREAM
   } else {
     Mix_HaltChannel(channel_id_);
   }
@@ -93,7 +109,11 @@ void ChannelInternalState::Halt() {
 void ChannelInternalState::FadeOut(int milliseconds) {
   int channels_halted;
   if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    channels_halted = Mix_FadeOutMusicCh(channel_id_, milliseconds);
+#else
     channels_halted = Mix_FadeOutMusic(milliseconds);
+#endif  // PINDROP_MULTISTREAM
   } else {
     channels_halted = Mix_FadeOutChannel(channel_id_, milliseconds);
   }
@@ -113,12 +133,20 @@ static const ChannelId kAllChannels = -1;
 
 void ChannelInternalState::PauseAll() {
   Mix_Pause(kAllChannels);
+#ifdef PINDROP_MULTISTREAM
+  Mix_PauseMusicCh(kAllChannels);
+#else
   Mix_PauseMusic();
+#endif  // PINDROP_MULTISTREAM
 }
 
 void ChannelInternalState::ResumeAll() {
   Mix_Resume(kAllChannels);
+#ifdef PINDROP_MULTISTREAM
+  Mix_ResumeMusicCh(kAllChannels);
+#else
   Mix_ResumeMusic();
+#endif  // PINDROP_MULTISTREAM
 }
 
 }  // namespace pindrop

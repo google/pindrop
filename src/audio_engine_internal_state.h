@@ -18,7 +18,7 @@
 #include <vector>
 #include <map>
 
-#include "SDL_log.h"
+#include "backend.h"
 #include "bus.h"
 #include "channel_internal_state.h"
 #include "pindrop/pindrop.h"
@@ -46,6 +46,8 @@ typedef flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>
     BusNameList;
 
 struct AudioEngineInternalState {
+  Backend backend;
+
   // Hold the audio bus list.
   std::string buses_source;
 
@@ -79,9 +81,6 @@ struct AudioEngineInternalState {
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   std::vector<ListenerInternalState> listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
-
-  // We only ever play one stream, so store that separately.
-  ChannelInternalState stream_channel_state;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;

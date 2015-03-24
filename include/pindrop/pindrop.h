@@ -16,7 +16,7 @@
 #define PINDROP_AUDIO_ENGINE_H_
 
 #include <string>
-#include <vector>
+
 #include "mathfu/vector_3.h"
 
 #define PINDROP_VERSION_MAJOR 1

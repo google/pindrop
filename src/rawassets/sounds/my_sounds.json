@@ -4,6 +4,7 @@
   "mode": "Positional",
   "loop": true,
   "priority": 1.0,
+  "stream": false,
   "audio_sample_set": [
     {
       "audio_sample": {

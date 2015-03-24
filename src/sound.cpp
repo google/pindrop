@@ -20,9 +20,22 @@
 
 namespace pindrop {
 
-const int kPlayStreamError = -1;
 const int kLoopForever = -1;
 const int kPlayOnce = 0;
+
+#ifdef PINDROP_MULTISTREAM
+void FreeFinishedMusicMultistream(void* /*userdata*/, Mix_Music* music,
+                                  int /*channel*/) {
+  Mix_FreeMusic(music);
+}
+#else
+static Mix_Music* playing_music;
+
+void FreeFinishedMusic() {
+  Mix_FreeMusic(playing_music);
+  playing_music = nullptr;
+}
+#endif  // PINDROP_MULTISTREAM
 
 SoundBuffer::~SoundBuffer() {
   if (data_) {
@@ -40,23 +53,22 @@ bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
 }
 
-SoundStream::~SoundStream() {
-  if (data_) {
-    Mix_FreeMusic(data_);
-  }
-}
-
 bool SoundStream::LoadFile(const char* filename) {
-  data_ = Mix_LoadMUS(filename);
-  return data_ != nullptr;
+  filename_ = filename;
+  return true;
 }
 
 bool SoundStream::Play(ChannelId channel_id, bool loop) {
-  (void)channel_id;  // SDL_mixer does not currently support
-                     // more than one channel of streaming audio.
+  ChannelId result;
   int loops = loop ? kLoopForever : kPlayOnce;
-  return Mix_PlayMusic(data_, loops) != kPlayStreamError;
-
+#ifdef PINDROP_MULTISTREAM
+  result = Mix_PlayMusicCh(Mix_LoadMUS(filename_.c_str()), loops, channel_id);
+#else
+  (void)channel_id;
+  FreeFinishedMusic();
+  result = Mix_PlayMusic(Mix_LoadMUS(filename_.c_str()), loops);
+#endif
+  return result != kInvalidChannelId;
 }
 
 }  // namespace pindrop

@@ -75,3 +75,4 @@ class SoundCollection {
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_COLLECTION_H_
+

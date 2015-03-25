@@ -165,7 +165,6 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   InitializeChannelFreeList(&state_->channel_state_free_list,
                             &state_->channel_state_memory,
                             config->mixer_channels());
-  state_->stream_channel_state.set_channel_id(kStreamChannelId);
 
   // Initialize the listener internal data.
   InitializeListenerFreeList(&state_->listener_state_free_list,
@@ -244,7 +243,7 @@ static bool PlayCollection(const SoundCollection& collection,
                            ChannelInternalState* channel) {
   SoundSource* source = collection.Select();
   const SoundCollectionDef& def = *collection.GetSoundCollectionDef();
-  if (!channel->Play(source, def.loop())) {
+  if (!channel->Play(source, def.loop() != 0)) {
     return false;
   }
   const float gain =
@@ -293,7 +292,7 @@ static ChannelInternalState* FindFreeChannelInternalState(
     // sound, evict the lowest priority sound.
     IntrusiveListNode* node = list->GetPrevious();
     new_channel = ChannelInternalState::GetInstanceFromPriorityNode(node);
-    Mix_HaltChannel(new_channel->channel_id());
+    new_channel->Halt();
 
     // Move it to a new spot in the list if it needs to be moved.
     if (insertion_point->priority_node() != node) {
@@ -413,15 +412,10 @@ void AudioEngine::RemoveListener(Listener* listener) {
 }
 
 void AudioEngine::Pause(bool pause) {
-  // Special value for SDL_Mixer that indicates an operation should be applied
-  // to all channels.
-  static const ChannelId kAllChannels = -1;
   if (pause) {
-    Mix_Pause(kAllChannels);
-    Mix_PauseMusic();
+    ChannelInternalState::PauseAll();
   } else {
-    Mix_Resume(kAllChannels);
-    Mix_ResumeMusic();
+    ChannelInternalState::ResumeAll();
   }
 }
 
@@ -448,13 +442,13 @@ float BestListener(ListenerInternalState** best_listener,
   assert(!listeners.IsEmpty());
 
   ListenerInternalState* listener = listeners.GetNext();
-  mathfu::Vector<float, 3> delta = listener->location() - location;
+  mathfu::Vector<float, 3> delta = listener->Location() - location;
   float distance_squared = delta.LengthSquared();
   *best_listener = listener;
 
   for (listener = listener->GetNext(); listener != listeners.GetTerminator();
        listener = listener->GetNext()) {
-    delta = listener->location() - location;
+    delta = listener->Location() - location;
     float delta_magnitude = delta.LengthSquared();
     if (delta_magnitude < distance_squared) {
       *best_listener = listener;
@@ -511,7 +505,7 @@ static void UpdateChannel(ChannelInternalState* channel,
                           AudioEngineInternalState* state) {
   float channel_gain = CalculateGain(state->listener_list,
                                      channel->handle()->GetSoundCollectionDef(),
-                                     channel->location());
+                                     channel->Location());
   float bus_gain = channel->handle()->bus()->gain();
   channel->SetGain(channel_gain * bus_gain);
 }

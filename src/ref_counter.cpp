@@ -18,9 +18,7 @@
 
 namespace pindrop {
 
-int RefCounter::Increment() {
-  return ++count_;
-}
+int RefCounter::Increment() { return ++count_; }
 
 int RefCounter::Decrement() {
   assert(count_);
@@ -28,3 +26,4 @@ int RefCounter::Decrement() {
 }
 
 }  // namespace pindrop
+

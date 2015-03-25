@@ -24,6 +24,10 @@
 
 namespace pindrop {
 
+bool ChannelInternalState::IsStream() const {
+  return handle_->GetSoundCollectionDef()->stream() != 0;
+}
+
 void ChannelInternalState::Clear() {
   handle_ = nullptr;
   priority_node_.Remove();
@@ -50,7 +54,7 @@ bool ChannelInternalState::Play(SoundSource* source, bool loop) {
 }
 
 bool ChannelInternalState::Playing() const {
-  if (channel_id_ == kStreamChannelId) {
+  if (IsStream()) {
     return Mix_PlayingMusic() != 0;
   } else {
     return Mix_Playing(channel_id_) != 0;
@@ -59,7 +63,7 @@ bool ChannelInternalState::Playing() const {
 
 void ChannelInternalState::SetGain(const float gain) {
   int mix_volume = static_cast<int>(gain * MIX_MAX_VOLUME);
-  if (channel_id_ == kStreamChannelId) {
+  if (IsStream()) {
     Mix_VolumeMusic(mix_volume);
   } else {
     Mix_Volume(channel_id_, mix_volume);
@@ -70,7 +74,7 @@ float ChannelInternalState::Gain() const {
   // Special value to query volume rather than set volume.
   static const int kQueryVolume = -1;
   int volume;
-  if (channel_id_ == kStreamChannelId) {
+  if (IsStream()) {
     volume = Mix_VolumeMusic(kQueryVolume);
   } else {
     volume = Mix_Volume(channel_id_, kQueryVolume);
@@ -79,7 +83,7 @@ float ChannelInternalState::Gain() const {
 }
 
 void ChannelInternalState::Halt() {
-  if (channel_id_ == kStreamChannelId) {
+  if (IsStream()) {
     Mix_HaltMusic();
   } else {
     Mix_HaltChannel(channel_id_);
@@ -88,7 +92,7 @@ void ChannelInternalState::Halt() {
 
 void ChannelInternalState::FadeOut(int milliseconds) {
   int channels_halted;
-  if (channel_id_ == kStreamChannelId) {
+  if (IsStream()) {
     channels_halted = Mix_FadeOutMusic(milliseconds);
   } else {
     channels_halted = Mix_FadeOutChannel(channel_id_, milliseconds);
@@ -101,6 +105,20 @@ void ChannelInternalState::FadeOut(int milliseconds) {
 float ChannelInternalState::Priority() const {
   assert(handle_);
   return Gain() * handle_->GetSoundCollectionDef()->priority();
+}
+
+// Special value for SDL_Mixer that indicates an operation should be applied
+// to all channels.
+static const ChannelId kAllChannels = -1;
+
+void ChannelInternalState::PauseAll() {
+  Mix_Pause(kAllChannels);
+  Mix_PauseMusic();
+}
+
+void ChannelInternalState::ResumeAll() {
+  Mix_Resume(kAllChannels);
+  Mix_ResumeMusic();
 }
 
 }  // namespace pindrop

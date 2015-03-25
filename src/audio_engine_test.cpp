@@ -138,10 +138,10 @@ TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointLowest) {
 TEST(BestListenerTests, BestListenerTests) {
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   ListenerInternalState listeners[4];
-  listeners[0].set_location(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-  listeners[1].set_location(mathfu::Vector<float, 3>(10.0f, 0.0f, 0.0f));
-  listeners[2].set_location(mathfu::Vector<float, 3>(10.0f, 0.0f, 10.0f));
-  listeners[3].set_location(mathfu::Vector<float, 3>(0.0f, 0.0f, 10.0f));
+  listeners[0].SetLocation(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+  listeners[1].SetLocation(mathfu::Vector<float, 3>(10.0f, 0.0f, 0.0f));
+  listeners[2].SetLocation(mathfu::Vector<float, 3>(10.0f, 0.0f, 10.0f));
+  listeners[3].SetLocation(mathfu::Vector<float, 3>(0.0f, 0.0f, 10.0f));
   listener_list.InsertAfter(&listeners[0]);
   listeners[0].InsertAfter(&listeners[1]);
   listeners[1].InsertAfter(&listeners[2]);
@@ -263,7 +263,7 @@ TEST(CalculateGain, Mode_Normal) {
 
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   ListenerInternalState listener;
-  listener.set_location(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+  listener.SetLocation(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f));
   listener_list.InsertAfter(&listener);
 
   // Ensure the normal gain is always returned.
@@ -290,7 +290,7 @@ TEST(CalculateGain, Mode_Positional) {
 
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   ListenerInternalState listener;
-  listener.set_location(mathfu::Vector<float, 3>(10.0f, 0.0f, 0.0f));
+  listener.SetLocation(mathfu::Vector<float, 3>(10.0f, 0.0f, 0.0f));
   listener_list.InsertAfter(&listener);
 
   // Ensure the gain drops off with the proper curve.
@@ -352,3 +352,4 @@ int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+

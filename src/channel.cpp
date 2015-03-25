@@ -22,13 +22,17 @@ const Channel kInvalidChannel(nullptr);
 
 const int kFadeOutDurationMs = 10;
 
+bool Channel::Valid() const {
+  return state_ && state_->handle();
+}
+
 bool Channel::Playing() const {
-  assert(valid());
+  assert(Valid());
   return state_->Playing();
 }
 
 void Channel::Stop() {
-  assert(valid());
+  assert(Valid());
   // Fade out rather than halting to avoid clicks.  However, SDL_Mixer will
   // not fade out channels with a volume of 0.  Manually halt channels in this
   // case.
@@ -39,14 +43,14 @@ void Channel::Stop() {
   }
 }
 
-const mathfu::Vector<float, 3> Channel::location() const {
-  assert(valid());
-  return state_->location();
+const mathfu::Vector<float, 3> Channel::Location() const {
+  assert(Valid());
+  return state_->Location();
 }
 
-void Channel::set_location(const mathfu::Vector<float, 3>& location) {
-  assert(valid());
-  state_->set_location(location);
+void Channel::SetLocation(const mathfu::Vector<float, 3>& location) {
+  assert(Valid());
+  state_->SetLocation(location);
 }
 
 }  // namespace pindrop

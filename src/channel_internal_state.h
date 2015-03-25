@@ -28,9 +28,6 @@ typedef int ChannelId;
 // Special value representing an invalid stream.
 const ChannelId kInvalidChannelId = -1;
 
-// Special value representing an audio stream.
-static const ChannelId kStreamChannelId = -100;
-
 // Represents a sample that is playing on a channel.
 class ChannelInternalState {
  public:
@@ -41,6 +38,8 @@ class ChannelInternalState {
         priority_node_(),
         bus_node_() {}
 
+  bool IsStream() const;
+
   void Clear();
 
   void SetHandle(SoundHandle handle);
@@ -49,10 +48,10 @@ class ChannelInternalState {
   void set_channel_id(ChannelId channel_id) { channel_id_ = channel_id; }
   ChannelId channel_id() const { return channel_id_; }
 
-  void set_location(const mathfu::Vector<float, 3>& location) {
+  void SetLocation(const mathfu::Vector<float, 3>& location) {
     location_ = location;
   }
-  mathfu::Vector<float, 3> location() const {
+  mathfu::Vector<float, 3> Location() const {
     return mathfu::Vector<float, 3>(location_);
   }
 
@@ -83,6 +82,9 @@ class ChannelInternalState {
   PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
                                                  bus_node_,
                                                  GetInstanceFromBusNode);
+
+  static void PauseAll();
+  static void ResumeAll();
 
  private:
   SoundHandle handle_;

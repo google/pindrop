@@ -31,3 +31,4 @@ class RefCounter {
 }  // namespace pindrop
 
 #endif  // PINDROP_REF_COUNTER_H_
+

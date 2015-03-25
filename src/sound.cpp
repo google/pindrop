@@ -38,7 +38,6 @@ bool SoundBuffer::LoadFile(const char* filename) {
 bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   int loops = loop ? kLoopForever : kPlayOnce;
   return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
-
 }
 
 SoundStream::~SoundStream() {
@@ -61,3 +60,4 @@ bool SoundStream::Play(ChannelId channel_id, bool loop) {
 }
 
 }  // namespace pindrop
+

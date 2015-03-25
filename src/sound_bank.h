@@ -48,3 +48,4 @@ class SoundBank {
 }  // namespace pindrop
 
 #endif  // PINDROP_SOUND_BANK_H_
+

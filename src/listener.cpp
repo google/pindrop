@@ -19,14 +19,14 @@ namespace pindrop {
 
 bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
 
-mathfu::Vector<float, 3> Listener::location() const {
+mathfu::Vector<float, 3> Listener::Location() const {
   assert(Valid());
-  return state_->location();
+  return state_->Location();
 }
 
-void Listener::set_location(const mathfu::Vector<float, 3>& location) {
+void Listener::SetLocation(const mathfu::Vector<float, 3>& location) {
   assert(Valid());
-  state_->set_location(location);
+  state_->SetLocation(location);
 }
 
 }  // namespace pindrop

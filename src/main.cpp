@@ -87,6 +87,7 @@ class DemoState {
   void HandleInput();
   void UpdateIconState(IconState* icon_state, float delta_time);
   void UpdateIcons(float delta_time);
+  void RemoveInvalidSounds();
   void DrawInstructions();
   void DrawIcon(const IconState& icon_state, SDL_Texture* texture);
   void DrawIcons();
@@ -203,12 +204,12 @@ void DemoState::UpdateIcons(float delta_time) {
   for (size_t i = 0; i < channel_icons_.size(); ++i) {
     ChannelIcon& icon = channel_icons_[i];
     UpdateIconState(&icon, delta_time);
-    icon.channel.set_location(mathfu::Vector<float, 3>(icon.location, 0.0f));
+    icon.channel.SetLocation(mathfu::Vector<float, 3>(icon.location, 0.0f));
   }
   for (size_t i = 0; i < listener_icons_.size(); ++i) {
     ListenerIcon& icon = listener_icons_[i];
     UpdateIconState(&icon, delta_time);
-    icon.listener.set_location(mathfu::Vector<float, 3>(icon.location, 0.0f));
+    icon.listener.SetLocation(mathfu::Vector<float, 3>(icon.location, 0.0f));
   }
 }
 
@@ -223,6 +224,15 @@ void DemoState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
   SDL_Rect rect = {0, 0, 0, 0};
   TextureRect(&rect, icon_state.location, texture);
   SDL_RenderCopy(renderer_, texture, nullptr, &rect);
+}
+
+void DemoState::RemoveInvalidSounds() {
+  channel_icons_.erase(
+      std::remove_if(channel_icons_.begin(), channel_icons_.end(),
+                     [](const ChannelIcon& icon) {
+                       return !icon.channel.Valid();
+                     }),
+      channel_icons_.end());
 }
 
 void DemoState::DrawInstructions() {
@@ -295,11 +305,14 @@ void DemoState::HandleInput() {
         }
 
         if (event.button.button == SDL_BUTTON_LEFT) {
-          channel_icons_.push_back(ChannelIcon());
-          ChannelIcon& icon = channel_icons_.back();
-          icon.location = new_channel_location_;
-          icon.velocity = mouse_location - new_channel_location_;
-          icon.channel = audio_engine_.PlaySound(sound_handle_);
+          pindrop::Channel channel = audio_engine_.PlaySound(sound_handle_);
+          if (channel.Valid()) {
+            channel_icons_.push_back(ChannelIcon());
+            ChannelIcon& icon = channel_icons_.back();
+            icon.location = new_channel_location_;
+            icon.velocity = mouse_location - new_channel_location_;
+            icon.channel = channel;
+          }
           break;
         }
 
@@ -326,6 +339,7 @@ void DemoState::AdvanceFrame(float delta_time) {
   HandleInput();
   UpdateIcons(delta_time);
   audio_engine_.AdvanceFrame(delta_time);
+  RemoveInvalidSounds();
   SDL_RenderClear(renderer_);
   DrawInstructions();
   DrawIcons();

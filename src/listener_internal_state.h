@@ -23,10 +23,10 @@ class ListenerInternalState
  public:
   ListenerInternalState() : location_(mathfu::kZeros3f) {}
 
-  mathfu::Vector<float, 3> location() const {
+  mathfu::Vector<float, 3> Location() const {
     return mathfu::Vector<float, 3>(location_);
   }
-  void set_location(const mathfu::Vector<float, 3>& location) {
+  void SetLocation(const mathfu::Vector<float, 3>& location) {
     location_ = location;
   }
 

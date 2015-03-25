@@ -133,3 +133,4 @@ bool LoadFile(const char* filename, std::string* dest);
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
+

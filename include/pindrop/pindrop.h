@@ -45,8 +45,8 @@ class Listener {
 
   bool Valid() const;
 
-  mathfu::Vector<float, 3> location() const;
-  void set_location(const mathfu::Vector<float, 3>& location);
+  mathfu::Vector<float, 3> Location() const;
+  void SetLocation(const mathfu::Vector<float, 3>& location);
 
   ListenerInternalState* state() { return state_; }
 
@@ -58,7 +58,7 @@ class Channel {
  public:
   Channel(ChannelInternalState* state) : state_(state) {}
 
-  bool valid() const { return state_ != nullptr; }
+  bool Valid() const;
 
   // Checks if the sound playing on a given channel is playing
   bool Playing() const;
@@ -67,8 +67,8 @@ class Channel {
   void Stop();
 
   // Sets or gets the location of a playing sound.
-  const mathfu::Vector<float, 3> location() const;
-  void set_location(const mathfu::Vector<float, 3>& location);
+  const mathfu::Vector<float, 3> Location() const;
+  void SetLocation(const mathfu::Vector<float, 3>& location);
 
  private:
   ChannelInternalState* state_;

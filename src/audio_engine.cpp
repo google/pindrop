@@ -256,11 +256,11 @@ static ChannelInternalState* PlayStream(AudioEngineInternalState* state,
                                         SoundHandle sound_handle, float gain) {
   // TODO: Add prioritization by gain for streams, like we have for buffers.
   (void)gain;
+  state->stream_channel_state.SetHandle(sound_handle);
   if (!PlayCollection(*sound_handle, &state->stream_channel_state)) {
     state->stream_channel_state.Clear();
     return nullptr;
   }
-  state->stream_channel_state.SetHandle(sound_handle);
   return &state->stream_channel_state;
 }
 

@@ -17,6 +17,8 @@
 
 namespace pindrop {
 
+void Listener::Clear() { state_ = nullptr; }
+
 bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
 
 mathfu::Vector<float, 3> Listener::Location() const {

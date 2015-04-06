@@ -41,8 +41,14 @@ extern const Channel kInvalidChannel;
 
 class Listener {
  public:
-  Listener(ListenerInternalState* state) : state_(state) {}
+  Listener() : state_(nullptr) {}
+  explicit Listener(ListenerInternalState* state) : state_(state) {}
 
+  // Uninitializes this Listener. Note that this does not destroy the listener
+  // itself, it just removes this reference to it.
+  void Clear();
+
+  // Checks whether this listener has been initialized.
   bool Valid() const;
 
   mathfu::Vector<float, 3> Location() const;
@@ -56,8 +62,14 @@ class Listener {
 
 class Channel {
  public:
-  Channel(ChannelInternalState* state) : state_(state) {}
+  Channel() : state_(nullptr) {}
+  explicit Channel(ChannelInternalState* state) : state_(state) {}
 
+  // Uninitializes this Channel. Note that this does not destroy the channel
+  // itself, it just removes this reference to it.
+  void Clear();
+
+  // Checks whether this channel has been initialized.
   bool Valid() const;
 
   // Checks if the sound playing on a given channel is playing

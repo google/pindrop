@@ -19,8 +19,7 @@
 #include <iostream>
 #include <map>
 
-#include "SDL_log.h"
-#include "SDL_mixer.h"
+#include "SDL.h"
 #include "audio_config_generated.h"
 #include "audio_engine_internal_state.h"
 #include "bus.h"
@@ -62,10 +61,7 @@ bool LoadFile(const char* filename, std::string* dest) {
   return len == rlen && len > 0;
 }
 
-AudioEngine::~AudioEngine() {
-  delete state_;
-  Mix_CloseAudio();
-}
+AudioEngine::~AudioEngine() { delete state_; }
 
 Bus* FindBus(AudioEngineInternalState* state, const char* name) {
   auto it = std::find_if(
@@ -147,21 +143,11 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   state_->version_string = kPindropVersionString;
 
   // Initialize audio engine.
-  if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
-                    config->output_channels(),
-                    config->output_buffer_size()) != 0) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not open audio stream\n");
+  if (!state_->backend.Initialize(config)) {
     return false;
   }
 
-  // Initialize Ogg support. Returns a bitmask of formats that were successfully
-  // initialized, so make sure ogg support was successfully loaded.
-  if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error initializing Ogg support\n");
-  }
-
   // Initialize the channel internal data.
-  Mix_AllocateChannels(config->mixer_channels());
   InitializeChannelFreeList(&state_->channel_state_free_list,
                             &state_->channel_state_memory,
                             config->mixer_channels());
@@ -252,18 +238,6 @@ static bool PlayCollection(const SoundCollection& collection,
   return true;
 }
 
-static ChannelInternalState* PlayStream(AudioEngineInternalState* state,
-                                        SoundHandle sound_handle, float gain) {
-  // TODO: Add prioritization by gain for streams, like we have for buffers.
-  (void)gain;
-  state->stream_channel_state.SetHandle(sound_handle);
-  if (!PlayCollection(*sound_handle, &state->stream_channel_state)) {
-    state->stream_channel_state.Clear();
-    return nullptr;
-  }
-  return &state->stream_channel_state;
-}
-
 ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
                                          float priority) {
   IntrusiveListNode* node;
@@ -345,17 +319,12 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
                  "Cannot play sound: invalid sound handle\n");
     return Channel(nullptr);
   }
-  bool stream = collection->GetSoundCollectionDef()->stream() != 0;
   float channel_gain = CalculateGain(
       state_->listener_list, sound_handle->GetSoundCollectionDef(), location);
   float bus_gain = sound_handle->bus()->gain();
   float final_gain = channel_gain * bus_gain;
-  ChannelInternalState* new_channel;
-  if (stream) {
-    new_channel = PlayStream(state_, sound_handle, final_gain);
-  } else {
-    new_channel = PlayBuffer(state_, sound_handle, final_gain);
-  }
+  ChannelInternalState* new_channel =
+      PlayBuffer(state_, sound_handle, final_gain);
   if (new_channel) {
     new_channel->SetGain(final_gain);
   }
@@ -528,9 +497,6 @@ void AudioEngine::AdvanceFrame(float delta_time) {
     ChannelInternalState* channel =
         ChannelInternalState::GetInstanceFromPriorityNode(node);
     UpdateChannel(channel, state_);
-  }
-  if (state_->stream_channel_state.handle()) {
-    UpdateChannel(&state_->stream_channel_state, state_);
   }
   list.Sort([](const IntrusiveListNode& a, const IntrusiveListNode& b) -> bool {
     const ChannelInternalState* channel_a =

@@ -15,6 +15,8 @@
 #ifndef PINDROP_SOUND_H_
 #define PINDROP_SOUND_H_
 
+#include <string>
+
 #include "pindrop/pindrop.h"
 #include "channel_internal_state.h"
 
@@ -66,15 +68,22 @@ class SoundBuffer : public SoundSource {
 class SoundStream : public SoundSource {
  public:
   explicit SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
-  virtual ~SoundStream();
+  virtual ~SoundStream() {}
 
   virtual bool LoadFile(const char* filename);
 
   virtual bool Play(ChannelId channel_id, bool loop);
 
  private:
-  Mix_Music* data_;
+  std::string filename_;
 };
+
+#ifdef PINDROP_MULTISTREAM
+void FreeFinishedMusicMultistream(void* userdata, Mix_Music* music,
+                                  int channel);
+#else
+void FreeFinishedMusic();
+#endif  // PINDROP_MULTISTREAM
 
 }  // namespace pindrop
 

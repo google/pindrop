@@ -34,25 +34,38 @@ extern "C" {
 Mix_Chunk* Mix_LoadWAV_RW(SDL_RWops*, int) { return NULL; }
 Mix_Music* Mix_LoadMUS(const char*) { return NULL; }
 int Mix_AllocateChannels(int) { return 0; }
+int Mix_FadeOutChannel(int, int) { return 0; }
 int Mix_HaltChannel(int) { return 0; }
-int Mix_HaltMusic() { return 0; }
 int Mix_Init(int) { return 0; }
 int Mix_OpenAudio(int, Uint16, int, int) { return 0; }
-int Mix_PlayChannelTimed(int, Mix_Chunk*, int, int) { return 0; }
-int Mix_FadeOutChannel(int, int) { return 0; }
-int Mix_PlayMusic(Mix_Music*, int) { return 0; }
 int Mix_Playing(int) { return 0; }
-int Mix_PlayingMusic() { return 0; }
 int Mix_Volume(int, int) { return MIX_MAX_VOLUME; }
-int Mix_VolumeMusic(int) { return MIX_MAX_VOLUME; }
 void Mix_CloseAudio() {}
 void Mix_FreeChunk(Mix_Chunk*) {}
 void Mix_FreeMusic(Mix_Music*) {}
-void Mix_Pause(int) {}
-void Mix_PauseMusic() {}
-int Mix_FadeOutMusic(int) { return 0; }
+#ifdef PINDROP_MULTISTREAM
+int Mix_FadeOutMusicCh(int, int) { return 0; }
+int Mix_HaltMusicCh(int) { return 0; }
+int Mix_PlayChannelTimed(int, Mix_Chunk*, int, int, int) { return 0; }
+int Mix_PlayMusicCh(Mix_Music*, int, int) { return 0; }
+int Mix_PlayingMusicCh(int) { return 0; }
+int Mix_VolumeMusicCh(int, int) { return MIX_MAX_VOLUME; }
+void Mix_HookMusicFinishedCh(void*, void (*)(void* userdata, Mix_Music* music, int channel)) {}
+void Mix_PauseMusicCh(int) {}
+void Mix_ResumeMusicCh(int) {}
+#else
 void Mix_Resume(int) {}
+void Mix_Pause(int) {}
+int Mix_FadeOutMusic(int) { return 0; }
+int Mix_HaltMusic() { return 0; }
+int Mix_PlayChannelTimed(int, Mix_Chunk*, int, int) { return 0; }
+int Mix_PlayMusic(Mix_Music*, int) { return 0; }
+int Mix_PlayingMusic() { return 0; }
+int Mix_VolumeMusic(int) { return MIX_MAX_VOLUME; }
+void Mix_HookMusicFinished(void (*)(void)) {}
+void Mix_PauseMusic() {}
 void Mix_ResumeMusic() {}
+#endif  // PINDROP_MULTISTREAM
 }
 
 static const float kEpsilon = 0.001f;

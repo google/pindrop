@@ -15,8 +15,11 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(pindrop)
 
-# Compile the game with the debug flag
-set(pindrop_DEBUG ON)
+option(pindrop_multistream "Support multiple channels of streaming audio" off)
+
+if(pindrop_multistream)
+  add_definitions(-DPINDROP_MULTISTREAM)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
@@ -148,6 +151,8 @@ add_custom_target(pindrop_demo_assets
 set(pindrop_SRCS
     include/pindrop/pindrop.h
     src/audio_engine.cpp
+    src/backend.cpp
+    src/backend.h
     src/bus.cpp
     src/bus.h
     src/channel.cpp
@@ -208,11 +213,6 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
 endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
-
-if(pindrop_DEBUG)
-  # if we want to define this, it needs to be only in debug builds
-  #add_definitions(-D_DEBUG)
-endif()
 
 set (SDL_LIBRARIES SDL2-static)
 if(WIN32)

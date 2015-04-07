@@ -43,6 +43,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := \
   $(PINDROP_RELATIVE_DIR)/src/audio_engine.cpp \
+  $(PINDROP_RELATIVE_DIR)/src/backend.cpp \
   $(PINDROP_RELATIVE_DIR)/src/bus.cpp \
   $(PINDROP_RELATIVE_DIR)/src/channel.cpp \
   $(PINDROP_RELATIVE_DIR)/src/channel_internal_state.cpp \

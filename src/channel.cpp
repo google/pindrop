@@ -24,7 +24,7 @@ const int kFadeOutDurationMs = 10;
 
 void Channel::Clear() { state_ = nullptr; }
 
-bool Channel::Valid() const { return state_ && state_->handle(); }
+bool Channel::Valid() const { return state_ != nullptr; }
 
 bool Channel::Playing() const {
   assert(Valid());

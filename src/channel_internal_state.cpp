@@ -28,8 +28,7 @@ bool ChannelInternalState::IsStream() const {
   return handle_->GetSoundCollectionDef()->stream() != 0;
 }
 
-void ChannelInternalState::Clear() {
-  handle_ = nullptr;
+void ChannelInternalState::Remove() {
   priority_node_.Remove();
   bus_node_.Remove();
 }

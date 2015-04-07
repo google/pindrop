@@ -17,7 +17,7 @@
 
 namespace pindrop {
 
-class AudioConfig;
+struct AudioConfig;
 
 class Backend {
  public:

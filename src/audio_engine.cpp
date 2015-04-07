@@ -301,7 +301,7 @@ static ChannelInternalState* PlayBuffer(AudioEngineInternalState* state,
   if (!PlayCollection(*sound_handle, new_channel)) {
     // Error playing the sound, put it back in the free list.
     state->channel_state_free_list.push_back(new_channel);
-    new_channel->Clear();
+    new_channel->Remove();
     return nullptr;
   }
   return new_channel;
@@ -326,6 +326,16 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   ChannelInternalState* new_channel =
       PlayBuffer(state_, sound_handle, final_gain);
   if (new_channel) {
+#ifndef PINDROP_MULTISTREAM
+    // If we only support a single stream, stop tracking the channel assigned to
+    // the old stream.
+    if (new_channel->IsStream()) {
+      if (state_->stream_channel) {
+        state_->stream_channel->Remove();
+      }
+      state_->stream_channel = new_channel;
+    }
+#endif  // PINDROP_MULTISTREAM
     new_channel->SetGain(final_gain);
   }
   return Channel(new_channel);
@@ -395,12 +405,11 @@ static void EraseFinishedSounds(AudioEngine* engine) {
   for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
        node = next) {
     next = node->GetNext();
-    ChannelInternalState* channel_state =
+    ChannelInternalState* channel =
         ChannelInternalState::GetInstanceFromPriorityNode(node);
-    Channel channel(channel_state);
-    if (!channel.Playing()) {
-      state->channel_state_free_list.push_back(channel_state);
-      channel_state->Clear();
+    if (!channel->Playing()) {
+      state->channel_state_free_list.push_back(channel);
+      channel->Remove();
     }
   }
 }

@@ -151,6 +151,7 @@ add_custom_target(pindrop_demo_assets
 set(pindrop_SRCS
     include/pindrop/pindrop.h
     src/audio_engine.cpp
+    src/audio_engine_internal_state.h
     src/backend.cpp
     src/backend.h
     src/bus.cpp

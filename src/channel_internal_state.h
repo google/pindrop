@@ -40,7 +40,7 @@ class ChannelInternalState {
 
   bool IsStream() const;
 
-  void Clear();
+  void Remove();
 
   void SetHandle(SoundHandle handle);
   SoundHandle handle() const { return handle_; }

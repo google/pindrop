@@ -1,9 +1,13 @@
-SoundBankDef         {#pindrop_guide_sound_bank_def}
+SoundBankDef    {#pindrop_guide_sound_bank_def}
 ============
 
-Another file, sounds_assets.json, is used to load these individual
-`SoundCollection`s.  Filenames listed in this JSON file will be loaded in
-order.  The index of a sound collection in this file represents the unique
-identifier used to play a that sound collection.   E.g., the first sound
-sound collection listed would be played by calling
-`audio_engine.PlaySound(0)`.
+A `SoundBankDef` is simply a list of [SoundCollectionDef][]s to load. Each
+`[SoundCollectionDef][] will be loaded only once, so there is no need to worry
+about specifying a [SoundCollectionDef][] in multiple `SoundBankDef`s.
+`SoundBankDef`s allow you to decide how much memory you want to devote to audio
+assets and manage groups of them together.
+
+<br>
+
+  [SoundCollectionDef]: @ref pindrop_guide_sound_collection_def
+

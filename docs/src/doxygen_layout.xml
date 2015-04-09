@@ -41,6 +41,20 @@
         <tab type="user" url="@ref pindrop_guide_sound_collection_def" title="SoundCollectionDef"/>
       </tab>
     </tab>
+    <tab type="usergroup" url="@ref pindrop_api_reference"
+         title="API Reference">
+      <tab type="modules" visible="yes" title="" intro=""/>
+      <tab type="classes" visible="yes" title="">
+        <tab type="classlist" visible="yes" title="" intro=""/>
+        <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/>
+        <tab type="hierarchy" visible="yes" title="" intro=""/>
+        <tab type="classmembers" visible="yes" title="" intro=""/>
+      </tab>
+      <tab type="files" visible="yes" title="">
+        <tab type="filelist" visible="yes" title="" intro=""/>
+        <tab type="globals" visible="yes" title="" intro=""/>
+      </tab>
+    </tab>
     <tab type="user" url="@ref pindrop_readme" title="Readme"/>
     <tab type="user" url="@ref contributing" title="Contributing"/>
   </navindex>

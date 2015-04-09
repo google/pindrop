@@ -758,10 +758,11 @@ INPUT                  = "index.md" \
                          "programmers_guide/datafiles/buses.md" \
                          "programmers_guide/datafiles/sound_bank_def.md" \
                          "programmers_guide/datafiles/sound_collection_def.md" \
+                         "api_reference.md" \
                          "../../README.md" \
                          "contributing.md" \
                          "groups" \
-                         "../../src"
+                         "../../include/pindrop/pindrop.h"
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

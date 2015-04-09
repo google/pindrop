@@ -7,10 +7,10 @@ You can use [cmake][] to generate an [Xcode][] project for Pindrop on [OS X][].
 
 These are the minimum required versions for building Pindrop on OS X:
 
--   [OS X][]: Mavericks 10.9.1.
--   [Xcode][]: 5.1.1 or newer
--   [cmake][]: 2.8.12 or newer
--   [Python][]: 2.7.*
+  * [OS X][]: Mavericks 10.9.1.
+  * [Xcode][]: 5.1.1 or newer
+  * [cmake][]: 2.8.12 or newer
+  * [Python][]: 2.7.x
 
 # Before Building    {#building_osx_prerequisites}
 
@@ -28,14 +28,14 @@ directory.
 
 # Building with Xcode
 
--   Double-click on `pindrop/pindrop.xcodeproj` to open the project in
+  * Double-click on `pindrop/pindrop.xcodeproj` to open the project in
     [Xcode][].
--   Select "Product-->Build" from the menu.
+  * Select "Product-->Build" from the menu.
 
 You can also build the game from the command-line.
 
--   Run `xcodebuild` after generating the Xcode project to build all targets.
--   You may need to force the `generated_includes` target to be built first.
+  * Run `xcodebuild` after generating the Xcode project to build all targets.
+  * You may need to force the `generated_includes` target to be built first.
 
 For example, in the pindrop directory:
 
@@ -47,7 +47,7 @@ For example, in the pindrop directory:
 <br>
 
   [cmake]: http://www.cmake.org
-  [Pindrop]: @ref pindrop_guide_overview
   [OS X]: http://www.apple.com/osx/
-  [Xcode]: http://developer.apple.com/xcode/
+  [Pindrop]: @ref pindrop_guide_overview
   [Python]: http://www.python.org/download/releases/2.7/
+  [Xcode]: http://developer.apple.com/xcode/

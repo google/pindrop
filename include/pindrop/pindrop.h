@@ -25,6 +25,10 @@
 #define PINDROP_STRING_EXPAND(X) #X
 #define PINDROP_STRING(X) PINDROP_STRING_EXPAND(X)
 
+/// @file pindrop/pindrop.h
+/// @brief The public API consisting of the AudioEngine, Channel, and Listener
+///        classes.
+
 namespace pindrop {
 
 class Channel;
@@ -37,21 +41,44 @@ struct AudioEngineInternalState;
 typedef SoundCollection* SoundHandle;
 typedef size_t ListenerId;
 
-extern const Channel kInvalidChannel;
-
+/// @class Listener
+///
+/// @brief An object whose distance from sounds determines their gain.
+///
+/// The Listener class is a lightweight reference to a ListenerInternalState
+/// which is managed by the AudioEngine. Multiple Listener objects may point to
+/// the same underlying data.
 class Listener {
  public:
+  /// @brief Construct an uninitialized Listener.
+  ///
+  /// An uninitialized Listener can not have its location set or queried.
+  ///
+  /// To initialize the Listener, use <code>AudioEngine::AddListener();</code>
   Listener() : state_(nullptr) {}
+
   explicit Listener(ListenerInternalState* state) : state_(state) {}
 
-  // Uninitializes this Listener. Note that this does not destroy the listener
-  // itself, it just removes this reference to it.
+  /// @brief Uninitializes this Listener.
+  ///
+  /// Uninitializes this Listener. Note that this does not destroy the internal
+  /// state it references; it just removes this reference to it.
+  /// To destroy the Listener, use <code>AudioEngine::RemoveListener();</code>
   void Clear();
 
-  // Checks whether this listener has been initialized.
+  /// @brief Checks whether this Listener has been initialized.
+  ///
+  /// @return Returns true if this Listener is initialized.
   bool Valid() const;
 
+  /// @brief Get the location of this Listener.
+  ///
+  /// @return The location of this Listener.
   mathfu::Vector<float, 3> Location() const;
+
+  /// @brief Set the location of this Listener.
+  ///
+  /// @param location The new location of the Listener.
   void SetLocation(const mathfu::Vector<float, 3>& location);
 
   ListenerInternalState* state() { return state_; }
@@ -60,84 +87,193 @@ class Listener {
   ListenerInternalState* state_;
 };
 
+/// @class Channel
+///
+/// @brief An object that represents a single channel of audio.
+///
+/// The Channel class is a lightweight reference to a ChannelInternalState
+/// which is managed by the AudioEngine. Multiple Channel objects may point to
+/// the same underlying data.
 class Channel {
  public:
+  /// @brief Construct an uninitialized Listener.
+  ///
+  /// An uninitialized Construct can not have its location set or queried.
+  ///
+  /// To initialize the Channel, use <code>AudioEngine::PlaySound();</code>
   Channel() : state_(nullptr) {}
+
   explicit Channel(ChannelInternalState* state) : state_(state) {}
 
-  // Uninitializes this Channel. Note that this does not destroy the channel
-  // itself, it just removes this reference to it.
+  /// @brief Uninitializes this Channel.
+  ///
+  /// Uninitializes this Channel. Note that this does not stop the audio or
+  /// destroy the internal state it references; it just removes this reference
+  /// to it. To stop the Channel use <code>Channel::Stop();</code>
   void Clear();
 
-  // Checks whether this channel has been initialized.
+  /// @brief Checks whether this Channel has been initialized.
   bool Valid() const;
 
-  // Checks if the sound playing on a given channel is playing
+  /// @brief Checks if the sound playing on a given Channel is playing.
+  ///
+  /// @return Whether the Channel is currently playing.
   bool Playing() const;
 
-  // Stop a channel.
+  /// @brief Stop a channel.
+  ///
+  /// Stop this channel from playing. A sound will stop on its own if it not set
+  /// to loop. Looped audio must be explicitly stopped.
   void Stop();
 
-  // Sets or gets the location of a playing sound.
+  /// @brief Get the location of this Channel.
+  ///
+  /// If the audio on this channel is not set to be Positional this property
+  /// does nothing.
+  ///
+  /// @return The location of this Channel.
   const mathfu::Vector<float, 3> Location() const;
+
+  /// @brief Set the location of this Channel.
+  ///
+  /// If the audio on this channel is not set to be Positional this property
+  /// does nothing.
+  ///
+  /// @param location The new location of the Channel.
   void SetLocation(const mathfu::Vector<float, 3>& location);
 
  private:
   ChannelInternalState* state_;
 };
 
+/// @class AudioEngine
+///
+/// @brief The central class of the library that manages the Listeners,
+/// Channels, and tracks all of the internal state.
 class AudioEngine {
  public:
+  /// @brief Construct an uninitialized AudioEngine.
   AudioEngine() : state_(nullptr) {}
+
   ~AudioEngine();
 
-  // Initialize the audio engine.
-  // You may either initlize with a pointer to the AudioConfig structure or the
-  // file containing the AudioConfig flatbuffer.
+  /// @brief Initialize the audio engine.
+  ///
+  /// @param config_file the path to the file containing an AudioConfig
+  /// Flatbuffer binary.
+  /// @return Whether initialization was successful.
   bool Initialize(const char* config_file);
+
+  /// @brief Initialize the audio engine.
+  ///
+  /// @param config A pointer to a loaded AudioConfig object.
+  /// @return Whether initialization was successful.
   bool Initialize(const AudioConfig* config);
 
-  // Update audio volume per channel each frame.
+  /// @brief Update audio volume per channel each frame.
+  ///
+  /// @param delta_time the number of elapsed seconds since the last frame.
   void AdvanceFrame(float delta_time);
 
-  // Load a sound bank from a file.
-  // Returns true on success.
+  /// @brief Load a sound bank from a file.
+  ///
+  /// @param filename The file containing the SoundBank flatbuffer binary data.
+  /// @return Returns true on success
   bool LoadSoundBank(const std::string& filename);
 
-  // Unload a sound bank.
+  /// @brief Unload a sound bank.
+  ///
+  /// @param filename The file to unload.
   void UnloadSoundBank(const std::string& filename);
 
-  // Get a SoundHandle given its sound_id as defined in its flatbuffer.
-  SoundHandle GetSoundHandle(const std::string& sound_id) const;
+  /// @brief Get a SoundHandle given its name as defined in its JSON data.
+  ///
+  /// @param name The unique name as defined in the JSON data.
+  SoundHandle GetSoundHandle(const std::string& name) const;
 
-  // Get a SoundHandle given its filename.
+  /// @brief Get a SoundHandle given its SoundCollectionDef filename.
+  ///
+  /// @param name The filename containing the flatbuffer binary data.
   SoundHandle GetSoundHandleFromFile(const std::string& filename) const;
 
-  // Adjusts the gain on the master bus.
+  /// @brief Adjusts the gain on the master bus.
+  ///
+  /// @param master_gain the gain to apply to all buses.
   void set_master_gain(float master_gain);
+
+  /// @brief Get the master bus's current gain.
+  ///
+  /// @return the master bus's current gain.
   float master_gain();
 
-  // Mutes the audio engine completely.
+  /// @brief Mutes the AudioEngine completely.
+  ///
+  /// @param mute whether to mute or unmute the AudioEngine.
   void set_mute(bool mute);
+
+  /// @brief Whether the AudioEngine is currently muted.
+  ///
+  /// @return Whether the AudioEngine is currently muted.
   bool mute();
 
-  // Pauses all playing sounds and streams.
+  /// @brief Pauses all playing sounds and streams.
+  ///
+  /// @param pause Whether to pause or unpause the AudioEngine.
   void Pause(bool pause);
 
+  /// @brief Initialize and return a Listener.
+  ///
+  /// @return An initialized Listener.
   Listener AddListener();
+
+  /// @brief Remove a Listener.
+  ///
+  /// @param The Listener to be removed.
   void RemoveListener(Listener* listener);
 
-  // Play a sound associated with the given sound_handle.
-  // Returns the channel the sound is played on.
-  // Playing a SoundHandle is faster while passing the sound by sound_id incurs
-  // a map lookup.
+  /// @brief Play a sound associated with the given sound_handle.
+  ///
+  /// @param sound_handle A handle to the sound to play.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
   Channel PlaySound(SoundHandle sound_handle);
+
+  /// @brief Play a sound associated with the given sound_handle at the given
+  ///        location.
+  ///
+  /// @param sound_handle A handle to the sound to play.
+  /// @param location The location of the sound.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
   Channel PlaySound(SoundHandle sound_handle,
                     const mathfu::Vector<float, 3>& location);
-  Channel PlaySound(const std::string& sound_id);
-  Channel PlaySound(const std::string& sound_id,
+
+  /// @brief Play a sound associated with the given sound name.
+  ///
+  /// Note: Playing a sound with its SoundHandle is faster than using the sound
+  /// name as using the name requires a map lookup internally.
+  ///
+  /// @param sound_name A handle to the sound to play.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
+  Channel PlaySound(const std::string& sound_name);
+
+  /// @brief Play a sound associated with the given sound name at the given
+  ///        location.
+  ///
+  /// Note: Playing a sound with its SoundHandle is faster than using the sound
+  /// name as using the name requires a map lookup internally.
+  ///
+  /// @param sound_name A handle to the sound to play.
+  /// @param location The location of the sound.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
+  Channel PlaySound(const std::string& sound_name,
                     const mathfu::Vector<float, 3>& location);
 
+  /// @brief Get the version string.
+  ///
+  /// @return The version string.
   const char* version_string() const;
 
   AudioEngineInternalState* state() { return state_; }

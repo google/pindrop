@@ -18,8 +18,6 @@
 
 namespace pindrop {
 
-const Channel kInvalidChannel(nullptr);
-
 const int kFadeOutDurationMs = 10;
 
 void Channel::Clear() { state_ = nullptr; }

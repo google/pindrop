@@ -34,15 +34,6 @@ import sys
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             os.path.pardir))
 
-PREBUILTS_ROOT = os.path.abspath(os.path.join(os.path.join(PROJECT_ROOT),
-                                              os.path.pardir, os.path.pardir,
-                                              os.path.pardir, os.path.pardir,
-                                              'prebuilts'))
-
-PINDROP_ROOT = os.path.abspath(os.path.join(os.path.join(PROJECT_ROOT),
-                                            os.path.pardir, os.path.pardir,
-                                            'libs', "audio_engine"))
-
 # Directories that may contains the FlatBuffers compiler.
 FLATBUFFERS_PATHS = [
     os.path.join(PROJECT_ROOT, 'bin'),
@@ -63,7 +54,7 @@ RAW_SOUND_PATH = os.path.join(RAW_ASSETS_PATH, 'sounds')
 RAW_SOUND_BANK_PATH = os.path.join(RAW_ASSETS_PATH, 'sound_banks')
 
 # Directory where unprocessed assets can be found.
-SCHEMA_PATHS = [ os.path.join(PINDROP_ROOT, 'schemas') ]
+SCHEMA_PATHS = [ os.path.join(PROJECT_ROOT, 'schemas') ]
 
 # Windows uses the .exe extension on executables.
 EXECUTABLE_EXTENSION = '.exe' if platform.system() == 'Windows' else ''

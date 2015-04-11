@@ -115,7 +115,7 @@ static void InitializeChannelFreeList(
 
 static void InitializeListenerFreeList(
     std::vector<ListenerInternalState*>* listener_state_free_list,
-    std::vector<ListenerInternalState>* listeners, unsigned int list_size) {
+    ListenerStateVector* listeners, unsigned int list_size) {
   listeners->resize(list_size);
   listener_state_free_list->reserve(list_size);
   for (size_t i = 0; i < list_size; ++i) {
@@ -229,6 +229,91 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
   }
 }
 
+bool BestListener(
+    ListenerInternalState** best_listener, float* distance_squared,
+    mathfu::Vector<float, 3>* listener_space_location,
+    const TypedIntrusiveListNode<ListenerInternalState>& listeners,
+    const mathfu::Vector<float, 3>& location) {
+  if (listeners.IsEmpty()) {
+    return false;
+  }
+
+  ListenerInternalState* listener = listeners.GetNext();
+  *listener_space_location = listener->matrix() * location;
+  *distance_squared = listener_space_location->LengthSquared();
+  *best_listener = listener;
+  for (listener = listener->GetNext(); listener != listeners.GetTerminator();
+       listener = listener->GetNext()) {
+    mathfu::Vector<float, 3> transformed_location =
+        listener->matrix() * location;
+    float magnitude_squared = transformed_location.LengthSquared();
+    if (magnitude_squared < *distance_squared) {
+      *best_listener = listener;
+      *distance_squared = magnitude_squared;
+      *listener_space_location = transformed_location;
+    }
+  }
+  return true;
+}
+
+mathfu::Vector<float, 2> CalculatePan(
+    const mathfu::Vector<float, 3>& listener_space_location) {
+  mathfu::Vector<float, 3> direction = listener_space_location.Normalized();
+  return mathfu::Vector<float, 2>(
+      mathfu::Vector<float, 3>::DotProduct(mathfu::kAxisX3f, direction),
+      mathfu::Vector<float, 3>::DotProduct(mathfu::kAxisZ3f, direction));
+}
+
+float AttenuationCurve(float point, float lower_bound, float upper_bound,
+                       float curve_factor) {
+  assert(lower_bound <= point && point <= upper_bound && curve_factor >= 0.0f);
+  float distance = point - lower_bound;
+  float range = upper_bound - lower_bound;
+  return distance / ((range - distance) * (curve_factor - 1.0f) + range);
+}
+
+inline float Square(float f) { return f * f; }
+
+float CalculateDistanceAttenuation(float distance_squared,
+                                   const SoundCollectionDef* def) {
+  if (distance_squared < Square(def->min_audible_radius()) ||
+      distance_squared > Square(def->max_audible_radius())) {
+    return 0.0f;
+  }
+  float distance = std::sqrt(distance_squared);
+  if (distance < def->roll_in_radius()) {
+    return AttenuationCurve(distance, def->min_audible_radius(),
+                            def->roll_in_radius(), def->roll_in_curve_factor());
+  } else if (distance > def->roll_out_radius()) {
+    return 1.0f - AttenuationCurve(distance, def->roll_out_radius(),
+                                   def->max_audible_radius(),
+                                   def->roll_out_curve_factor());
+  } else {
+    return 1.0f;
+  }
+}
+
+static void CalculateGainAndPan(
+    float* gain, mathfu::Vector<float, 2>* pan, SoundCollection* collection,
+    const mathfu::Vector<float, 3>& location,
+    const TypedIntrusiveListNode<ListenerInternalState>& listener_list) {
+  const SoundCollectionDef* def = collection->GetSoundCollectionDef();
+  *gain = def->gain() * collection->bus()->gain();
+  if (def->mode() == Mode_Positional) {
+    ListenerInternalState* listener;
+    float distance_squared;
+    mathfu::Vector<float, 3> listener_space_location;
+    if (BestListener(&listener, &distance_squared, &listener_space_location,
+                     listener_list, location)) {
+      *gain *= CalculateDistanceAttenuation(distance_squared, def);
+      *pan = CalculatePan(listener_space_location);
+    } else {
+      *gain = 0.0f;
+      *pan = mathfu::kZeros2f;
+    }
+  }
+}
+
 static bool PlayCollection(const SoundCollection& collection,
                            ChannelInternalState* channel) {
   SoundSource* source = collection.Select();
@@ -236,9 +321,6 @@ static bool PlayCollection(const SoundCollection& collection,
   if (!channel->Play(source, def.loop() != 0)) {
     return false;
   }
-  const float gain =
-      source->audio_sample_set_entry().audio_sample()->gain() * def.gain();
-  channel->SetGain(gain);
   return true;
 }
 
@@ -280,37 +362,6 @@ static ChannelInternalState* FindFreeChannelInternalState(
   return new_channel;
 }
 
-static ChannelInternalState* PlayBuffer(AudioEngineInternalState* state,
-                                        SoundHandle sound_handle, float gain) {
-  // Find where it belongs in the list.
-  float priority = gain * sound_handle->GetSoundCollectionDef()->priority();
-  ChannelInternalState* insertion_point =
-      FindInsertionPoint(&state->playing_channel_list, priority);
-
-  // Decide which ChannelInternalState object to use.
-  ChannelInternalState* new_channel = FindFreeChannelInternalState(
-      &state->playing_channel_list, insertion_point,
-      state->channel_state_free_list);
-
-  // The sound could not be added to the list; not high enough priority.
-  if (new_channel == nullptr) {
-    return nullptr;
-  }
-
-  // Now that we have our new sound, set the data on it and update the next
-  // pointers.
-  new_channel->SetHandle(sound_handle);
-
-  // Attempt to play the sound.
-  if (!PlayCollection(*sound_handle, new_channel)) {
-    // Error playing the sound, put it back in the free list.
-    state->channel_state_free_list.push_back(new_channel);
-    new_channel->Remove();
-    return nullptr;
-  }
-  return new_channel;
-}
-
 Channel AudioEngine::PlaySound(SoundHandle sound_handle) {
   return PlaySound(sound_handle, mathfu::kZeros3f);
 }
@@ -323,25 +374,51 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
                  "Cannot play sound: invalid sound handle\n");
     return Channel(nullptr);
   }
-  float channel_gain = CalculateGain(
-      state_->listener_list, sound_handle->GetSoundCollectionDef(), location);
-  float bus_gain = sound_handle->bus()->gain();
-  float final_gain = channel_gain * bus_gain;
-  ChannelInternalState* new_channel =
-      PlayBuffer(state_, sound_handle, final_gain);
-  if (new_channel) {
-#ifndef PINDROP_MULTISTREAM
-    // If we only support a single stream, stop tracking the channel assigned to
-    // the old stream.
-    if (new_channel->IsStream()) {
-      if (state_->stream_channel) {
-        state_->stream_channel->Remove();
-      }
-      state_->stream_channel = new_channel;
-    }
-#endif  // PINDROP_MULTISTREAM
-    new_channel->SetGain(final_gain);
+
+  // Find where it belongs in the list.
+  float gain;
+  mathfu::Vector<float, 2> pan;
+  CalculateGainAndPan(&gain, &pan, collection, location, state_->listener_list);
+  float priority = gain * sound_handle->GetSoundCollectionDef()->priority();
+  ChannelInternalState* insertion_point =
+      FindInsertionPoint(&state_->playing_channel_list, priority);
+
+  // Decide which ChannelInternalState object to use.
+  ChannelInternalState* new_channel = FindFreeChannelInternalState(
+      &state_->playing_channel_list, insertion_point,
+      state_->channel_state_free_list);
+
+  // The sound could not be added to the list; not high enough priority.
+  if (new_channel == nullptr) {
+    return Channel(nullptr);
   }
+
+  // Now that we have our new sound, set the data on it and update the next
+  // pointers.
+  new_channel->SetHandle(sound_handle);
+
+  // Attempt to play the sound.
+  if (!PlayCollection(*sound_handle, new_channel)) {
+    // Error playing the sound, put it back in the free list.
+    state_->channel_state_free_list.push_back(new_channel);
+    new_channel->Remove();
+    return Channel(nullptr);
+  }
+
+  new_channel->SetGain(gain);
+  new_channel->SetPan(pan);
+
+#ifndef PINDROP_MULTISTREAM
+  // If we only support a single stream, stop tracking the channel assigned to
+  // the old stream.
+  if (new_channel->IsStream()) {
+    if (state_->stream_channel) {
+      state_->stream_channel->Remove();
+    }
+    state_->stream_channel = new_channel;
+  }
+#endif  // PINDROP_MULTISTREAM
+
   return Channel(new_channel);
 }
 
@@ -418,78 +495,14 @@ static void EraseFinishedSounds(AudioEngine* engine) {
   }
 }
 
-float BestListener(ListenerInternalState** best_listener,
-                   TypedIntrusiveListNode<ListenerInternalState>& listeners,
-                   const mathfu::Vector<float, 3>& location) {
-  assert(!listeners.IsEmpty());
-
-  ListenerInternalState* listener = listeners.GetNext();
-  mathfu::Vector<float, 3> delta = listener->Location() - location;
-  float distance_squared = delta.LengthSquared();
-  *best_listener = listener;
-
-  for (listener = listener->GetNext(); listener != listeners.GetTerminator();
-       listener = listener->GetNext()) {
-    delta = listener->Location() - location;
-    float delta_magnitude = delta.LengthSquared();
-    if (delta_magnitude < distance_squared) {
-      *best_listener = listener;
-      distance_squared = delta_magnitude;
-    }
-  }
-  return distance_squared;
-}
-
-inline float Square(float f) { return f * f; }
-
-float AttenuationCurve(float point, float lower_bound, float upper_bound,
-                       float curve_factor) {
-  assert(lower_bound <= point && point <= upper_bound && curve_factor >= 0.0f);
-  float distance = point - lower_bound;
-  float range = upper_bound - lower_bound;
-  return distance / ((range - distance) * (curve_factor - 1.0f) + range);
-}
-
-float CalculatePositionalAttenuation(float distance_squared,
-                                     const SoundCollectionDef* def) {
-  if (distance_squared < Square(def->min_audible_radius()) ||
-      distance_squared > Square(def->max_audible_radius())) {
-    return 0.0f;
-  }
-  float distance = std::sqrt(distance_squared);
-  if (distance < def->roll_in_radius()) {
-    return AttenuationCurve(distance, def->min_audible_radius(),
-                            def->roll_in_radius(), def->roll_in_curve_factor());
-  } else if (distance > def->roll_out_radius()) {
-    return 1.0f - AttenuationCurve(distance, def->roll_out_radius(),
-                                   def->max_audible_radius(),
-                                   def->roll_out_curve_factor());
-  } else {
-    return 1.0f;
-  }
-}
-
-float CalculateGain(TypedIntrusiveListNode<ListenerInternalState>& listeners,
-                    const SoundCollectionDef* def,
-                    const mathfu::Vector<float, 3>& location) {
-  if (def->mode() == Mode_Nonpositional) {
-    return def->gain();
-  } else if (!listeners.IsEmpty()) {
-    ListenerInternalState* listener;
-    float distance_squared = BestListener(&listener, listeners, location);
-    return def->gain() * CalculatePositionalAttenuation(distance_squared, def);
-  } else {
-    return 0.0f;
-  }
-}
-
 static void UpdateChannel(ChannelInternalState* channel,
                           AudioEngineInternalState* state) {
-  float channel_gain = CalculateGain(state->listener_list,
-                                     channel->handle()->GetSoundCollectionDef(),
-                                     channel->Location());
-  float bus_gain = channel->handle()->bus()->gain();
-  channel->SetGain(channel_gain * bus_gain);
+  float gain;
+  mathfu::Vector<float, 2> pan;
+  CalculateGainAndPan(&gain, &pan, channel->handle(), channel->Location(),
+                      state->listener_list);
+  channel->SetGain(gain);
+  channel->SetPan(pan);
 }
 
 void AudioEngine::AdvanceFrame(float delta_time) {

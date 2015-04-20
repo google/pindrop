@@ -413,6 +413,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   // the old stream.
   if (new_channel->IsStream()) {
     if (state_->stream_channel) {
+      state_->channel_state_free_list.push_back(state_->stream_channel);
       state_->stream_channel->Remove();
     }
     state_->stream_channel = new_channel;

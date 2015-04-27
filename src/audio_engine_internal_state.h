@@ -15,13 +15,15 @@
 #ifndef PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 #define PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 
+#include "pindrop/pindrop.h"
+
 #include <vector>
 #include <map>
 
 #include "backend.h"
 #include "bus.h"
 #include "channel_internal_state.h"
-#include "pindrop/pindrop.h"
+#include "mathfu/utilities.h"
 #include "sound.h"
 #include "sound_bank.h"
 #include "sound_collection.h"
@@ -44,6 +46,12 @@ typedef std::map<std::string, std::unique_ptr<SoundBank>> SoundBankMap;
 
 typedef flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>
     BusNameList;
+
+typedef std::vector<ChannelInternalState> ChannelStateVector;
+
+typedef std::vector<ListenerInternalState,
+                    mathfu::simd_allocator<ListenerInternalState>>
+    ListenerStateVector;
 
 struct AudioEngineInternalState {
   Backend backend;
@@ -74,7 +82,7 @@ struct AudioEngineInternalState {
 
   // A list of the currently playing sounds.
   IntrusiveListNode playing_channel_list;
-  std::vector<ChannelInternalState> channel_state_memory;
+  ChannelStateVector channel_state_memory;
   std::vector<ChannelInternalState*> channel_state_free_list;
 
 #ifndef PINDROP_MULTISTREAM
@@ -84,7 +92,7 @@ struct AudioEngineInternalState {
 
   // The list of listeners.
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
-  std::vector<ListenerInternalState> listener_state_memory;
+  ListenerStateVector listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
@@ -101,12 +109,15 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
                                          float priority);
 
-// Given a list of listener and a location, find which listener is closest.
+// Given a list of listeners and a location, find which listener is closest.
 // Additionally, return the square of the distance between the closest listener
-// and the location.
-float BestListener(ListenerInternalState** best_listener,
-                   TypedIntrusiveListNode<ListenerInternalState>& listeners,
-                   const mathfu::Vector<float, 3>& location);
+// and the location, as well as the given location translated into listener
+// space.  Returns true on success, or false if the list was empty.
+bool BestListener(
+    ListenerInternalState** best_listener, float* distance_squared,
+    mathfu::Vector<float, 3>* listener_space_location,
+    const TypedIntrusiveListNode<ListenerInternalState>& listeners,
+    const mathfu::Vector<float, 3>& location);
 
 // This will take a point between lower_bound and upper_bound and use it to
 // calculate an attenuation multiplier. The curve_factor can be adjusted based
@@ -125,12 +136,17 @@ float AttenuationCurve(float point, float lower_bound, float upper_bound,
 
 // Determine whether the sound can be heard at all. If it can, apply the roll
 // in gain, roll out gain, or norminal gain appropriately.
-float CalculatePositionalAttenuation(float distance_squared,
-                                     const SoundCollectionDef* def);
+float CalculateDistanceAttenuation(float distance_squared,
+                                   const SoundCollectionDef* def);
 
-float CalculateGain(TypedIntrusiveListNode<ListenerInternalState>& listeners,
-                    const SoundCollectionDef* def,
-                    const mathfu::Vector<float, 3>& location);
+// Given a vector in listener space, return a vector inside a unit circle
+// representing the direction from the listener to the sound. A value of (-1, 0)
+// means the sound is directly to the listener's left, while a value of (1, 0)
+// means the sound is directly to the listener's right. Likewise, values of
+// (0, 1) and (0, -1) mean the sound is directly in front or behind the
+// listener, respectively.
+mathfu::Vector<float, 2> CalculatePan(
+    const mathfu::Vector<float, 3>& listener_space_location);
 
 bool LoadFile(const char* filename, std::string* dest);
 

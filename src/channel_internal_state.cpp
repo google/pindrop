@@ -14,6 +14,14 @@
 
 #include "channel_internal_state.h"
 
+#ifdef _WIN32
+#if !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES // For M_PI.
+#endif  // !defined(_USE_MATH_DEFINES)
+#endif  // _WIN32
+
+#include <math.h>
+
 #include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "bus.h"
@@ -119,6 +127,17 @@ void ChannelInternalState::FadeOut(int milliseconds) {
   if (channels_halted == 0) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error halting channel %i\n");
   }
+}
+
+void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
+  static const Uint8 kMaxPanValue = 255;
+
+  // This formula is explained in the following paper:
+  // http://www.rs-met.com/documents/tutorials/PanRules.pdf
+  float p = static_cast<float>(M_PI) * (pan.x() + 1.0f) / 4.0f;
+  Uint8 left = static_cast<Uint8>(cos(p) * kMaxPanValue);
+  Uint8 right = static_cast<Uint8>(sin(p) * kMaxPanValue);
+  Mix_SetPanning(channel_id_, left, right);
 }
 
 float ChannelInternalState::Priority() const {

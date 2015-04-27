@@ -17,6 +17,8 @@
 
 #include <string>
 
+#include "mathfu/matrix.h"
+#include "mathfu/matrix_4x4.h"
 #include "mathfu/vector_3.h"
 
 #define PINDROP_VERSION_MAJOR 1
@@ -80,6 +82,26 @@ class Listener {
   ///
   /// @param location The new location of the Listener.
   void SetLocation(const mathfu::Vector<float, 3>& location);
+
+  /// @brief Set the location, direction and up vector of this Listener.
+  ///
+  /// @param location The location of this listener.
+  /// @param direction The direction this listener is facing.
+  /// @param up The up vector of this listener.
+  void SetOrientation(const mathfu::Vector<float, 3>& location,
+                      const mathfu::Vector<float, 3>& direction,
+                      const mathfu::Vector<float, 3>& up);
+
+  /// @brief Set the location and orientation of this Listener using a matrix.
+  ///
+  /// @param matrix The matrix representating the location and orientation of
+  ///               this listener.
+  void SetMatrix(const mathfu::Matrix<float, 4>& matrix);
+
+  /// @brief Get the matrix of this Listener.
+  ///
+  /// @return The matrix of this Listener.
+  const mathfu::Matrix<float, 4>& Matrix() const;
 
   ListenerInternalState* state() { return state_; }
 

@@ -17,6 +17,7 @@
 
 #include "intrusive_list.h"
 #include "mathfu/vector_3.h"
+#include "mathfu/vector_2.h"
 #include "pindrop/pindrop.h"
 
 namespace pindrop {
@@ -70,6 +71,9 @@ class ChannelInternalState {
 
   // Fade out over the specified number of milliseconds.
   void FadeOut(int milliseconds);
+
+  // Sets the pan based on a position in a unit circle.
+  void SetPan(const mathfu::Vector<float, 2>& pan);
 
   float Priority() const;
 

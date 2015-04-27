@@ -209,7 +209,8 @@ void DemoState::UpdateIcons(float delta_time) {
   for (size_t i = 0; i < listener_icons_.size(); ++i) {
     ListenerIcon& icon = listener_icons_[i];
     UpdateIconState(&icon, delta_time);
-    icon.listener.SetLocation(mathfu::Vector<float, 3>(icon.location, 0.0f));
+    mathfu::Vector<float, 3> location(icon.location, 0.0f);
+    icon.listener.SetOrientation(location, mathfu::kAxisY3f, -mathfu::kAxisZ3f);
   }
 }
 
@@ -228,10 +229,9 @@ void DemoState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
 
 void DemoState::RemoveInvalidSounds() {
   channel_icons_.erase(
-      std::remove_if(channel_icons_.begin(), channel_icons_.end(),
-                     [](const ChannelIcon& icon) {
-                       return !icon.channel.Valid();
-                     }),
+      std::remove_if(
+          channel_icons_.begin(), channel_icons_.end(),
+          [](const ChannelIcon& icon) { return !icon.channel.Valid(); }),
       channel_icons_.end());
 }
 

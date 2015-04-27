@@ -15,23 +15,22 @@
 #include "intrusive_list.h"
 #include "mathfu/constants.h"
 #include "mathfu/vector_3.h"
+#include "mathfu/matrix_4x4.h"
 
 namespace pindrop {
 
 class ListenerInternalState
     : public TypedIntrusiveListNode<ListenerInternalState> {
  public:
-  ListenerInternalState() : location_(mathfu::kZeros3f) {}
+  ListenerInternalState() : matrix_(mathfu::Matrix<float, 4>::Identity()) {}
 
-  mathfu::Vector<float, 3> Location() const {
-    return mathfu::Vector<float, 3>(location_);
-  }
-  void SetLocation(const mathfu::Vector<float, 3>& location) {
-    location_ = location;
-  }
+  void set_matrix(const mathfu::Matrix<float, 4>& matrix) { matrix_ = matrix; }
+
+  mathfu::Matrix<float, 4>& matrix() { return matrix_; }
+  const mathfu::Matrix<float, 4>& matrix() const { return matrix_; }
 
  private:
-  mathfu::VectorPacked<float, 3> location_;
+  mathfu::Matrix<float, 4> matrix_;
 };
 
 }  // namespace pindrop

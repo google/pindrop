@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <map>
 
 #include "SDL.h"
@@ -93,23 +92,38 @@ static bool PopulateBuses(AudioEngineInternalState* state,
   return true;
 }
 
-static void InitializeChannelFreeList(
-    std::vector<ChannelInternalState*>* channel_state_free_list,
-    std::vector<ChannelInternalState>* channels, unsigned int list_size) {
+// The InternalChannelStates have three lists they are a part of: The engine's
+// priority list, the bus's playing sound list, and which free list they are in.
+// Initially, all nodes are in a free list becuase nothing is playing. Seperate
+// free lists are kept for real channels and virtual channels (where 'real'
+// channels are channels that have a channel_id
+static void InitializeChannelFreeLists(
+    IntrusiveListNode* real_channel_free_list,
+    IntrusiveListNode* virtual_channel_free_list,
+    std::vector<ChannelInternalState>* channels, unsigned int virtual_channels,
+    unsigned int real_channels) {
   // We do our own tracking of audio channels so that when a new sound is
   // played we can determine if one of the currently playing channels is lower
   // priority so that we can drop it.
-  channels->resize(list_size);
-  channel_state_free_list->reserve(list_size);
-  for (size_t i = 0; i < list_size; ++i) {
+  unsigned int total_channels = real_channels + virtual_channels;
+  channels->resize(total_channels);
+  for (size_t i = 0; i < total_channels; ++i) {
     ChannelInternalState& channel = (*channels)[i];
-    channel_state_free_list->push_back(&channel);
-    channel.set_channel_id(static_cast<ChannelId>(i));
     // Because the channels are in a vector they may have been copy constructed.
     // Intrusive lists misbehave in these cases, so they need to be
     // reinitialized.
-    channel.bus_node()->Initialize();
     channel.priority_node()->Initialize();
+    channel.free_node()->Initialize();
+    channel.bus_node()->Initialize();
+
+    // Track real channels separately from virtual channels.
+    if (i < real_channels) {
+      channel.set_channel_id(static_cast<ChannelId>(i));
+      real_channel_free_list->InsertAfter(channel.free_node());
+    } else {
+      channel.set_channel_id(static_cast<ChannelId>(kInvalidChannelId));
+      virtual_channel_free_list->InsertAfter(channel.free_node());
+    }
   }
 }
 
@@ -148,9 +162,10 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   }
 
   // Initialize the channel internal data.
-  InitializeChannelFreeList(&state_->channel_state_free_list,
-                            &state_->channel_state_memory,
-                            config->mixer_channels());
+  InitializeChannelFreeLists(
+      &state_->real_channel_free_list, &state_->virtual_channel_free_list,
+      &state_->channel_state_memory, config->mixer_virtual_channels(),
+      config->mixer_channels());
 
   // Initialize the listener internal data.
   InitializeListenerFreeList(&state_->listener_state_free_list,
@@ -314,18 +329,13 @@ static void CalculateGainAndPan(
   }
 }
 
-static bool PlayCollection(const SoundCollection& collection,
-                           ChannelInternalState* channel) {
-  SoundSource* source = collection.Select();
-  const SoundCollectionDef& def = *collection.GetSoundCollectionDef();
-  if (!channel->Play(source, def.loop() != 0)) {
-    return false;
-  }
-  return true;
-}
-
-ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
-                                         float priority) {
+// Given the priority of a node, and the list of ChannelInternalStates sorted by
+// priority, find the location in the list where the node would be inserted.
+// Note that the node should be inserted using InsertAfter. If the node you want
+// to insert turns out the be the highest priority node, this will return the
+// list terminator (and inserting after the terminator will put it at the front
+// of the list).
+IntrusiveListNode* FindInsertionPoint(IntrusiveListNode* list, float priority) {
   IntrusiveListNode* node;
   for (node = list->GetPrevious(); node != list->GetTerminator();
        node = node->GetPrevious()) {
@@ -335,19 +345,42 @@ ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
       break;
     }
   }
-  return ChannelInternalState::GetInstanceFromPriorityNode(node);
+  return node;
 }
 
+// Given a location to insert a node, take an InternalChannelState from the
+// appropritate list and insert it there. Return the new InternalChannelState.
+//
+// There are three places an InternalChannelState may be taken from. First, if
+// there are any real channels available in the real channel free list, use one
+// of those so that your channel can play.
+//
+// If there are no real channels, then use a free virtual channel instead so
+// that your channel can at least be tracked.
+//
+// If there are no real or virtual channels, use the node in the priority list,
+// remove it from the list, and insert it in the new insertion point. This
+// causes the lowest priority sound to stop being tracked.
+//
+// If the node you are trying to insert is the lowest priority, do nothing and
+// return a nullptr.
+//
+// This function could use some unit tests b/20752976
 static ChannelInternalState* FindFreeChannelInternalState(
-    IntrusiveListNode* list, ChannelInternalState* insertion_point,
-    std::vector<ChannelInternalState*>& free_list) {
+    IntrusiveListNode* insertion_point, IntrusiveListNode* list,
+    IntrusiveListNode* real_channel_free_list,
+    IntrusiveListNode* virtual_channel_free_list) {
   ChannelInternalState* new_channel = nullptr;
   // Grab a free ChannelInternalState if there is one.
-  if (free_list.size()) {
-    new_channel = free_list.back();
-    free_list.pop_back();
-    insertion_point->priority_node()->InsertAfter(new_channel->priority_node());
-  } else if (insertion_point->priority_node() != list->GetTerminator()) {
+  if (!real_channel_free_list->IsEmpty()) {
+    IntrusiveListNode* node = real_channel_free_list->GetNext()->Remove();
+    new_channel = ChannelInternalState::GetInstanceFromFreeNode(node);
+    insertion_point->InsertAfter(new_channel->priority_node());
+  } else if (!virtual_channel_free_list->IsEmpty()) {
+    IntrusiveListNode* node = virtual_channel_free_list->GetNext()->Remove();
+    new_channel = ChannelInternalState::GetInstanceFromFreeNode(node);
+    insertion_point->InsertAfter(new_channel->priority_node());
+  } else if (insertion_point != list->GetTerminator()->GetPrevious()) {
     // If there are no free sounds, and the new sound is not the lowest priority
     // sound, evict the lowest priority sound.
     IntrusiveListNode* node = list->GetPrevious();
@@ -355,8 +388,8 @@ static ChannelInternalState* FindFreeChannelInternalState(
     new_channel->Halt();
 
     // Move it to a new spot in the list if it needs to be moved.
-    if (insertion_point->priority_node() != node) {
-      insertion_point->priority_node()->InsertAfter(node->Remove());
+    if (insertion_point != node) {
+      insertion_point->InsertAfter(node->Remove());
     }
   }
   return new_channel;
@@ -364,6 +397,17 @@ static ChannelInternalState* FindFreeChannelInternalState(
 
 Channel AudioEngine::PlaySound(SoundHandle sound_handle) {
   return PlaySound(sound_handle, mathfu::kZeros3f);
+}
+
+// Returns this channel to the free appropriate free list based on whether it's
+// backed by a real channel or not.
+static void InsertIntoFreeList(AudioEngineInternalState* state,
+                               ChannelInternalState* channel) {
+  channel->Remove();
+  IntrusiveListNode* list = channel->is_real()
+                                ? &state->real_channel_free_list
+                                : &state->virtual_channel_free_list;
+  list->InsertAfter(channel->free_node());
 }
 
 Channel AudioEngine::PlaySound(SoundHandle sound_handle,
@@ -380,13 +424,13 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   mathfu::Vector<float, 2> pan;
   CalculateGainAndPan(&gain, &pan, collection, location, state_->listener_list);
   float priority = gain * sound_handle->GetSoundCollectionDef()->priority();
-  ChannelInternalState* insertion_point =
+  IntrusiveListNode* insertion_point =
       FindInsertionPoint(&state_->playing_channel_list, priority);
 
   // Decide which ChannelInternalState object to use.
   ChannelInternalState* new_channel = FindFreeChannelInternalState(
-      &state_->playing_channel_list, insertion_point,
-      state_->channel_state_free_list);
+      insertion_point, &state_->playing_channel_list,
+      &state_->real_channel_free_list, &state_->virtual_channel_free_list);
 
   // The sound could not be added to the list; not high enough priority.
   if (new_channel == nullptr) {
@@ -398,23 +442,24 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   new_channel->SetHandle(sound_handle);
 
   // Attempt to play the sound.
-  if (!PlayCollection(*sound_handle, new_channel)) {
+  if (!new_channel->Play(sound_handle)) {
     // Error playing the sound, put it back in the free list.
-    state_->channel_state_free_list.push_back(new_channel);
-    new_channel->Remove();
+    InsertIntoFreeList(state_, new_channel);
     return Channel(nullptr);
   }
 
-  new_channel->SetGain(gain);
-  new_channel->SetPan(pan);
+  new_channel->set_gain(gain);
+  if (new_channel->is_real()) {
+    new_channel->SetRealChannelGain(gain);
+    new_channel->SetPan(pan);
+  }
 
 #ifndef PINDROP_MULTISTREAM
   // If we only support a single stream, stop tracking the channel assigned to
   // the old stream.
   if (new_channel->IsStream()) {
     if (state_->stream_channel) {
-      state_->channel_state_free_list.push_back(state_->stream_channel);
-      state_->stream_channel->Remove();
+      InsertIntoFreeList(state_, state_->stream_channel);
     }
     state_->stream_channel = new_channel;
   }
@@ -489,9 +534,9 @@ static void EraseFinishedSounds(AudioEngine* engine) {
     next = node->GetNext();
     ChannelInternalState* channel =
         ChannelInternalState::GetInstanceFromPriorityNode(node);
+    channel->UpdateState();
     if (!channel->Playing()) {
-      state->channel_state_free_list.push_back(channel);
-      channel->Remove();
+      InsertIntoFreeList(state, channel);
     }
   }
 }
@@ -502,8 +547,73 @@ static void UpdateChannel(ChannelInternalState* channel,
   mathfu::Vector<float, 2> pan;
   CalculateGainAndPan(&gain, &pan, channel->handle(), channel->Location(),
                       state->listener_list);
-  channel->SetGain(gain);
-  channel->SetPan(pan);
+  channel->set_gain(gain);
+  if (channel->is_real()) {
+    channel->SetRealChannelGain(gain);
+    channel->SetPan(pan);
+  }
+}
+
+// Searches backwards through the list from start to finish looking for a real
+// channel.
+static IntrusiveListNode* FindRealChannel(IntrusiveListNode* start,
+                                          IntrusiveListNode* finish) {
+  IntrusiveListNode* node;
+  for (node = start; node != finish; node = node->GetPrevious()) {
+    ChannelInternalState* channel =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    if (channel->is_real()) {
+      return node;
+    }
+  }
+  return nullptr;
+}
+
+// If there are any free real channels, assign those to virtual channels that
+// need them. If the priority list has gaps (i.e. if there are real channels
+// that are lower priority than virtual channels) then move the lower priority
+// real channels to the higher priority virtual channels.
+// TODO(amablue): Write unit tests for this function. b/20696606
+static void UpdateRealChannels(IntrusiveListNode* priority_list,
+                               IntrusiveListNode* real_free_list,
+                               IntrusiveListNode* virtual_free_list) {
+  IntrusiveListNode* reverse_node = priority_list->GetPrevious();
+  IntrusiveListNode* node = priority_list->GetNext();
+  for (; node != priority_list->GetTerminator(); node = node->GetNext()) {
+    ChannelInternalState* channel =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    if (!channel->is_real()) {
+      // First check if there are any free real channels.
+      if (!real_free_list->IsEmpty()) {
+        // We have a free real channel. Assign this channel id to the channel
+        // that is trying to resume, clear the free channel, and push it into
+        // the virtual free list.
+        IntrusiveListNode* free_node = real_free_list->GetNext()->Remove();
+        ChannelInternalState* free_channel =
+            ChannelInternalState::GetInstanceFromFreeNode(free_node);
+        channel->set_channel_id(free_channel->channel_id());
+        free_channel->invalidate();
+        virtual_free_list->InsertAfter(free_node);
+        channel->Resume();
+      } else {
+        // If there aren't any free channels, then scan from the back of the
+        // list for low priority real channels.
+        reverse_node = FindRealChannel(reverse_node, node);
+        if (reverse_node == nullptr) {
+          // There is no more swapping that can be done. Return.
+          return;
+        }
+        // Found a real channel that we can give to the higher priority
+        // channel.
+        ChannelInternalState* reverse_channel =
+            ChannelInternalState::GetInstanceFromPriorityNode(reverse_node);
+        channel->set_channel_id(reverse_channel->channel_id());
+        reverse_channel->RealChannelHalt();
+        reverse_channel->invalidate();
+        channel->Resume();
+      }
+    }
+  }
 }
 
 void AudioEngine::AdvanceFrame(float delta_time) {
@@ -530,8 +640,11 @@ void AudioEngine::AdvanceFrame(float delta_time) {
         ChannelInternalState::GetInstanceFromPriorityNode(&a);
     const ChannelInternalState* channel_b =
         ChannelInternalState::GetInstanceFromPriorityNode(&b);
-    return channel_a->Priority() < channel_b->Priority();
+    return channel_b->Priority() < channel_a->Priority();
   });
+  UpdateRealChannels(&state_->playing_channel_list,
+                     &state_->real_channel_free_list,
+                     &state_->virtual_channel_free_list);
 }
 
 const char* AudioEngine::version_string() const {

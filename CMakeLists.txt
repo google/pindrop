@@ -228,6 +228,11 @@ mathfu_configure_flags(pindrop)
 
 # Dependencies for the executable target.
 add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
+target_link_libraries(pindrop
+  ${SDL_LIBRARIES}
+  sdl_mixer
+  libvorbis
+  libogg)
 
 add_executable(pindrop_demo ${pindrop_demo_SRCS})
 target_link_libraries(pindrop_demo

@@ -97,6 +97,9 @@ class ChannelInternalState {
   // Check if this channel is currently playing on a real or virtual channel.
   bool Playing() const;
 
+  // Check if this channel is currently stopped on a real or virtual channel.
+  bool Stopped() const;
+
   // Check if this channel is currently playing on a real channel.
   bool RealChannelPlaying() const;
 

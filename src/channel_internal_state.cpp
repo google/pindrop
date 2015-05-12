@@ -93,6 +93,10 @@ bool ChannelInternalState::Playing() const {
   return channel_state_ == kChannelStatePlaying;
 }
 
+bool ChannelInternalState::Stopped() const {
+  return channel_state_ == kChannelStateStopped;
+}
+
 void ChannelInternalState::SetRealChannelGain(const float gain) {
   assert(is_real());
   int mix_volume = static_cast<int>(gain * MIX_MAX_VOLUME);
@@ -202,9 +206,7 @@ void ChannelInternalState::UpdateState() {
       }
       break;
     }
-    default: {
-      assert(false);
-    }
+    default: { assert(false); }
   }
 }
 
@@ -231,4 +233,3 @@ void ChannelInternalState::ResumeAll() {
 }
 
 }  // namespace pindrop
-

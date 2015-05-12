@@ -71,6 +71,9 @@ struct AudioEngineInternalState {
   // If true, the master gain is ignored and all channels have a gain of 0.
   bool mute;
 
+  // If true, the entire audio engine has paused all playback.
+  bool paused;
+
   // A map of sound names to SoundCollections.
   SoundCollectionMap sound_collection_map;
 

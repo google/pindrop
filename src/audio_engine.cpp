@@ -369,10 +369,12 @@ IntrusiveListNode* FindInsertionPoint(IntrusiveListNode* list, float priority) {
 static ChannelInternalState* FindFreeChannelInternalState(
     IntrusiveListNode* insertion_point, IntrusiveListNode* list,
     IntrusiveListNode* real_channel_free_list,
-    IntrusiveListNode* virtual_channel_free_list) {
+    IntrusiveListNode* virtual_channel_free_list, bool paused) {
   ChannelInternalState* new_channel = nullptr;
-  // Grab a free ChannelInternalState if there is one.
-  if (!real_channel_free_list->IsEmpty()) {
+  // Grab a free ChannelInternalState if there is one and the engine is not
+  // paused. The engine is paused, grab a virtual channel for now, and it will
+  // fix itself when the engine is unpaused.
+  if (!paused && !real_channel_free_list->IsEmpty()) {
     IntrusiveListNode* node = real_channel_free_list->GetNext()->Remove();
     new_channel = ChannelInternalState::GetInstanceFromFreeNode(node);
     insertion_point->InsertAfter(new_channel->priority_node());
@@ -430,7 +432,8 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   // Decide which ChannelInternalState object to use.
   ChannelInternalState* new_channel = FindFreeChannelInternalState(
       insertion_point, &state_->playing_channel_list,
-      &state_->real_channel_free_list, &state_->virtual_channel_free_list);
+      &state_->real_channel_free_list, &state_->virtual_channel_free_list,
+      state_->paused);
 
   // The sound could not be added to the list; not high enough priority.
   if (new_channel == nullptr) {
@@ -441,11 +444,13 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   // pointers.
   new_channel->SetHandle(sound_handle);
 
-  // Attempt to play the sound.
-  if (!new_channel->Play(sound_handle)) {
-    // Error playing the sound, put it back in the free list.
-    InsertIntoFreeList(state_, new_channel);
-    return Channel(nullptr);
+  // Attempt to play the sound if the engine is not paused.
+  if (!state_->paused) {
+    if (!new_channel->Play(sound_handle)) {
+      // Error playing the sound, put it back in the free list.
+      InsertIntoFreeList(state_, new_channel);
+      return Channel(nullptr);
+    }
   }
 
   new_channel->set_gain(gain);
@@ -518,6 +523,7 @@ void AudioEngine::RemoveListener(Listener* listener) {
 }
 
 void AudioEngine::Pause(bool pause) {
+  state_->paused = pause;
   if (pause) {
     ChannelInternalState::PauseAll();
   } else {
@@ -525,8 +531,7 @@ void AudioEngine::Pause(bool pause) {
   }
 }
 
-static void EraseFinishedSounds(AudioEngine* engine) {
-  AudioEngineInternalState* state = engine->state();
+static void EraseFinishedSounds(AudioEngineInternalState* state) {
   IntrusiveListNode& list = state->playing_channel_list;
   IntrusiveListNode* next;
   for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
@@ -535,7 +540,7 @@ static void EraseFinishedSounds(AudioEngine* engine) {
     ChannelInternalState* channel =
         ChannelInternalState::GetInstanceFromPriorityNode(node);
     channel->UpdateState();
-    if (!channel->Playing()) {
+    if (channel->Stopped()) {
       InsertIntoFreeList(state, channel);
     }
   }
@@ -618,7 +623,7 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
 
 void AudioEngine::AdvanceFrame(float delta_time) {
   ++state_->current_frame;
-  EraseFinishedSounds(this);
+  EraseFinishedSounds(state_);
   for (size_t i = 0; i < state_->buses.size(); ++i) {
     state_->buses[i].ResetDuckGain();
   }
@@ -642,9 +647,12 @@ void AudioEngine::AdvanceFrame(float delta_time) {
         ChannelInternalState::GetInstanceFromPriorityNode(&b);
     return channel_b->Priority() < channel_a->Priority();
   });
-  UpdateRealChannels(&state_->playing_channel_list,
-                     &state_->real_channel_free_list,
-                     &state_->virtual_channel_free_list);
+  // No point in updating which channels are real and virtual when paused.
+  if (!state_->paused) {
+    UpdateRealChannels(&state_->playing_channel_list,
+                       &state_->real_channel_free_list,
+                       &state_->virtual_channel_free_list);
+  }
 }
 
 const char* AudioEngine::version_string() const {

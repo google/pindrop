@@ -104,10 +104,10 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
     channels_[2].SetHandle(&collections_[1]);
     channels_[3].SetHandle(&collections_[0]);
 
-    channels_[0].SetGain(1.0f);
-    channels_[1].SetGain(1.0f);
-    channels_[2].SetGain(1.0f);
-    channels_[3].SetGain(1.0f);
+    channels_[0].set_gain(1.0f);
+    channels_[1].set_gain(1.0f);
+    channels_[2].set_gain(1.0f);
+    channels_[3].set_gain(1.0f);
   }
   virtual void TearDown() {}
 
@@ -122,32 +122,30 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointAtHead) {
   // New sound's priority is greater than highest priority.
-  EXPECT_EQ(
-      ChannelInternalState::GetInstanceFromPriorityNode(list_.GetTerminator()),
-      FindInsertionPoint(&list_, 2.5f));
+  EXPECT_EQ(list_.GetTerminator(), FindInsertionPoint(&list_, 2.5f));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointWithEqualPriority) {
   // New sound's priority is...
   // ...equal to highest priority.
-  EXPECT_EQ(&channels_[0], FindInsertionPoint(&list_, 2.0f));
+  EXPECT_EQ(channels_[0].priority_node(), FindInsertionPoint(&list_, 2.0f));
   // ...equal to a sound with the same priority as the previous sound.
-  EXPECT_EQ(&channels_[2], FindInsertionPoint(&list_, 1.0f));
+  EXPECT_EQ(channels_[2].priority_node(), FindInsertionPoint(&list_, 1.0f));
   // ...equal to the lowest priority.
-  EXPECT_EQ(&channels_[3], FindInsertionPoint(&list_, 0));
+  EXPECT_EQ(channels_[3].priority_node(), FindInsertionPoint(&list_, 0));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointMiddlePriority) {
   // New sound's priority is...
   // ...between highest and second highest.
-  EXPECT_EQ(&channels_[0], FindInsertionPoint(&list_, 1.5f));
+  EXPECT_EQ(channels_[0].priority_node(), FindInsertionPoint(&list_, 1.5f));
   // ...lower than a sound with the same priority as the previous sound.
-  EXPECT_EQ(&channels_[2], FindInsertionPoint(&list_, 0.5));
+  EXPECT_EQ(channels_[2].priority_node(), FindInsertionPoint(&list_, 0.5));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointLowest) {
   // New sound's priority is less than the lowest prioity.
-  EXPECT_EQ(&channels_[3], FindInsertionPoint(&list_, -1.0f));
+  EXPECT_EQ(channels_[3].priority_node(), FindInsertionPoint(&list_, -1.0f));
 }
 
 class BestListenerTests : public ::testing::Test {

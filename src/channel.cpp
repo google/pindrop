@@ -34,7 +34,7 @@ void Channel::Stop() {
   // Fade out rather than halting to avoid clicks.  However, SDL_Mixer will
   // not fade out channels with a volume of 0.  Manually halt channels in this
   // case.
-  if (state_->Gain() == 0.0f) {
+  if (state_->RealChannelGain() == 0.0f) {
     state_->Halt();
   } else {
     state_->FadeOut(kFadeOutDurationMs);

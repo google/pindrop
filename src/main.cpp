@@ -229,9 +229,10 @@ void DemoState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
 
 void DemoState::RemoveInvalidSounds() {
   channel_icons_.erase(
-      std::remove_if(
-          channel_icons_.begin(), channel_icons_.end(),
-          [](const ChannelIcon& icon) { return !icon.channel.Valid(); }),
+      std::remove_if(channel_icons_.begin(), channel_icons_.end(),
+                     [](const ChannelIcon& icon) {
+                       return !icon.channel.Valid() || !icon.channel.Playing();
+                     }),
       channel_icons_.end());
 }
 

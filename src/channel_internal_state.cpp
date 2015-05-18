@@ -16,9 +16,9 @@
 
 #ifdef _WIN32
 #if !defined(_USE_MATH_DEFINES)
-#define _USE_MATH_DEFINES // For M_PI.
-#endif  // !defined(_USE_MATH_DEFINES)
-#endif  // _WIN32
+#define _USE_MATH_DEFINES  // For M_PI.
+#endif                     // !defined(_USE_MATH_DEFINES)
+#endif                     // _WIN32
 
 #include <math.h>
 
@@ -36,7 +36,9 @@ bool ChannelInternalState::IsStream() const {
   return handle_->GetSoundCollectionDef()->stream() != 0;
 }
 
+// Removes this channel state from all lists.
 void ChannelInternalState::Remove() {
+  free_node_.Remove();
   priority_node_.Remove();
   bus_node_.Remove();
 }
@@ -51,8 +53,22 @@ void ChannelInternalState::SetHandle(SoundHandle handle) {
   }
 }
 
-bool ChannelInternalState::Play(SoundSource* source, bool loop) {
-  if (!source->Play(channel_id_, loop)) {
+bool ChannelInternalState::Play(SoundHandle handle) {
+  handle_ = handle;
+  sound_source_ = handle->Select();
+  channel_state_ = kChannelStatePlaying;
+  return is_real() ? Resume() : true;
+}
+
+static bool SoundHandleLoops(SoundHandle handle) {
+  SoundCollection* collection = handle;
+  const SoundCollectionDef* def = collection->GetSoundCollectionDef();
+  return def->loop() != 0;
+}
+
+bool ChannelInternalState::Resume() {
+  assert(is_real() && channel_state_ == kChannelStatePlaying);
+  if (!sound_source_->Play(channel_id_, SoundHandleLoops(handle_))) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not play sound %s\n",
                  Mix_GetError());
     return false;
@@ -60,7 +76,8 @@ bool ChannelInternalState::Play(SoundSource* source, bool loop) {
   return true;
 }
 
-bool ChannelInternalState::Playing() const {
+bool ChannelInternalState::RealChannelPlaying() const {
+  assert(is_real());
   if (IsStream()) {
 #ifdef PINDROP_MULTISTREAM
     return Mix_PlayingMusicCh(channel_id_) != 0;
@@ -72,7 +89,16 @@ bool ChannelInternalState::Playing() const {
   }
 }
 
-void ChannelInternalState::SetGain(const float gain) {
+bool ChannelInternalState::Playing() const {
+  return channel_state_ == kChannelStatePlaying;
+}
+
+bool ChannelInternalState::Stopped() const {
+  return channel_state_ == kChannelStateStopped;
+}
+
+void ChannelInternalState::SetRealChannelGain(const float gain) {
+  assert(is_real());
   int mix_volume = static_cast<int>(gain * MIX_MAX_VOLUME);
   if (IsStream()) {
 #ifdef PINDROP_MULTISTREAM
@@ -85,7 +111,8 @@ void ChannelInternalState::SetGain(const float gain) {
   }
 }
 
-float ChannelInternalState::Gain() const {
+float ChannelInternalState::RealChannelGain() const {
+  assert(is_real());
   // Special value to query volume rather than set volume.
   static const int kQueryVolume = -1;
   int volume;
@@ -101,7 +128,17 @@ float ChannelInternalState::Gain() const {
   return volume / static_cast<float>(MIX_MAX_VOLUME);
 }
 
-void ChannelInternalState::Halt() {
+void ChannelInternalState::RealChannelHalt() {
+  assert(is_real());
+  // If this channel loops, we may want to resume it later. If this is a one
+  // shot sound that does not loop, just halt it now.
+  // TODO(amablue): What we really want is for one shot sounds to change to the
+  // stopped state when the sound would have finished. However, SDL mixer does
+  // not give good visibility into the length of loaded audio, which makes this
+  // difficult. b/20697050
+  if (!SoundHandleLoops(handle_)) {
+    channel_state_ = kChannelStateStopped;
+  }
   if (IsStream()) {
 #ifdef PINDROP_MULTISTREAM
     Mix_HaltMusicCh(channel_id_);
@@ -111,6 +148,13 @@ void ChannelInternalState::Halt() {
   } else {
     Mix_HaltChannel(channel_id_);
   }
+}
+
+void ChannelInternalState::Halt() {
+  if (is_real()) {
+    RealChannelHalt();
+  }
+  channel_state_ = kChannelStateStopped;
 }
 
 void ChannelInternalState::FadeOut(int milliseconds) {
@@ -126,10 +170,15 @@ void ChannelInternalState::FadeOut(int milliseconds) {
   }
   if (channels_halted == 0) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error halting channel %i\n");
+  } else {
+    channel_state_ = kChannelStateFadingOut;
   }
 }
 
 void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
+  if (!is_real()) {
+    return;
+  }
   static const Uint8 kMaxPanValue = 255;
 
   // This formula is explained in the following paper:
@@ -142,7 +191,23 @@ void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
 
 float ChannelInternalState::Priority() const {
   assert(handle_);
-  return Gain() * handle_->GetSoundCollectionDef()->priority();
+  return gain() * handle_->GetSoundCollectionDef()->priority();
+}
+
+void ChannelInternalState::UpdateState() {
+  switch (channel_state_) {
+    case kChannelStateStopped: {
+      break;
+    }
+    case kChannelStatePlaying:
+    case kChannelStateFadingOut: {
+      if (is_real() && !RealChannelPlaying()) {
+        channel_state_ = kChannelStateStopped;
+      }
+      break;
+    }
+    default: { assert(false); }
+  }
 }
 
 // Special value for SDL_Mixer that indicates an operation should be applied
@@ -168,4 +233,3 @@ void ChannelInternalState::ResumeAll() {
 }
 
 }  // namespace pindrop
-

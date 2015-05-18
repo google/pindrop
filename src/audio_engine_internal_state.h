@@ -71,6 +71,9 @@ struct AudioEngineInternalState {
   // If true, the master gain is ignored and all channels have a gain of 0.
   bool mute;
 
+  // If true, the entire audio engine has paused all playback.
+  bool paused;
+
   // A map of sound names to SoundCollections.
   SoundCollectionMap sound_collection_map;
 
@@ -80,10 +83,13 @@ struct AudioEngineInternalState {
   // Hold the sounds banks.
   SoundBankMap sound_bank_map;
 
-  // A list of the currently playing sounds.
-  IntrusiveListNode playing_channel_list;
+  // The preallocated pool of all ChannelInternalState objects
   ChannelStateVector channel_state_memory;
-  std::vector<ChannelInternalState*> channel_state_free_list;
+
+  // The lists that track currently playing channels and free channels.
+  IntrusiveListNode playing_channel_list;
+  IntrusiveListNode real_channel_free_list;
+  IntrusiveListNode virtual_channel_free_list;
 
 #ifndef PINDROP_MULTISTREAM
   // In single stream mode, track the currently playing stream.
@@ -106,8 +112,7 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name);
 
 // Given a playing sound, find where a new sound with the given priority should
 // be inserted into the list.
-ChannelInternalState* FindInsertionPoint(IntrusiveListNode* list,
-                                         float priority);
+IntrusiveListNode* FindInsertionPoint(IntrusiveListNode* list, float priority);
 
 // Given a list of listeners and a location, find which listener is closest.
 // Additionally, return the square of the distance between the closest listener

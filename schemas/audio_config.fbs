@@ -30,8 +30,13 @@ table AudioConfig {
   // Bytes used per output sample.
   output_buffer_size:uint;
 
-  // The number of channels to allocate for mixing.
+  // The number of real channels to allocate for mixing.
   mixer_channels:uint;
+
+  // The number of virtual channels to allocate in addition to the real
+  // channels. Mixing does not occur on virtual channels, but information about
+  // the channel is still tracked.
+  mixer_virtual_channels:uint;
 
   // The number of listeners to allocate.
   listeners:uint;

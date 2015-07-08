@@ -326,6 +326,8 @@ static void CalculateGainAndPan(
       *gain = 0.0f;
       *pan = mathfu::kZeros2f;
     }
+  } else {
+    *pan = mathfu::kZeros2f;
   }
 }
 

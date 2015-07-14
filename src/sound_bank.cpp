@@ -52,7 +52,8 @@ bool SoundBank::Initialize(const std::string& filename,
   sound_bank_def_ = GetSoundBankDef(sound_bank_def_source_.c_str());
 
   // Load each SoundCollection named in the sound bank.
-  for (size_t i = 0; i < sound_bank_def_->filenames()->size(); ++i) {
+  for (flatbuffers::uoffset_t i = 0; i < sound_bank_def_->filenames()->size();
+       ++i) {
     const char* sound_filename = sound_bank_def_->filenames()->Get(i)->c_str();
     success &= InitializeSoundCollection(sound_filename, audio_engine);
   }
@@ -79,7 +80,8 @@ static bool DeinitializeSoundCollection(const char* filename,
 }
 
 void SoundBank::Deinitialize(AudioEngine* audio_engine) {
-  for (size_t i = 0; i < sound_bank_def_->filenames()->size(); ++i) {
+  for (flatbuffers::uoffset_t i = 0; i < sound_bank_def_->filenames()->size();
+       ++i) {
     const char* filename = sound_bank_def_->filenames()->Get(i)->c_str();
     if (!DeinitializeSoundCollection(filename, audio_engine->state())) {
       SDL_LogError(
@@ -92,4 +94,3 @@ void SoundBank::Deinitialize(AudioEngine* audio_engine) {
 }
 
 }  // namespace pindrop
-

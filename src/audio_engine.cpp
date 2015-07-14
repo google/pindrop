@@ -181,7 +181,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   const BusDefList* bus_def_list =
       pindrop::GetBusDefList(state_->buses_source.c_str());
   state_->buses.resize(bus_def_list->buses()->Length());
-  for (size_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
+  for (flatbuffers::uoffset_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
     state_->buses[i].Initialize(bus_def_list->buses()->Get(i));
   }
 

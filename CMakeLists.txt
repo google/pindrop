@@ -170,7 +170,6 @@ set(pindrop_SRCS
     src/intrusive_list.h
     src/listener.cpp
     src/listener_internal_state.h
-    src/main.cpp
     src/ref_counter.cpp
     src/ref_counter.h
     src/sound.cpp

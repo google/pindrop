@@ -48,7 +48,6 @@ LOCAL_SRC_FILES := \
   $(PINDROP_RELATIVE_DIR)/src/channel.cpp \
   $(PINDROP_RELATIVE_DIR)/src/channel_internal_state.cpp \
   $(PINDROP_RELATIVE_DIR)/src/listener.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/main.cpp \
   $(PINDROP_RELATIVE_DIR)/src/ref_counter.cpp \
   $(PINDROP_RELATIVE_DIR)/src/sound.cpp \
   $(PINDROP_RELATIVE_DIR)/src/sound_bank.cpp \

@@ -78,7 +78,8 @@ static bool PopulateBuses(AudioEngineInternalState* state,
                           const char* list_name,
                           const BusNameList* child_name_list,
                           std::vector<Bus*>* output) {
-  for (size_t i = 0; child_name_list && i < child_name_list->Length(); ++i) {
+  for (flatbuffers::uoffset_t i = 0;
+       child_name_list && i < child_name_list->Length(); ++i) {
     const char* bus_name = child_name_list->Get(i)->c_str();
     Bus* bus = FindBus(state, bus_name);
     if (bus) {
@@ -180,7 +181,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   const BusDefList* bus_def_list =
       pindrop::GetBusDefList(state_->buses_source.c_str());
   state_->buses.resize(bus_def_list->buses()->Length());
-  for (size_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
+  for (flatbuffers::uoffset_t i = 0; i < bus_def_list->buses()->Length(); ++i) {
     state_->buses[i].Initialize(bus_def_list->buses()->Get(i));
   }
 
@@ -326,6 +327,8 @@ static void CalculateGainAndPan(
       *gain = 0.0f;
       *pan = mathfu::kZeros2f;
     }
+  } else {
+    *pan = mathfu::kZeros2f;
   }
 }
 
@@ -660,4 +663,3 @@ const char* AudioEngine::version_string() const {
 }
 
 }  // namespace pindrop
-

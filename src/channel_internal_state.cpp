@@ -16,15 +16,15 @@
 
 #ifdef _WIN32
 #if !defined(_USE_MATH_DEFINES)
-#define _USE_MATH_DEFINES  // For M_PI.
-#endif                     // !defined(_USE_MATH_DEFINES)
-#endif                     // _WIN32
+#define _USE_MATH_DEFINES
+#endif  // !defined(_USE_MATH_DEFINES)
+#endif  // _WIN32
 
 #include <math.h>
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
-#include "bus.h"
+#include "bus_internal_state.h"
 #include "intrusive_list.h"
 #include "pindrop/pindrop.h"
 #include "sound_collection.h"

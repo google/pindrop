@@ -51,5 +51,10 @@ void Channel::SetLocation(const mathfu::Vector<float, 3>& location) {
   state_->SetLocation(location);
 }
 
-}  // namespace pindrop
+void Channel::SetGain(float gain) {
+  return state_->set_user_gain(gain);
+}
 
+float Channel::Gain() const { return state_->user_gain(); }
+
+}  // namespace pindrop

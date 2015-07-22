@@ -24,6 +24,7 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
@@ -163,7 +164,8 @@ set(pindrop_SRCS
     src/backend.cpp
     src/backend.h
     src/bus.cpp
-    src/bus.h
+    src/bus_internal_state.cpp
+    src/bus_internal_state.h
     src/channel.cpp
     src/channel_internal_state.cpp
     src/channel_internal_state.h

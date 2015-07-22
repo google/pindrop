@@ -24,7 +24,7 @@
 
 namespace pindrop {
 
-class Bus;
+class BusInternalState;
 class SoundSource;
 struct AudioEngineInternalState;
 struct SoundCollectionDef;
@@ -57,13 +57,13 @@ class SoundCollection {
   SoundSource* Select() const;
 
   // Return the bus this SoundCollection will play on.
-  Bus* bus() { return bus_; }
+  BusInternalState* bus() { return bus_; }
 
   RefCounter* ref_counter() { return &ref_counter_; }
 
  private:
   // The bus this SoundCollection will play on.
-  Bus* bus_;
+  BusInternalState* bus_;
 
   std::string source_;
   std::vector<std::unique_ptr<SoundSource>> sound_sources_;

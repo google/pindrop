@@ -28,11 +28,12 @@
 #define PINDROP_STRING(X) PINDROP_STRING_EXPAND(X)
 
 /// @file pindrop/pindrop.h
-/// @brief The public API consisting of the AudioEngine, Channel, and Listener
-///        classes.
+/// @brief The public API consisting of the AudioEngine, Channel, Listener and
+///        Bus classes.
 
 namespace pindrop {
 
+class BusInternalState;
 class Channel;
 class ChannelInternalState;
 class ListenerInternalState;
@@ -41,7 +42,63 @@ struct AudioConfig;
 struct AudioEngineInternalState;
 
 typedef SoundCollection* SoundHandle;
-typedef size_t ListenerId;
+
+/// @class Bus
+///
+/// @brief An object representing one in a tree of buses. Buses are used to
+///        adjust a set of channel gains in tandem.
+///
+/// The Bus class is a lightweight reference to a BusInternalState which is
+/// managed by the AudioEngine. There is always at least one bus, the master
+/// bus, and any number of additional buses may be defined as well. Each bus can
+/// be thought of as a node in a tree. The gain on a Bus is applied to all child
+/// buses as well.
+class Bus {
+ public:
+  /// @brief Construct an uninitialized Bus.
+  ///
+  /// An uninitialized Bus can not set or get any of it's fields.
+  ///
+  /// To initialize the Listener, use <code>AudioEngine::AddListener();</code>
+  Bus() : state_(nullptr) {}
+
+  explicit Bus(BusInternalState* state) : state_(state) {}
+
+  /// @brief Uninitializes this Bus.
+  ///
+  /// Uninitializes this Bus. Note that this does not destroy the internal
+  /// state it references; it just removes this reference to it.
+  void Clear();
+
+  /// @brief Checks whether this Bus has been initialized.
+  ///
+  /// @return Returns true if this Bus is initialized.
+  bool Valid() const;
+
+  /// @brief Sets the gain on this Bus.
+  ///
+  /// @param gain The new gain value.
+  void SetGain(float gain);
+
+  /// @brief Returns the user specified gain on this bus.
+  ///
+  /// @return Returns the user specified gain.
+  float Gain() const;
+
+  /// @brief Returns the final calculated gain on this bus.
+  ///
+  /// The FinalGain of a bus is the product of the gain specified in the Bus
+  /// definition file, the gain specified by the user, and the final gain of
+  /// this bus's parent bus.
+  ///
+  /// @return Returns the gain.
+  float FinalGain() const;
+
+  BusInternalState* state() { return state_; }
+
+ private:
+  BusInternalState* state_;
+};
 
 /// @class Listener
 ///
@@ -164,6 +221,16 @@ class Channel {
   /// @param location The new location of the Channel.
   void SetLocation(const mathfu::Vector<float, 3>& location);
 
+  /// @brief Sets the gain on this chanel.
+  ///
+  /// @param gain The new gain value.
+  void SetGain(float gain);
+
+  /// @brief Returns the gain on this chanel.
+  ///
+  /// @return Returns the gain.
+  float Gain() const;
+
  private:
   ChannelInternalState* state_;
 };
@@ -253,6 +320,11 @@ class AudioEngine {
   /// @param The Listener to be removed.
   void RemoveListener(Listener* listener);
 
+  /// @brief Returns the named bus.
+  ///
+  /// @return The named bus.
+  Bus FindBus(const char* bus_name);
+
   /// @brief Play a sound associated with the given sound_handle.
   ///
   /// @param sound_handle A handle to the sound to play.
@@ -269,6 +341,17 @@ class AudioEngine {
   ///         played, an invalid Channel is returned.
   Channel PlaySound(SoundHandle sound_handle,
                     const mathfu::Vector<float, 3>& location);
+
+  /// @brief Play a sound associated with the given sound_handle at the given
+  ///        location with the given gain.
+  ///
+  /// @param sound_handle A handle to the sound to play.
+  /// @param location The location of the sound.
+  /// @param gain The gain of the sound.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
+  Channel PlaySound(SoundHandle sound_handle,
+                    const mathfu::Vector<float, 3>& location, float gain);
 
   /// @brief Play a sound associated with the given sound name.
   ///
@@ -293,6 +376,20 @@ class AudioEngine {
   Channel PlaySound(const std::string& sound_name,
                     const mathfu::Vector<float, 3>& location);
 
+  /// @brief Play a sound associated with the given sound name at the given
+  ///        location with the given gain.
+  ///
+  /// Note: Playing a sound with its SoundHandle is faster than using the sound
+  /// name as using the name requires a map lookup internally.
+  ///
+  /// @param sound_name A handle to the sound to play.
+  /// @param location The location of the sound.
+  /// @param gain The gain of the sound.
+  /// @return The channel the sound is played on. If the sound could not be
+  ///         played, an invalid Channel is returned.
+  Channel PlaySound(const std::string& sound_name,
+                    const mathfu::Vector<float, 3>& location, float gain);
+
   /// @brief Get the version string.
   ///
   /// @return The version string.
@@ -307,4 +404,3 @@ class AudioEngine {
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_ENGINE_H_
-

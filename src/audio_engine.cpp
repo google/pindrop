@@ -21,7 +21,7 @@
 #include "SDL.h"
 #include "audio_config_generated.h"
 #include "audio_engine_internal_state.h"
-#include "bus.h"
+#include "bus_internal_state.h"
 #include "buses_generated.h"
 #include "channel_internal_state.h"
 #include "intrusive_list.h"
@@ -62,11 +62,13 @@ bool LoadFile(const char* filename, std::string* dest) {
 
 AudioEngine::~AudioEngine() { delete state_; }
 
-Bus* FindBus(AudioEngineInternalState* state, const char* name) {
-  auto it = std::find_if(
-      state->buses.begin(), state->buses.end(), [name](const Bus& bus) {
-        return strcmp(bus.bus_def()->name()->c_str(), name) == 0;
-      });
+BusInternalState* FindBusInternalState(AudioEngineInternalState* state,
+                                       const char* name) {
+  auto it =
+      std::find_if(state->buses.begin(), state->buses.end(),
+                   [name](const BusInternalState& bus) {
+                     return strcmp(bus.bus_def()->name()->c_str(), name) == 0;
+                   });
   if (it != state->buses.end()) {
     return &*it;
   } else {
@@ -77,11 +79,11 @@ Bus* FindBus(AudioEngineInternalState* state, const char* name) {
 static bool PopulateBuses(AudioEngineInternalState* state,
                           const char* list_name,
                           const BusNameList* child_name_list,
-                          std::vector<Bus*>* output) {
+                          std::vector<BusInternalState*>* output) {
   for (flatbuffers::uoffset_t i = 0;
        child_name_list && i < child_name_list->Length(); ++i) {
     const char* bus_name = child_name_list->Get(i)->c_str();
-    Bus* bus = FindBus(state, bus_name);
+    BusInternalState* bus = FindBusInternalState(state, bus_name);
     if (bus) {
       output->push_back(bus);
     } else {
@@ -187,7 +189,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
 
   // Set up the children and ducking pointers.
   for (size_t i = 0; i < state_->buses.size(); ++i) {
-    Bus& bus = state_->buses[i];
+    BusInternalState& bus = state_->buses[i];
     const BusDef* def = bus.bus_def();
     if (!PopulateBuses(state_, "child_buses", def->child_buses(),
                        &bus.child_buses())) {
@@ -199,7 +201,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
     }
   }
 
-  state_->master_bus = FindBus(state_, "master");
+  state_->master_bus = FindBusInternalState(state_, "master");
   if (!state_->master_bus) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "No master bus specified.\n");
     return false;
@@ -312,9 +314,10 @@ float CalculateDistanceAttenuation(float distance_squared,
 static void CalculateGainAndPan(
     float* gain, mathfu::Vector<float, 2>* pan, SoundCollection* collection,
     const mathfu::Vector<float, 3>& location,
-    const TypedIntrusiveListNode<ListenerInternalState>& listener_list) {
+    const TypedIntrusiveListNode<ListenerInternalState>& listener_list,
+    float user_gain) {
   const SoundCollectionDef* def = collection->GetSoundCollectionDef();
-  *gain = def->gain() * collection->bus()->gain();
+  *gain = def->gain() * collection->bus()->gain() * user_gain;
   if (def->mode() == Mode_Positional) {
     ListenerInternalState* listener;
     float distance_squared;
@@ -400,10 +403,6 @@ static ChannelInternalState* FindFreeChannelInternalState(
   return new_channel;
 }
 
-Channel AudioEngine::PlaySound(SoundHandle sound_handle) {
-  return PlaySound(sound_handle, mathfu::kZeros3f);
-}
-
 // Returns this channel to the free appropriate free list based on whether it's
 // backed by a real channel or not.
 static void InsertIntoFreeList(AudioEngineInternalState* state,
@@ -415,8 +414,18 @@ static void InsertIntoFreeList(AudioEngineInternalState* state,
   list->InsertAfter(channel->free_node());
 }
 
+Channel AudioEngine::PlaySound(SoundHandle sound_handle) {
+  return PlaySound(sound_handle, mathfu::kZeros3f, 1.0f);
+}
+
 Channel AudioEngine::PlaySound(SoundHandle sound_handle,
                                const mathfu::Vector<float, 3>& location) {
+  return PlaySound(sound_handle, location, 1.0f);
+}
+
+Channel AudioEngine::PlaySound(SoundHandle sound_handle,
+                               const mathfu::Vector<float, 3>& location,
+                               float user_gain) {
   SoundCollection* collection = sound_handle;
   if (!collection) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
@@ -427,7 +436,8 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   // Find where it belongs in the list.
   float gain;
   mathfu::Vector<float, 2> pan;
-  CalculateGainAndPan(&gain, &pan, collection, location, state_->listener_list);
+  CalculateGainAndPan(&gain, &pan, collection, location, state_->listener_list,
+                      user_gain);
   float priority = gain * sound_handle->GetSoundCollectionDef()->priority();
   IntrusiveListNode* insertion_point =
       FindInsertionPoint(&state_->playing_channel_list, priority);
@@ -446,6 +456,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   // Now that we have our new sound, set the data on it and update the next
   // pointers.
   new_channel->SetHandle(sound_handle);
+  new_channel->set_user_gain(user_gain);
 
   // Attempt to play the sound if the engine is not paused.
   if (!state_->paused) {
@@ -476,20 +487,26 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   return Channel(new_channel);
 }
 
+Channel AudioEngine::PlaySound(const std::string& sound_name) {
+  return PlaySound(sound_name, mathfu::kZeros3f, 1.0f);
+}
+
 Channel AudioEngine::PlaySound(const std::string& sound_name,
                                const mathfu::Vector<float, 3>& location) {
+  return PlaySound(sound_name, location, 1.0f);
+}
+
+Channel AudioEngine::PlaySound(const std::string& sound_name,
+                               const mathfu::Vector<float, 3>& location,
+                               float user_gain) {
   SoundHandle handle = GetSoundHandle(sound_name);
   if (handle) {
-    return PlaySound(handle, location);
+    return PlaySound(handle, location, user_gain);
   } else {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                  "Cannot play sound: invalid name (%s)\n", sound_name.c_str());
     return Channel(nullptr);
   }
-}
-
-Channel AudioEngine::PlaySound(const std::string& sound_name) {
-  return PlaySound(sound_name, mathfu::kZeros3f);
 }
 
 SoundHandle AudioEngine::GetSoundHandle(const std::string& sound_name) const {
@@ -525,6 +542,10 @@ void AudioEngine::RemoveListener(Listener* listener) {
   state_->listener_state_free_list.push_back(listener->state());
 }
 
+Bus AudioEngine::FindBus(const char* bus_name) {
+  return Bus(FindBusInternalState(state_, bus_name));
+}
+
 void AudioEngine::Pause(bool pause) {
   state_->paused = pause;
   if (pause) {
@@ -554,7 +575,7 @@ static void UpdateChannel(ChannelInternalState* channel,
   float gain;
   mathfu::Vector<float, 2> pan;
   CalculateGainAndPan(&gain, &pan, channel->handle(), channel->Location(),
-                      state->listener_list);
+                      state->listener_list, channel->user_gain());
   channel->set_gain(gain);
   if (channel->is_real()) {
     channel->SetRealChannelGain(gain);

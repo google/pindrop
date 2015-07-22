@@ -103,6 +103,10 @@ class ChannelInternalState {
   // Check if this channel is currently playing on a real channel.
   bool RealChannelPlaying() const;
 
+  // Set and query the user gain of this channel.
+  void set_user_gain(const float user_gain) { user_gain_ = user_gain; }
+  float user_gain() const { return user_gain_; }
+
   // Set and query the current gain of this channel.
   void set_gain(const float gain) { gain_ = gain; }
   float gain() const { return gain_; }
@@ -157,6 +161,9 @@ class ChannelInternalState {
 
   // The sound source that was chosen from the sound collection.
   SoundSource* sound_source_;
+
+  // The gain set by the user.
+  float user_gain_;
 
   // The gain of this channel.
   float gain_;

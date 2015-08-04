@@ -257,13 +257,13 @@ bool BestListener(
   }
 
   ListenerInternalState* listener = listeners.GetNext();
-  *listener_space_location = listener->matrix() * location;
+  *listener_space_location = listener->inverse_matrix() * location;
   *distance_squared = listener_space_location->LengthSquared();
   *best_listener = listener;
   for (listener = listener->GetNext(); listener != listeners.GetTerminator();
        listener = listener->GetNext()) {
     mathfu::Vector<float, 3> transformed_location =
-        listener->matrix() * location;
+        listener->inverse_matrix() * location;
     float magnitude_squared = transformed_location.LengthSquared();
     if (magnitude_squared < *distance_squared) {
       *best_listener = listener;
@@ -276,6 +276,12 @@ bool BestListener(
 
 mathfu::Vector<float, 2> CalculatePan(
     const mathfu::Vector<float, 3>& listener_space_location) {
+  // Zero length vectors just end up with NaNs when normalized. Return a zero
+  // vector instead.
+  const float kEpsilon = 0.0001f;
+  if (listener_space_location.LengthSquared() <= kEpsilon) {
+    return mathfu::kZeros2f;
+  }
   mathfu::Vector<float, 3> direction = listener_space_location.Normalized();
   return mathfu::Vector<float, 2>(
       mathfu::Vector<float, 3>::DotProduct(mathfu::kAxisX3f, direction),
@@ -468,6 +474,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   }
 
   new_channel->set_gain(gain);
+  new_channel->SetLocation(location);
   if (new_channel->is_real()) {
     new_channel->SetRealChannelGain(gain);
     new_channel->SetPan(pan);

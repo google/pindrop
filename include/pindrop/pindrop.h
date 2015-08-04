@@ -158,7 +158,7 @@ class Listener {
   /// @brief Get the matrix of this Listener.
   ///
   /// @return The matrix of this Listener.
-  const mathfu::Matrix<float, 4>& Matrix() const;
+  const mathfu::Matrix<float, 4> Matrix() const;
 
   ListenerInternalState* state() { return state_; }
 

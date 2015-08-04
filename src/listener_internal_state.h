@@ -22,16 +22,23 @@ namespace pindrop {
 class ListenerInternalState
     : public TypedIntrusiveListNode<ListenerInternalState> {
  public:
-  ListenerInternalState() : matrix_(mathfu::Matrix<float, 4>::Identity()) {}
+  ListenerInternalState()
+      : inverse_matrix_(mathfu::Matrix<float, 4>::Identity()) {}
 
-  void set_matrix(const mathfu::Matrix<float, 4>& matrix) { matrix_ = matrix; }
+  void set_inverse_matrix(const mathfu::Matrix<float, 4>& inverse_matrix) {
+    inverse_matrix_ = inverse_matrix;
+  }
 
-  mathfu::Matrix<float, 4>& matrix() { return matrix_; }
-  const mathfu::Matrix<float, 4>& matrix() const { return matrix_; }
+  mathfu::Matrix<float, 4>& inverse_matrix() { return inverse_matrix_; }
+  const mathfu::Matrix<float, 4>& inverse_matrix() const {
+    return inverse_matrix_;
+  }
 
  private:
-  mathfu::Matrix<float, 4> matrix_;
+  // We use an inverse matrix here rather than a regular matrix because the
+  // inverse matrix is used to translate sounds into listener space, and
+  // calculating the matrix every time would be wasteful.
+  mathfu::Matrix<float, 4> inverse_matrix_;
 };
 
 }  // namespace pindrop
-

@@ -24,7 +24,8 @@ bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
 void Listener::SetOrientation(const mathfu::Vector<float, 3>& location,
                               const mathfu::Vector<float, 3>& direction,
                               const mathfu::Vector<float, 3>& up) {
-  SetMatrix(
+  assert(Valid());
+  state_->set_inverse_matrix(
       mathfu::Matrix<float, 4>::LookAt(location + direction, location, up));
 }
 
@@ -33,7 +34,8 @@ mathfu::Vector<float, 3> Listener::Location() const {
 }
 
 void Listener::SetLocation(const mathfu::Vector<float, 3>& location) {
-  SetMatrix(mathfu::Matrix<float, 4>::FromTranslationVector(-location));
+  assert(Valid());
+  SetMatrix(mathfu::Matrix<float, 4>::FromTranslationVector(location));
 }
 
 void Listener::SetMatrix(const mathfu::Matrix<float, 4>& matrix) {

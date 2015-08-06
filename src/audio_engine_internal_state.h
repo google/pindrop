@@ -23,6 +23,8 @@
 #include "bus_internal_state.h"
 #include "channel_internal_state.h"
 #include "file_loader.h"
+#include "fplutil/intrusive_list.h"
+#include "listener_internal_state.h"
 #include "mathfu/utilities.h"
 #include "mathfu/vector.h"
 #include "mixer.h"
@@ -50,7 +52,19 @@ typedef std::vector<ListenerInternalState,
                     mathfu::simd_allocator<ListenerInternalState>>
     ListenerStateVector;
 
+typedef fplutil::intrusive_list<ChannelInternalState> PriorityList;
+
+typedef fplutil::intrusive_list<ChannelInternalState> FreeList;
+
+typedef fplutil::intrusive_list<ListenerInternalState> ListenerList;
+
 struct AudioEngineInternalState {
+  AudioEngineInternalState()
+      : playing_channel_list(&ChannelInternalState::priority_node),
+        real_channel_free_list(&ChannelInternalState::free_node),
+        virtual_channel_free_list(&ChannelInternalState::free_node),
+        listener_list(&ListenerInternalState::node) {}
+
   Mixer mixer;
 
   // Hold the audio bus list.
@@ -84,12 +98,12 @@ struct AudioEngineInternalState {
   ChannelStateVector channel_state_memory;
 
   // The lists that track currently playing channels and free channels.
-  IntrusiveListNode playing_channel_list;
-  IntrusiveListNode real_channel_free_list;
-  IntrusiveListNode virtual_channel_free_list;
+  PriorityList playing_channel_list;
+  FreeList real_channel_free_list;
+  FreeList virtual_channel_free_list;
 
   // The list of listeners.
-  TypedIntrusiveListNode<ListenerInternalState> listener_list;
+  ListenerList listener_list;
   ListenerStateVector listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
 
@@ -108,17 +122,17 @@ BusInternalState* FindBusInternalState(AudioEngineInternalState* state,
 
 // Given a playing sound, find where a new sound with the given priority should
 // be inserted into the list.
-IntrusiveListNode* FindInsertionPoint(IntrusiveListNode* list, float priority);
+PriorityList::iterator FindInsertionPoint(PriorityList* list, float priority);
 
 // Given a list of listeners and a location, find which listener is closest.
 // Additionally, return the square of the distance between the closest listener
 // and the location, as well as the given location translated into listener
 // space.  Returns true on success, or false if the list was empty.
-bool BestListener(
-    ListenerInternalState** best_listener, float* distance_squared,
-    mathfu::Vector<float, 3>* listener_space_location,
-    const TypedIntrusiveListNode<ListenerInternalState>& listeners,
-    const mathfu::Vector<float, 3>& location);
+bool BestListener(ListenerList::const_iterator* best_listener,
+                  float* distance_squared,
+                  mathfu::Vector<float, 3>* listener_space_location,
+                  const ListenerList& listeners,
+                  const mathfu::Vector<float, 3>& location);
 
 // This will take a point between lower_bound and upper_bound and use it to
 // calculate an attenuation multiplier. The curve_factor can be adjusted based

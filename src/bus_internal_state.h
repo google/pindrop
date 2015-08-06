@@ -17,11 +17,14 @@
 
 #include <vector>
 
-#include "intrusive_list.h"
+#include "channel_internal_state.h"
+#include "fplutil/intrusive_list.h"
 
 namespace pindrop {
 
 struct BusDef;
+
+typedef fplutil::intrusive_list<ChannelInternalState> BusList;
 
 class BusInternalState {
  public:
@@ -31,7 +34,7 @@ class BusInternalState {
         target_user_gain_(1.0f),
         target_user_gain_step_(0.0f),
         duck_gain_(1.0f),
-        playing_sound_list_(),
+        playing_sound_list_(&ChannelInternalState::bus_node),
         transition_percentage_(0.0f) {}
 
   void Initialize(const BusDef* bus_def);
@@ -70,10 +73,8 @@ class BusInternalState {
   // When a sound begins playing or finishes playing, the sound counter should
   // be incremented or decremented appropriately to track whether or not to
   // apply the duck gain.
-  IntrusiveListNode& playing_sound_list() { return playing_sound_list_; }
-  const IntrusiveListNode& playing_sound_list() const {
-    return playing_sound_list_;
-  }
+  BusList& playing_sound_list() { return playing_sound_list_; }
+  const BusList& playing_sound_list() const { return playing_sound_list_; }
 
   // Apply appropriate duck gain to all ducked buses.
   void UpdateDuckGain(float delta_time);
@@ -109,7 +110,7 @@ class BusInternalState {
   float gain_;
 
   // Keeps track of how many sounds are being played on this bus.
-  IntrusiveListNode playing_sound_list_;
+  BusList playing_sound_list_;
 
   // If a sound is playing on this bus, all duck_buses_ should lower in volume
   // over time. This tracks how far we are into that transition.

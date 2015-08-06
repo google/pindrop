@@ -24,7 +24,7 @@
 #include <cmath>
 
 #include "bus_internal_state.h"
-#include "intrusive_list.h"
+#include "fplutil/intrusive_list.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
@@ -37,18 +37,18 @@ bool ChannelInternalState::IsStream() const {
 
 // Removes this channel state from all lists.
 void ChannelInternalState::Remove() {
-  free_node_.Remove();
-  priority_node_.Remove();
-  bus_node_.Remove();
+  free_node.remove();
+  priority_node.remove();
+  bus_node.remove();
 }
 
 void ChannelInternalState::SetSoundCollection(SoundCollection* collection) {
   if (collection_ && collection_->bus()) {
-    bus_node_.Remove();
+    bus_node.remove();
   }
   collection_ = collection;
   if (collection_ && collection_->bus()) {
-    collection_->bus()->playing_sound_list().InsertAfter(&bus_node_);
+    collection_->bus()->playing_sound_list().push_front(*this);
   }
 }
 

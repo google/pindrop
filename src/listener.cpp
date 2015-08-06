@@ -19,7 +19,9 @@ namespace pindrop {
 
 void Listener::Clear() { state_ = nullptr; }
 
-bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
+bool Listener::Valid() const {
+  return state_ != nullptr && state_->node.in_list();
+}
 
 void Listener::SetOrientation(const mathfu::Vector<float, 3>& location,
                               const mathfu::Vector<float, 3>& direction,

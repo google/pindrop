@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "intrusive_list.h"
+#ifndef PINDROP_LISTENER_INTERNAL_STATE_H_
+#define PINDROP_LISTENER_INTERNAL_STATE_H_
+
+#include "fplutil/intrusive_list.h"
 #include "mathfu/constants.h"
-#include "mathfu/vector_3.h"
 #include "mathfu/matrix_4x4.h"
+#include "mathfu/vector_3.h"
 
 namespace pindrop {
 
-class ListenerInternalState
-    : public TypedIntrusiveListNode<ListenerInternalState> {
+class ListenerInternalState {
  public:
   ListenerInternalState()
       : inverse_matrix_(mathfu::Matrix<float, 4>::Identity()) {}
@@ -34,6 +36,8 @@ class ListenerInternalState
     return inverse_matrix_;
   }
 
+  fplutil::intrusive_list_node node;
+
  private:
   // We use an inverse matrix here rather than a regular matrix because the
   // inverse matrix is used to translate sounds into listener space, and
@@ -42,3 +46,5 @@ class ListenerInternalState
 };
 
 }  // namespace pindrop
+
+#endif  // PINDROP_LISTENER_INTERNAL_STATE_H_

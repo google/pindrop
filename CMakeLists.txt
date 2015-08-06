@@ -96,6 +96,8 @@ set(dependencies_fplbase_dir "${fpl_root}/fplbase"
     CACHE PATH "Directory containing the FplBase library.")
 set(dependencies_mathfu_dir "${fpl_root}/mathfu"
     CACHE PATH "Directory containing the MathFu library.")
+set(dependencies_libfplutil_dir "${fpl_root}/fplutil/libfplutil"
+    CACHE PATH "Directory containing the libfplutil library.")
 set(dependencies_sdl_dir "${third_party_root}/sdl"
     CACHE PATH "Directory containing the SDL library.")
 set(dependencies_libogg_cmake_dir "${CMAKE_MODULE_PATH}/libogg"
@@ -243,7 +245,6 @@ set(pindrop_SRCS
     src/channel.cpp
     src/channel_internal_state.cpp
     src/channel_internal_state.h
-    src/intrusive_list.h
     src/listener.cpp
     src/listener_internal_state.h
     src/log.cpp
@@ -271,6 +272,7 @@ endif()
 if (pindrop_async_loading)
   include_directories(${dependencies_fplbase_dir}/include)
 endif()
+include_directories(${dependencies_libfplutil_dir}/include)
 include_directories(${dependencies_flatbuffers_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
@@ -361,7 +363,8 @@ if(pindrop_build_tests AND NOT fpl_ios)
 
   include_directories(${GUNIT_INCDIR}
                       ${CMAKE_CURRENT_SOURCE_DIR}
-                      ${dependencies_flatbuffers_dir}/include)
+                      ${dependencies_flatbuffers_dir}/include
+                      ${dependencies_libfplutil_dir}/include)
 
   # Common libraries for tests.
   if(NOT MSVC)
@@ -381,6 +384,5 @@ if(pindrop_build_tests AND NOT fpl_ios)
   endfunction()
 
   test_executable(audio_engine "gtest;pindrop;${SDL_LIBRARIES}")
-  test_executable(intrusive_list "gtest")
 endif()
 

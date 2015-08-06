@@ -15,7 +15,7 @@
 #ifndef PINDROP_CHANNEL_INTERNAL_STATE_H_
 #define PINDROP_CHANNEL_INTERNAL_STATE_H_
 
-#include "intrusive_list.h"
+#include "fplutil/intrusive_list.h"
 #include "mathfu/vector_2.h"
 #include "mathfu/vector_3.h"
 #include "pindrop/channel.h"
@@ -39,9 +39,7 @@ class ChannelInternalState {
         channel_state_(kChannelStateStopped),
         collection_(nullptr),
         sound_(nullptr),
-        location_(),
-        priority_node_(),
-        bus_node_() {}
+        location_() {}
 
   // Updates the state enum based on whether this channel is stopped, playing,
   // etc.
@@ -117,24 +115,19 @@ class ChannelInternalState {
 
   // Returns the real channel.
   RealChannel& real_channel() { return real_channel_; }
+  const RealChannel& real_channel() const { return real_channel_; }
 
   // Returns true if the real channel is valid.
   bool is_real() { return real_channel_.Valid(); }
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(priority_node_, priority_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 priority_node_,
-                                                 GetInstanceFromPriorityNode);
+  // The node that tracks the location in the priority list.
+  fplutil::intrusive_list_node priority_node;
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(free_node_, free_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 free_node_,
-                                                 GetInstanceFromFreeNode);
+  // The node that tracks the location in the free list.
+  fplutil::intrusive_list_node free_node;
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(bus_node_, bus_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 bus_node_,
-                                                 GetInstanceFromBusNode);
+  // The node that tracks the list of sounds playing on a given bus.
+  fplutil::intrusive_list_node bus_node;
 
  private:
   RealChannel real_channel_;
@@ -156,15 +149,6 @@ class ChannelInternalState {
 
   // The location of this channel's sound.
   mathfu::VectorPacked<float, 3> location_;
-
-  // The node that tracks the location in the priority list.
-  IntrusiveListNode priority_node_;
-
-  // The node that tracks the location in the free list.
-  IntrusiveListNode free_node_;
-
-  // The node that tracks the list of sounds playing on a given bus.
-  IntrusiveListNode bus_node_;
 };
 
 }  // namespace pindrop

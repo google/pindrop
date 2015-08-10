@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 2.8.12)
+if(fpl_ios)
+  cmake_minimum_required(VERSION 3.3.1)
+else()
+  cmake_minimum_required(VERSION 2.8.12)
+endif()
 
 project(pindrop)
 
@@ -22,9 +26,16 @@ if(pindrop_multistream)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if(NOT fpl_ios)
+  # This needs to be default for iOS as output dirs are of the form
+  # Debug-iphoneos, Debug-iphonesimulator to distinguish iphone and simulator
+  # builds, otherwise each build overwrites the other if the output dir is the
+  # same
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+endif()
+
 
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
@@ -97,24 +108,24 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static)
+if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static AND NOT fpl_ios)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-if(NOT pindrop_only_flatc AND NOT TARGET libogg)
+if(NOT pindrop_only_flatc AND NOT TARGET libogg AND NOT fpl_ios)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT pindrop_only_flatc AND NOT TARGET libvorbis)
+if(NOT pindrop_only_flatc AND NOT TARGET libvorbis AND NOT fpl_ios)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer)
+if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer AND NOT fpl_ios)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 
@@ -203,6 +214,7 @@ include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
 
 # SDL includes.
+set(SDL2_SOURCE_DIR "${dependencies_sdl_dir}")
 include_directories(${SDL2_BINARY_DIR}/include ${SDL2_SOURCE_DIR}/include)
 
 # libogg includes.
@@ -215,7 +227,7 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 include_directories(${dependencies_sdl_mixer_distr_dir})
 
 # Detect clang
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR 
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
    CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
   set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif()
@@ -234,7 +246,11 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
 
-set (SDL_LIBRARIES SDL2-static)
+if(NOT fpl_ios)
+  set(SDL_LIBRARIES SDL2-static)
+else()
+  set(SDL_LIBRARIES "")
+endif()
 if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
   set(SDL_LIBRARIES SDL2main ${SDL_LIBRARIES})
@@ -243,26 +259,34 @@ endif()
 
 # Executable target.
 add_library(pindrop ${pindrop_SRCS})
+# Set iOS specific attributes
+mathfu_set_ios_attributes(pindrop)
+
 mathfu_configure_flags(pindrop)
 
 # Dependencies for the executable target.
-add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
-target_link_libraries(pindrop
-  ${SDL_LIBRARIES}
-  fplbase
-  sdl_mixer
-  libvorbis
-  libogg)
+if(fpl_ios)
+  target_link_libraries(pindrop fplbase)
+  add_dependencies(pindrop pindrop_generated_includes)
+else()
+  add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
+  target_link_libraries(pindrop
+    ${SDL_LIBRARIES}
+    fplbase
+    sdl_mixer
+    libvorbis
+    libogg)
+  add_executable(pindrop_demo ${pindrop_demo_SRCS})
+    target_link_libraries(pindrop_demo
+      pindrop
+      ${SDL_LIBRARIES}
+      fplbase
+      sdl_mixer
+      libvorbis
+      libogg)
+  mathfu_configure_flags(pindrop_demo)
+endif()
 
-add_executable(pindrop_demo ${pindrop_demo_SRCS})
-target_link_libraries(pindrop_demo
-  pindrop
-  ${SDL_LIBRARIES}
-  fplbase
-  sdl_mixer
-  libvorbis
-  libogg)
-mathfu_configure_flags(pindrop_demo)
 
 # gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
 # everything else.
@@ -272,7 +296,7 @@ option(
   ON)
 
 # Tests.
-if(NOT pindrop_only_flatc AND pindrop_build_tests)
+if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
   add_subdirectory("${dependencies_gtest_dir}" googletest)

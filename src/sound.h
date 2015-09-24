@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "fplbase/async_loader.h"
 #include "pindrop/pindrop.h"
 #include "channel_internal_state.h"
 
@@ -35,7 +36,7 @@ class SoundSource {
   virtual ~SoundSource() {}
 
   // Load the sound from the given filename.
-  virtual bool LoadFile(const char* filename) = 0;
+  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader) = 0;
 
   // Play this sound on the given channel, and loop if necessary.
   virtual bool Play(ChannelId channel_id, bool loop) = 0;
@@ -50,14 +51,19 @@ class SoundSource {
 
 // A SoundBuffer is a piece of buffered audio that is completely loaded into
 // memory.
-class SoundBuffer : public SoundSource {
+class SoundBuffer : public SoundSource, public fpl::AsyncResource {
  public:
-  explicit SoundBuffer(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
+  explicit SoundBuffer(const AudioSampleSetEntry* entry)
+      : SoundSource(entry), data_(nullptr) {}
   virtual ~SoundBuffer();
 
-  virtual bool LoadFile(const char* filename);
+  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader);
 
   virtual bool Play(ChannelId channel_id, bool loop);
+
+  // Implementation of AsyncResource.
+  virtual void Load();
+  virtual void Finalize() {}
 
  private:
   Mix_Chunk* data_;
@@ -70,7 +76,7 @@ class SoundStream : public SoundSource {
   explicit SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
   virtual ~SoundStream() {}
 
-  virtual bool LoadFile(const char* filename);
+  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader);
 
   virtual bool Play(ChannelId channel_id, bool loop);
 

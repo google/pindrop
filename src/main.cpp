@@ -173,6 +173,12 @@ bool DemoState::Initialize() {
     return false;
   }
 
+  // Wait for the sound files to complete loading.
+  audio_engine_.StartLoadingSoundFiles();
+  while (!audio_engine_.TryFinalize()) {
+    SDL_Delay(1);
+  }
+
   // Cache the master bus so we can demonstrate adjusting the gain.
   master_bus_ = audio_engine_.FindBus("master");
 

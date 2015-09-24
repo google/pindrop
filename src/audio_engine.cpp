@@ -247,6 +247,14 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
   }
 }
 
+void AudioEngine::StartLoadingSoundFiles() {
+  state_->loader.StartLoading();
+}
+
+bool AudioEngine::TryFinalize() {
+  return state_->loader.TryFinalize();
+}
+
 bool BestListener(
     ListenerInternalState** best_listener, float* distance_squared,
     mathfu::Vector<float, 3>* listener_space_location,

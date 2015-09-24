@@ -43,9 +43,7 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
     } else {
       sound_source.reset(new SoundBuffer(entry));
     }
-    if (!sound_source->LoadFile(entry_filename)) {
-      return false;
-    }
+    sound_source->LoadFile(entry_filename, &state->loader);
     sum_of_probabilities_ += entry->playback_probability();
   }
   if (!def->bus()) {

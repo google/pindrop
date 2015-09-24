@@ -43,19 +43,27 @@ SoundBuffer::~SoundBuffer() {
   }
 }
 
-bool SoundBuffer::LoadFile(const char* filename) {
-  data_ = Mix_LoadWAV(filename);
-  return data_ != nullptr;
+void SoundBuffer::LoadFile(const char* filename, fpl::AsyncLoader* loader) {
+  set_filename(filename);
+  loader->QueueJob(this);
+}
+
+void SoundBuffer::Load() {
+  data_ = Mix_LoadWAV(filename().c_str());
+  if (data_ == nullptr) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load sound file %s.",
+                 filename().c_str());
+  }
 }
 
 bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
+  assert(data_ != nullptr);
   int loops = loop ? kLoopForever : kPlayOnce;
   return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
 }
 
-bool SoundStream::LoadFile(const char* filename) {
+void SoundStream::LoadFile(const char* filename, fpl::AsyncLoader* /*loader*/) {
   filename_ = filename;
-  return true;
 }
 
 bool SoundStream::Play(ChannelId channel_id, bool loop) {

@@ -28,6 +28,7 @@
 #include "sound_bank.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
+#include "fplbase/async_loader.h"
 
 namespace pindrop {
 
@@ -100,6 +101,9 @@ struct AudioEngineInternalState {
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   ListenerStateVector listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
+
+  // Loads the sound files on a background thread.
+  fpl::AsyncLoader loader;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;

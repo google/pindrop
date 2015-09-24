@@ -57,6 +57,8 @@ set(dependencies_gtest_dir "${fpl_root}/googletest"
     CACHE PATH "Directory containing the GoogleTest library.")
 set(dependencies_flatbuffers_dir "${fpl_root}/flatbuffers"
     CACHE PATH "Directory containing the Flatbuffers library.")
+set(dependencies_fplbase_dir "${fpl_root}/fplbase"
+    CACHE PATH "Directory containing the FplBase library.")
 set(dependencies_mathfu_dir "${fpl_root}/mathfu"
     CACHE PATH "Directory containing the MathFu library.")
 set(dependencies_sdl_dir "${third_party_root}/sdl"
@@ -127,6 +129,13 @@ if(NOT TARGET flatc)
   add_subdirectory("${dependencies_flatbuffers_dir}" ${tmp_dir}/flatbuffers)
 endif()
 
+# Include fplbase in this project.
+set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
+if(NOT TARGET flatc)
+  add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
+endif()
+
+
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
 set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
@@ -190,6 +199,7 @@ if(WIN32)
 endif()
 include_directories(${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
 include_directories(${dependencies_flatbuffers_dir}/include)
+include_directories(${dependencies_fplbase_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
 
@@ -239,6 +249,7 @@ mathfu_configure_flags(pindrop)
 add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
 target_link_libraries(pindrop
   ${SDL_LIBRARIES}
+  fplbase
   sdl_mixer
   libvorbis
   libogg)
@@ -247,6 +258,7 @@ add_executable(pindrop_demo ${pindrop_demo_SRCS})
 target_link_libraries(pindrop_demo
   pindrop
   ${SDL_LIBRARIES}
+  fplbase
   sdl_mixer
   libvorbis
   libogg)

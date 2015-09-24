@@ -264,7 +264,9 @@ class AudioEngine {
   /// @param delta_time the number of elapsed seconds since the last frame.
   void AdvanceFrame(float delta_time);
 
-  /// @brief Load a sound bank from a file.
+  /// @brief Load a sound bank from a file. Queue the sound files in that sound
+  ///        bank for loading. Call StartLoadingSoundFiles() to trigger loading
+  ///        of the sound files on a separate thread.
   ///
   /// @param filename The file containing the SoundBank flatbuffer binary data.
   /// @return Returns true on success
@@ -274,6 +276,14 @@ class AudioEngine {
   ///
   /// @param filename The file to unload.
   void UnloadSoundBank(const std::string& filename);
+
+  /// @brief Kick off loading thread to load all sound files queued with
+  ///        LoadSoundBank().
+  void StartLoadingSoundFiles();
+
+  /// @brief Return true if all sound files have been loaded. Must call
+  ///        StartLoadingSoundFiles() first.
+  bool TryFinalize();
 
   /// @brief Get a SoundHandle given its name as defined in its JSON data.
   ///

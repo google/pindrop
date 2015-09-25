@@ -563,10 +563,19 @@ Bus AudioEngine::FindBus(const char* bus_name) {
 
 void AudioEngine::Pause(bool pause) {
   state_->paused = pause;
-  if (pause) {
-    ChannelInternalState::PauseAll();
-  } else {
-    ChannelInternalState::ResumeAll();
+
+  IntrusiveListNode& list = state_->playing_channel_list;
+  for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();
+       node = node->GetNext()) {
+    ChannelInternalState* channel =
+        ChannelInternalState::GetInstanceFromPriorityNode(node);
+    if (!channel->Paused() && channel->is_real()) {
+      if (pause) {
+        channel->RealChannelPause();
+      } else {
+        channel->RealChannelResume();
+      }
+    }
   }
 }
 
@@ -638,7 +647,7 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
         channel->set_channel_id(free_channel->channel_id());
         free_channel->invalidate();
         virtual_free_list->InsertAfter(free_node);
-        channel->Resume();
+        channel->RealChannelPlay();
       } else {
         // If there aren't any free channels, then scan from the back of the
         // list for low priority real channels.
@@ -654,7 +663,7 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
         channel->set_channel_id(reverse_channel->channel_id());
         reverse_channel->RealChannelHalt();
         reverse_channel->invalidate();
-        channel->Resume();
+        channel->RealChannelPlay();
       }
     }
   }

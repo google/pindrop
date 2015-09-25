@@ -205,6 +205,17 @@ class Channel {
   /// to loop. Looped audio must be explicitly stopped.
   void Stop();
 
+  /// @brief Pause a channel.
+  ///
+  /// Pause this channel. A paused channel may be resumed where it left off.
+  void Pause();
+
+  /// @brief Resumes a paused channel.
+  ///
+  /// Resume this channel. If this channel was paused it will continue where it
+  /// left off.
+  void Resume();
+
   /// @brief Get the location of this Channel.
   ///
   /// If the audio on this channel is not set to be Positional this property

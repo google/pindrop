@@ -33,7 +33,7 @@ enum ChannelState {
   kChannelStateStopped,
   kChannelStatePlaying,
   kChannelStateFadingOut,
-  // TODO(amablue): Handle paused state. b/20758754
+  kChannelStatePaused,
 };
 
 // Represents a sample that is playing on a channel.
@@ -91,17 +91,14 @@ class ChannelInternalState {
   // Play a sound on this channel.
   bool Play(SoundHandle handle);
 
-  // Resume playing on this channel after having been stopped.
-  bool Resume();
-
   // Check if this channel is currently playing on a real or virtual channel.
   bool Playing() const;
 
   // Check if this channel is currently stopped on a real or virtual channel.
   bool Stopped() const;
 
-  // Check if this channel is currently playing on a real channel.
-  bool RealChannelPlaying() const;
+  // Check if this channel is currently paused on a real or virtual channel.
+  bool Paused() const;
 
   // Set and query the user gain of this channel.
   void set_user_gain(const float user_gain) { user_gain_ = user_gain; }
@@ -111,16 +108,14 @@ class ChannelInternalState {
   void set_gain(const float gain) { gain_ = gain; }
   float gain() const { return gain_; }
 
-  // Set and query the current gain of the real channel.
-  void SetRealChannelGain(float gain);
-  float RealChannelGain() const;
-
   // Immediately stop the audio. May cause clicking.
   void Halt();
 
-  // Halt the real channel so it may be re-used. However this virtual channel
-  // may still be considered playing.
-  void RealChannelHalt();
+  // Pauses this channel.
+  void Pause();
+
+  // Resumes this channel if it is paused.
+  void Resume();
 
   // Fade out over the specified number of milliseconds.
   void FadeOut(int milliseconds);
@@ -147,8 +142,29 @@ class ChannelInternalState {
                                                  bus_node_,
                                                  GetInstanceFromBusNode);
 
-  static void PauseAll();
-  static void ResumeAll();
+  // TODO: Move RealChannel functions to a separate object.
+  // Play the audio on the real channel.
+  bool RealChannelPlay();
+
+  // Halt the real channel so it may be re-used. However this virtual channel
+  // may still be considered playing.
+  void RealChannelHalt();
+
+  // Pause the real channel.
+  void RealChannelPause();
+
+  // Resume the paused real channel.
+  void RealChannelResume();
+
+  // Check if this channel is currently playing on a real channel.
+  bool RealChannelPlaying() const;
+
+  // Check if this channel is currently paused on a real channel.
+  bool RealChannelPaused() const;
+
+  // Set and query the current gain of the real channel.
+  void SetRealChannelGain(float gain);
+  float RealChannelGain() const;
 
  private:
   ChannelId channel_id_;

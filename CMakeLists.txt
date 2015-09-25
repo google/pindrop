@@ -275,7 +275,8 @@ option(
 if(NOT pindrop_only_flatc AND pindrop_build_tests)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
-  add_subdirectory(${dependencies_gtest_dir} googletest)
+  add_subdirectory("${dependencies_gtest_dir}" googletest)
+  add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
   include(${GTEST_LIBDIR}/cmake/internal_utils.cmake)
   config_compiler_and_linker()
   string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
@@ -307,3 +308,5 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests)
   test_executable(intrusive_list "gtest")
 endif()
 
+set(FPLBASE_FLATBUFFERS_GENERATED_INCLUDES_DIR
+    ${FPLBASE_FLATBUFFERS_GENERATED_INCLUDES_DIR} PARENT_SCOPE)

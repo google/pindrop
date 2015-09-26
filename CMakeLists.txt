@@ -160,10 +160,9 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
 endforeach()
 add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
-get_property(flatc_location TARGET flatc PROPERTY LOCATION)
 add_custom_target(pindrop_demo_assets
   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
-  --flatc ${flatc_location} DEPENDS flatc)
+  --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
 
 # AudioEngine source files.
 set(pindrop_SRCS

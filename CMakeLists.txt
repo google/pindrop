@@ -215,7 +215,8 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 include_directories(${dependencies_sdl_mixer_distr_dir})
 
 # Detect clang
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR 
+   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
   set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif()
 

@@ -571,8 +571,13 @@ void AudioEngine::Pause(bool pause) {
         ChannelInternalState::GetInstanceFromPriorityNode(node);
     if (!channel->Paused() && channel->is_real()) {
       if (pause) {
+        // Pause the real channel underlying this virutal channel. This freezes
+        // playback of the channel without marking it as paused from the audio
+        // engine's point of view, so that we know to restart it when the audio
+        // engine is unpaused.
         channel->RealChannelPause();
       } else {
+        // Unpause all channels that were not explicitly paused.
         channel->RealChannelResume();
       }
     }

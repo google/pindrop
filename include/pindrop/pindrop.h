@@ -85,6 +85,12 @@ class Bus {
   /// @return Returns the user specified gain.
   float Gain() const;
 
+  /// @brief Fades to <code>gain</code> over <code>duration</code> seconds.
+  //
+  /// @param gain The gain value to fade to.
+  /// @param duration The amount of time to take to reach the target gain.
+  void FadeTo(float gain, float duration);
+
   /// @brief Returns the final calculated gain on this bus.
   ///
   /// The FinalGain of a bus is the product of the gain specified in the Bus

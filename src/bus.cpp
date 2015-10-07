@@ -26,6 +26,10 @@ void Bus::SetGain(float gain) { return state_->set_user_gain(gain); }
 
 float Bus::Gain() const { return state_->user_gain(); }
 
+void Bus::FadeTo(float gain, float duration) {
+  state_->FadeTo(gain, duration);
+}
+
 float Bus::FinalGain() const { return state_->gain(); }
 
 }  // pindrop

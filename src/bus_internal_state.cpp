@@ -19,6 +19,11 @@
 
 namespace pindrop {
 
+void BusInternalState::FadeTo(float gain, float duration) {
+  target_user_gain_ = gain;
+  target_user_gain_step_ = (target_user_gain_ - user_gain_) / duration;
+}
+
 void BusInternalState::Initialize(const BusDef* bus_def) {
   // Make sure we only initiliaze once.
   assert(bus_def_ == nullptr);
@@ -55,12 +60,23 @@ void BusInternalState::UpdateDuckGain(float delta_time) {
   }
 }
 
-void BusInternalState::UpdateGain(float parent_gain) {
+void BusInternalState::AdvanceFrame(float delta_time, float parent_gain) {
+  // Update fading.
+  user_gain_ += delta_time * target_user_gain_step_;
+  bool fading_complete =
+      (target_user_gain_step_ < 0 && user_gain_ < target_user_gain_) ||
+      (target_user_gain_step_ > 0 && user_gain_ > target_user_gain_);
+  if (fading_complete) {
+    user_gain_ = target_user_gain_;
+    target_user_gain_step_ = 0;
+  }
+
+  // Update final gain.
   gain_ = bus_def_->gain() * parent_gain * duck_gain_ * user_gain_;
   for (size_t i = 0; i < child_buses_.size(); ++i) {
     BusInternalState* child_bus = child_buses_[i];
     if (child_bus) {
-      child_bus->UpdateGain(gain_);
+      child_bus->AdvanceFrame(delta_time, gain_);
     }
   }
 }

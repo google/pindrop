@@ -247,13 +247,9 @@ void AudioEngine::UnloadSoundBank(const std::string& filename) {
   }
 }
 
-void AudioEngine::StartLoadingSoundFiles() {
-  state_->loader.StartLoading();
-}
+void AudioEngine::StartLoadingSoundFiles() { state_->loader.StartLoading(); }
 
-bool AudioEngine::TryFinalize() {
-  return state_->loader.TryFinalize();
-}
+bool AudioEngine::TryFinalize() { return state_->loader.TryFinalize(); }
 
 bool BestListener(
     ListenerInternalState** best_listener, float* distance_squared,
@@ -684,7 +680,8 @@ void AudioEngine::AdvanceFrame(float delta_time) {
     state_->buses[i].UpdateDuckGain(delta_time);
   }
   if (state_->master_bus) {
-    state_->master_bus->UpdateGain(state_->mute ? 0.0f : state_->master_gain);
+    float master_gain = state_->mute ? 0.0f : state_->master_gain;
+    state_->master_bus->AdvanceFrame(delta_time, master_gain);
   }
   IntrusiveListNode& list = state_->playing_channel_list;
   for (IntrusiveListNode* node = list.GetNext(); node != list.GetTerminator();

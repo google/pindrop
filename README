@@ -23,6 +23,10 @@ Pindrop depends on the following libraries:
   * [libogg][]
   * [libvorbis][]
 
+Additionally, on Linux you will need:
+
+  * [osspd][]
+
 ## Notes
 
 For applications on Google Play that integrate this tool, usage is tracked.
@@ -39,3 +43,4 @@ in.
   [SDL_Mixer]: http://www.libsdl.org/projects/SDL_mixer/
   [libogg]: http://xiph.org/ogg/
   [libvorbis]: http://xiph.org/vorbis/
+  [osspd]: http://sourceforge.net/projects/osspd/

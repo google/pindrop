@@ -71,7 +71,8 @@ $(call flatbuffers_header_build_rules, \
   $(PINDROP_SCHEMA_DIR), \
   $(PINDROP_GENERATED_OUTPUT_DIR), \
   $(PINDROP_SCHEMA_INCLUDE_DIRS), \
-  $(LOCAL_SRC_FILES))
+  $(LOCAL_SRC_FILES), \
+  pindrop_generated_includes)
 endif
 
 include $(BUILD_STATIC_LIBRARY)

@@ -20,6 +20,7 @@ endif()
 project(pindrop)
 
 option(pindrop_multistream "Support multiple channels of streaming audio" off)
+option(pindrop_build_demo "Build the pindrop demo" ON)
 
 if(pindrop_multistream)
   add_definitions(-DPINDROP_MULTISTREAM)
@@ -172,10 +173,6 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
 endforeach()
 add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
 
-add_custom_target(pindrop_demo_assets
-  COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
-  --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
-
 # AudioEngine source files.
 set(pindrop_SRCS
     include/pindrop/pindrop.h
@@ -200,8 +197,6 @@ set(pindrop_SRCS
     src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h)
-
-set(pindrop_demo_SRCS src/main.cpp)
 
 # Includes for this project.
 include_directories(src include)
@@ -260,24 +255,28 @@ endif()
 
 # Executable target.
 add_library(pindrop ${pindrop_SRCS})
-# Set iOS specific attributes
 mathfu_set_ios_attributes(pindrop)
-
 mathfu_configure_flags(pindrop)
-
-# Dependencies for the executable target.
+add_dependencies(pindrop pindrop_generated_includes)
 if(fpl_ios)
   target_link_libraries(pindrop fplbase)
-  add_dependencies(pindrop pindrop_generated_includes)
 else()
-  add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
   target_link_libraries(pindrop
     ${SDL_LIBRARIES}
     fplbase
     sdl_mixer
     libvorbis
     libogg)
-  add_executable(pindrop_demo ${pindrop_demo_SRCS})
+endif()
+
+if(NOT fpl_ios)
+  if(pindrop_build_demo)
+    add_custom_target(pindrop_demo_assets
+      COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
+      --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
+
+    set(pindrop_demo_SRCS src/main.cpp)
+    add_executable(pindrop_demo ${pindrop_demo_SRCS})
     target_link_libraries(pindrop_demo
       pindrop
       ${SDL_LIBRARIES}
@@ -285,7 +284,9 @@ else()
       sdl_mixer
       libvorbis
       libogg)
-  mathfu_configure_flags(pindrop_demo)
+    mathfu_configure_flags(pindrop_demo)
+    add_dependencies(pindrop_demo pindrop pindrop_demo_assets)
+  endif()
 endif()
 
 

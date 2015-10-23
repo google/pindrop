@@ -152,8 +152,6 @@ endif()
 # directory.
 set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
-set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR} PARENT_SCOPE)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
@@ -165,13 +163,16 @@ foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
     ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}/${filename}_generated.h)
   add_custom_command(
     OUTPUT ${flatbuffers_include}
-    COMMAND flatc --gen-includes
+    COMMAND flatc
         -o ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
         -c ${flatbuffers_schema}
     DEPENDS flatc ${flatbuffers_schema})
   list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
 endforeach()
-add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
+add_custom_target(pindrop_generated_includes DEPENDS
+                  ${FLATBUFFERS_GENERATED_INCLUDES})
+set_property(TARGET pindrop_generated_includes PROPERTY PINDROP_DIR
+             ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
 
 # AudioEngine source files.
 set(pindrop_SRCS
@@ -334,5 +335,3 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
   test_executable(intrusive_list "gtest")
 endif()
 
-set(FPLBASE_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${FPLBASE_FLATBUFFERS_GENERATED_INCLUDES_DIR} PARENT_SCOPE)

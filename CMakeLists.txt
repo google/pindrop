@@ -94,6 +94,38 @@ option(pindrop_build_tests "Build tests for this project." ON)
 # Option to only build flatc
 option(pindrop_only_flatc "Only build FlatBuffers compiler." OFF)
 
+# Detect clang
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
+   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
+  set(CMAKE_COMPILER_IS_CLANGXX 1)
+endif()
+
+# External code should be compiled with these compiler options.
+# Call this function before add_subdirectory([external project]), and then
+# call restore_comiler_flags() after.
+# TODO: This is duplicated from fplbase. We should find a central location
+#       for it, or better yet, create proxy projects for external libraries.
+function(pindrop_set_compiler_flags_for_external_libraries)
+  # Save current compiler flags so that we can restore them in
+  # pindrop_restore_compiler_flags()
+  set(PINDROP_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+  set(PINDROP_SAVED_C_FLAGS "${CMAKE_C_FLAGS}" PARENT_SCOPE)
+
+  # Suppress all warnings.
+  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
+     CMAKE_COMPILER_IS_CLANGXX)
+    set(CMAKE_CXX_FLAGS "-std=c++0x -w" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
+  endif()
+endfunction()
+
+# Restore the compiler flags to the values they had before
+# pindrop_set_compiler_flags_for_external_libraries() was called.
+function(pindrop_restore_compiler_flags)
+  set(CMAKE_CXX_FLAGS "${PINDROP_SAVED_CXX_FLAGS}" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS "${PINDROP_SAVED_C_FLAGS}" PARENT_SCOPE)
+endfunction()
+
 # Include SDL in this project while working around SDL requirement of out of
 # tree builds.
 set(SDL_SHARED OFF CACHE BOOL "Build a shared version of the library")
@@ -115,6 +147,7 @@ endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
+pindrop_set_compiler_flags_for_external_libraries()
 if(NOT pindrop_only_flatc AND NOT TARGET libogg AND NOT fpl_ios)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
@@ -129,6 +162,7 @@ set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
 if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer AND NOT fpl_ios)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
+pindrop_restore_compiler_flags()
 
 # Include MathFu in this project with test and benchmark builds disabled.
 set(mathfu_build_benchmarks OFF CACHE BOOL "")
@@ -222,12 +256,6 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 
 # SDL Mixer includes.
 include_directories(${dependencies_sdl_mixer_distr_dir})
-
-# Detect clang
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
-   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-endif()
 
 # Compiler flags.
 set(C_FLAGS_WARNINGS "")

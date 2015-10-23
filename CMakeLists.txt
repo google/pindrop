@@ -304,7 +304,7 @@ if(NOT fpl_ios)
       COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
       --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
 
-    set(pindrop_demo_SRCS src/main.cpp)
+    set(pindrop_demo_SRCS demo/main.cpp)
     add_executable(pindrop_demo ${pindrop_demo_SRCS})
     target_link_libraries(pindrop_demo
       pindrop
@@ -354,7 +354,7 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
 
   function(test_executable name libs)
     cxx_executable_with_flags(${name}_test "${cxx_default}"
-        "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/src/${name}_test.cpp
+        "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/${name}_test.cpp
         ${ARGN})
     mathfu_configure_flags(${name}_test)
   endfunction()

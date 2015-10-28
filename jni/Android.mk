@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(call my-dir)/..
 
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := pindrop
 LOCAL_ARM_MODE := arm
-LOCAL_STATIC_LIBRARIES :=
-LOCAL_SHARED_LIBRARIES := libfplbase libmathfu SDL2 SDL2_mixer
+LOCAL_STATIC_LIBRARIES := libfplbase libmathfu SDL2_mixer_static
 
-PINDROP_RELATIVE_DIR := ..
-PINDROP_DIR := $(LOCAL_PATH)/$(PINDROP_RELATIVE_DIR)
+PINDROP_DIR := $(LOCAL_PATH)
 
 include $(PINDROP_DIR)/jni/android_config.mk
 include $(DEPENDENCIES_FLATBUFFERS_DIR)/android/jni/include.mk
@@ -30,6 +28,7 @@ include $(DEPENDENCIES_FLATBUFFERS_DIR)/android/jni/include.mk
 PINDROP_GENERATED_OUTPUT_DIR := $(PINDROP_DIR)/gen/include
 
 LOCAL_EXPORT_C_INCLUDES := \
+  $(DEPENDENCIES_FLATBUFFERS_DIR)/include \
   $(PINDROP_DIR)/include \
   $(PINDROP_GENERATED_OUTPUT_DIR)
 
@@ -43,17 +42,17 @@ LOCAL_C_INCLUDES := \
   $(DEPENDENCIES_SDL_MIXER_DIR)
 
 LOCAL_SRC_FILES := \
-  $(PINDROP_RELATIVE_DIR)/src/audio_engine.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/backend.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/bus.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/bus_internal_state.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/channel.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/channel_internal_state.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/listener.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/ref_counter.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/sound.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/sound_bank.cpp \
-  $(PINDROP_RELATIVE_DIR)/src/sound_collection.cpp
+  src/audio_engine.cpp \
+  src/backend.cpp \
+  src/bus.cpp \
+  src/bus_internal_state.cpp \
+  src/channel.cpp \
+  src/channel_internal_state.cpp \
+  src/listener.cpp \
+  src/ref_counter.cpp \
+  src/sound.cpp \
+  src/sound_bank.cpp \
+  src/sound_collection.cpp
 
 PINDROP_SCHEMA_DIR := $(PINDROP_DIR)/schemas
 PINDROP_SCHEMA_INCLUDE_DIRS :=
@@ -77,8 +76,10 @@ endif
 
 include $(BUILD_STATIC_LIBRARY)
 
+$(call import-add-path,$(DEPENDENCIES_MATHFU_DIR)/..)
 $(call import-add-path,$(DEPENDENCIES_FLATBUFFERS_DIR)/..)
+$(call import-add-path,$(PINDROP_DIR)/..)
 
 $(call import-module,flatbuffers/android/jni)
-
 $(call import-module,mathfu/jni)
+$(call import-module,pindrop/jni/sdl_mixer)

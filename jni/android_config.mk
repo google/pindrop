@@ -30,6 +30,8 @@ endif
 DEPENDENCIES_SDL_DIR?=$(THIRD_PARTY_ROOT)/sdl
 # Location of the SDL Mixer library.
 DEPENDENCIES_SDL_MIXER_DIR?=$(THIRD_PARTY_ROOT)/sdl_mixer
+# Location of the MathFu library.
+DEPENDENCIES_MATHFU_DIR?=$(FPL_ROOT)/mathfu
 # Location of the Flatbuffers library.
 DEPENDENCIES_FLATBUFFERS_DIR?=$(FPL_ROOT)/flatbuffers
 # Location of the googletest library.
@@ -38,4 +40,3 @@ DEPENDENCIES_GTEST_DIR?=$(FPL_ROOT)/googletest
 DEPENDENCIES_FPLBASE_DIR?=$(FPL_ROOT)/fplbase
 # Location of the fplutil library.
 DEPENDENCIES_FPLUTIL_DIR?=$(FPL_ROOT)/fplutil
-

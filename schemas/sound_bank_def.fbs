@@ -22,4 +22,6 @@ table SoundBankDef {
 }
 
 root_type SoundBankDef;
+file_identifier "PBAN";
+file_extension "pinbank";
 

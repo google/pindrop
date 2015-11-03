@@ -259,8 +259,12 @@ void ChannelInternalState::UpdateState() {
       break;
     }
     case kChannelStatePlaying:
-    case kChannelStateFadingOut: {
       if (is_real() && !RealChannelPlaying()) {
+        channel_state_ = kChannelStateStopped;
+      }
+      break;
+    case kChannelStateFadingOut: {
+      if (!is_real() || !RealChannelPlaying()) {
         channel_state_ = kChannelStateStopped;
       }
       break;

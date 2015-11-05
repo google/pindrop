@@ -3,12 +3,12 @@ Building for Android    {#pindrop_guide_building_android}
 
 ## Version Requirements
 
-Following are the minimum required versions for the tools and libraries you
+Following are the minimum tested versions for the tools and libraries you
 need for building [Pindrop][] for Android:
 
   * [Android SDK][]: Android 5.0 (API Level 21)
   * [ADT][]: 20140702
-  * [Android NDK][]: android-ndk-r10c
+  * [Android NDK][]: android-ndk-r10e
   * [cmake][]: 2.8.12 or newer
   * [Python][]: 2.7.x
 

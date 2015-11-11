@@ -72,9 +72,6 @@ class ChannelInternalState {
   // Returns true if this is a real channel.
   bool is_real() const { return channel_id_ != kInvalidChannelId; }
 
-  // Removes the ID of this channel, making it a virutal channel.
-  void invalidate() { channel_id_ = kInvalidChannelId; }
-
   // Get the current state of this channel (playing, stopped, paused, etc). This
   // is tracked manually because not all ChannelInternalStates are backed by
   // real channels.
@@ -122,6 +119,10 @@ class ChannelInternalState {
 
   // Sets the pan based on a position in a unit circle.
   void SetPan(const mathfu::Vector<float, 2>& pan);
+
+  // Devirtualizes a virtual channel. This transfers ownership of the given
+  // channel's channel_id to this channel.
+  void Devirtualize(ChannelInternalState* other);
 
   // Returns the priority of this channel based on its gain and priority
   // multiplier on the sound collection definition.

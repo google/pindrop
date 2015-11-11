@@ -645,10 +645,8 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
         IntrusiveListNode* free_node = real_free_list->GetNext()->Remove();
         ChannelInternalState* free_channel =
             ChannelInternalState::GetInstanceFromFreeNode(free_node);
-        channel->set_channel_id(free_channel->channel_id());
-        free_channel->invalidate();
         virtual_free_list->InsertAfter(free_node);
-        channel->RealChannelPlay();
+        channel->Devirtualize(free_channel);
       } else {
         // If there aren't any free channels, then scan from the back of the
         // list for low priority real channels.
@@ -661,10 +659,8 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
         // channel.
         ChannelInternalState* reverse_channel =
             ChannelInternalState::GetInstanceFromPriorityNode(reverse_node);
-        channel->set_channel_id(reverse_channel->channel_id());
         reverse_channel->RealChannelHalt();
-        reverse_channel->invalidate();
-        channel->RealChannelPlay();
+        channel->Devirtualize(reverse_channel);
       }
     }
   }

@@ -67,7 +67,7 @@ static bool SoundHandleLoops(SoundHandle handle) {
 }
 
 bool ChannelInternalState::RealChannelPlay() {
-  assert(is_real() && channel_state_ == kChannelStatePlaying);
+  assert(is_real());
   if (!sound_source_->Play(channel_id_, SoundHandleLoops(handle_))) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not play sound %s\n",
                  Mix_GetError());
@@ -211,8 +211,7 @@ void ChannelInternalState::Resume() {
   if (is_real()) {
     RealChannelResume();
   }
-  channel_state_ =
-      RealChannelPlaying() ? kChannelStatePlaying : kChannelStateStopped;
+  channel_state_ = kChannelStatePlaying;
 }
 
 void ChannelInternalState::FadeOut(int milliseconds) {
@@ -245,6 +244,24 @@ void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
   Uint8 left = static_cast<Uint8>(cos(p) * kMaxPanValue);
   Uint8 right = static_cast<Uint8>(sin(p) * kMaxPanValue);
   Mix_SetPanning(channel_id_, left, right);
+}
+
+void ChannelInternalState::Devirtualize(ChannelInternalState* other) {
+  assert(channel_id_ == kInvalidChannelId);
+  assert(other->channel_id_ != kInvalidChannelId);
+
+  // Transfer the real channel id to this channel.
+  channel_id_ = other->channel_id_;
+  other->channel_id_ = kInvalidChannelId;
+
+  if (Playing()) {
+    // Resume playing the audio.
+    RealChannelPlay();
+  } else if (Paused()) {
+    // The audio needs to be playing to pause it.
+    RealChannelPlay();
+    RealChannelPause();
+  }
 }
 
 float ChannelInternalState::Priority() const {

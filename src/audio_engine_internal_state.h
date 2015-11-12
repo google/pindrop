@@ -103,7 +103,7 @@ struct AudioEngineInternalState {
   std::vector<ListenerInternalState*> listener_state_free_list;
 
   // Loads the sound files on a background thread.
-  fpl::AsyncLoader loader;
+  fplbase::AsyncLoader loader;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;

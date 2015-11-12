@@ -36,7 +36,7 @@ class SoundSource {
   virtual ~SoundSource() {}
 
   // Load the sound from the given filename.
-  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader) = 0;
+  virtual void LoadFile(const char* filename, fplbase::AsyncLoader* loader) = 0;
 
   // Play this sound on the given channel, and loop if necessary.
   virtual bool Play(ChannelId channel_id, bool loop) = 0;
@@ -51,13 +51,13 @@ class SoundSource {
 
 // A SoundBuffer is a piece of buffered audio that is completely loaded into
 // memory.
-class SoundBuffer : public SoundSource, public fpl::AsyncResource {
+class SoundBuffer : public SoundSource, public fplbase::AsyncResource {
  public:
   explicit SoundBuffer(const AudioSampleSetEntry* entry)
       : SoundSource(entry), data_(nullptr) {}
   virtual ~SoundBuffer();
 
-  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader);
+  virtual void LoadFile(const char* filename, fplbase::AsyncLoader* loader);
 
   virtual bool Play(ChannelId channel_id, bool loop);
 
@@ -76,7 +76,7 @@ class SoundStream : public SoundSource {
   explicit SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
   virtual ~SoundStream() {}
 
-  virtual void LoadFile(const char* filename, fpl::AsyncLoader* loader);
+  virtual void LoadFile(const char* filename, fplbase::AsyncLoader* loader);
 
   virtual bool Play(ChannelId channel_id, bool loop);
 

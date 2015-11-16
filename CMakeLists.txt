@@ -190,23 +190,13 @@ file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
 # schema files.
-unset(FLATBUFFERS_GENERATED_INCLUDES)
-foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
-  get_filename_component(filename ${flatbuffers_schema} NAME_WE)
-  set(flatbuffers_include
-    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}/${filename}_generated.h)
-  add_custom_command(
-    OUTPUT ${flatbuffers_include}
-    COMMAND flatc
-        -o ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
-        -c ${flatbuffers_schema}
-    DEPENDS flatc ${flatbuffers_schema})
-  list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
-endforeach()
-add_custom_target(pindrop_generated_includes DEPENDS
-                  ${FLATBUFFERS_GENERATED_INCLUDES})
-set_property(TARGET pindrop_generated_includes PROPERTY PINDROP_DIR
-             ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
+build_flatbuffers("${FLATBUFFERS_SCHEMAS}"
+                  ""
+                  pindrop_generated_includes
+                  ""
+                  ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
+                  ""
+                  "")
 
 # AudioEngine source files.
 set(pindrop_SRCS
@@ -238,7 +228,6 @@ include_directories(src include)
 if(WIN32)
   include_directories(external/include/windows)
 endif()
-include_directories(${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
 include_directories(${dependencies_flatbuffers_dir}/include)
 include_directories(${dependencies_fplbase_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)

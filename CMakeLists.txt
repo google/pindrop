@@ -22,6 +22,12 @@ project(pindrop)
 option(pindrop_multistream "Support multiple channels of streaming audio" off)
 option(pindrop_build_demo "Build the pindrop demo" ON)
 
+# By default file load operations are blocking. FPLBase offers an async loader
+# class that we can optionally use. To enable async loading set
+# pindrop_async_loading=ON as well as the path to fplbase with the variable
+# dependencies_fplbase_dir.
+option(pindrop_async_loading "Support async loading with fplbase" off)
+
 if(pindrop_multistream)
   add_definitions(-DPINDROP_MULTISTREAM)
 endif()
@@ -36,7 +42,6 @@ if(NOT fpl_ios)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
-
 
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
@@ -176,7 +181,7 @@ if(NOT TARGET flatc)
 endif()
 
 # Include fplbase in this project.
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
+set(pindrop_async_loading and FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
 if(NOT TARGET flatc)
   add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
 endif()
@@ -197,6 +202,12 @@ build_flatbuffers("${FLATBUFFERS_SCHEMAS}"
                   ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
                   ""
                   "")
+
+if(pindrop_async_loading)
+  set(FILE_LOADER_DIR src/asynchronous_loader)
+else()
+  set(FILE_LOADER_DIR src/synchronous_loader)
+endif()
 
 # AudioEngine source files.
 set(pindrop_SRCS
@@ -221,15 +232,24 @@ set(pindrop_SRCS
     src/sound_bank.cpp
     src/sound_bank.h
     src/sound_collection.cpp
-    src/sound_collection.h)
+    src/sound_collection.h
+    ${FILE_LOADER_DIR}/file_loader.cpp
+    ${FILE_LOADER_DIR}/file_loader.h)
 
 # Includes for this project.
 include_directories(src include)
+if(pindrop_async_loading)
+  include_directories(src/asynchronous_loader)
+else()
+  include_directories(src/synchronous_loader)
+endif()
 if(WIN32)
   include_directories(external/include/windows)
 endif()
+if (pindrop_async_loading)
+  include_directories(${dependencies_fplbase_dir}/include)
+endif()
 include_directories(${dependencies_flatbuffers_dir}/include)
-include_directories(${dependencies_fplbase_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
 
@@ -265,6 +285,11 @@ if(NOT fpl_ios)
 else()
   set(SDL_LIBRARIES "")
 endif()
+if (pindrop_async_loading)
+  set(FPLBASE_LIBRARY fplbase)
+else()
+  set(FPL_LIBRARY "")
+endif()
 if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
   set(SDL_LIBRARIES SDL2main ${SDL_LIBRARIES})
@@ -277,11 +302,11 @@ mathfu_set_ios_attributes(pindrop)
 mathfu_configure_flags(pindrop)
 add_dependencies(pindrop pindrop_generated_includes)
 if(fpl_ios)
-  target_link_libraries(pindrop fplbase)
+  target_link_libraries(pindrop ${FPLBASE_LIBRARY})
 else()
   target_link_libraries(pindrop
     ${SDL_LIBRARIES}
-    fplbase
+    ${FPLBASE_LIBRARY}
     sdl_mixer
     libvorbis
     libogg)
@@ -298,7 +323,7 @@ if(NOT fpl_ios)
     target_link_libraries(pindrop_demo
       pindrop
       ${SDL_LIBRARIES}
-      fplbase
+      ${FPLBASE_LIBRARY}
       sdl_mixer
       libvorbis
       libogg)
@@ -320,7 +345,9 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
   add_subdirectory("${dependencies_gtest_dir}" googletest)
-  add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
+  if (pindrop_async_loading)
+    add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
+  endif()
   include(${GTEST_LIBDIR}/cmake/internal_utils.cmake)
   config_compiler_and_linker()
   string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")

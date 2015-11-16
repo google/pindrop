@@ -17,18 +17,18 @@
 
 #include "pindrop/pindrop.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "backend.h"
 #include "bus_internal_state.h"
 #include "channel_internal_state.h"
+#include "file_loader.h"
 #include "mathfu/utilities.h"
 #include "sound.h"
 #include "sound_bank.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
-#include "fplbase/async_loader.h"
 
 namespace pindrop {
 
@@ -102,8 +102,8 @@ struct AudioEngineInternalState {
   ListenerStateVector listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
 
-  // Loads the sound files on a background thread.
-  fplbase::AsyncLoader loader;
+  // Loads the sound files.
+  FileLoader loader;
 
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;

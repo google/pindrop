@@ -25,6 +25,8 @@ PINDROP_DIR := $(LOCAL_PATH)
 include $(PINDROP_DIR)/jni/android_config.mk
 include $(DEPENDENCIES_FLATBUFFERS_DIR)/android/jni/include.mk
 
+PINDROP_ASYNC_LOADING ?= 0
+
 PINDROP_GENERATED_OUTPUT_DIR := $(PINDROP_DIR)/gen/include
 
 LOCAL_EXPORT_C_INCLUDES := \
@@ -32,9 +34,16 @@ LOCAL_EXPORT_C_INCLUDES := \
   $(PINDROP_DIR)/include \
   $(PINDROP_GENERATED_OUTPUT_DIR)
 
+ifneq (0,$(PINDROP_ASYNC_LOADING))
+FILE_LOADER_DIR := src/asynchronous_loader
+else
+FILE_LOADER_DIR := src/synchronous_loader
+endif
+
 LOCAL_C_INCLUDES := \
   $(LOCAL_EXPORT_C_INCLUDES) \
   $(PINDROP_DIR)/src \
+  $(PINDROP_DIR)/${FILE_LOADER_DIR} \
   $(DEPENDENCIES_FLATBUFFERS_DIR)/include \
   $(DEPENDENCIES_FPLBASE_DIR)/include \
   $(DEPENDENCIES_SDL_DIR) \
@@ -52,7 +61,8 @@ LOCAL_SRC_FILES := \
   src/ref_counter.cpp \
   src/sound.cpp \
   src/sound_bank.cpp \
-  src/sound_collection.cpp
+  src/sound_collection.cpp \
+  ${FILE_LOADER_DIR}/file_loader.cpp
 
 PINDROP_SCHEMA_DIR := $(PINDROP_DIR)/schemas
 PINDROP_SCHEMA_INCLUDE_DIRS :=

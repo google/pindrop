@@ -43,11 +43,6 @@ SoundBuffer::~SoundBuffer() {
   }
 }
 
-void SoundBuffer::LoadFile(const char* filename, fplbase::AsyncLoader* loader) {
-  set_filename(filename);
-  loader->QueueJob(this);
-}
-
 void SoundBuffer::Load() {
   data_ = Mix_LoadWAV(filename().c_str());
   if (data_ == nullptr) {
@@ -62,23 +57,19 @@ bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
 }
 
-void SoundStream::LoadFile(const char* filename,
-                           fplbase::AsyncLoader* /*loader*/) {
-  filename_ = filename;
-}
+void SoundStream::Load() {}
 
 bool SoundStream::Play(ChannelId channel_id, bool loop) {
   ChannelId result;
   int loops = loop ? kLoopForever : kPlayOnce;
 #ifdef PINDROP_MULTISTREAM
-  result = Mix_PlayMusicCh(Mix_LoadMUS(filename_.c_str()), loops, channel_id);
+  result = Mix_PlayMusicCh(Mix_LoadMUS(filename().c_str()), loops, channel_id);
 #else
   (void)channel_id;
   FreeFinishedMusic();
-  result = Mix_PlayMusic(Mix_LoadMUS(filename_.c_str()), loops);
+  result = Mix_PlayMusic(Mix_LoadMUS(filename().c_str()), loops);
 #endif
   return result != kInvalidChannelId;
 }
 
 }  // namespace pindrop
-

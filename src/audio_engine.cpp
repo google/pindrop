@@ -24,6 +24,7 @@
 #include "bus_internal_state.h"
 #include "buses_generated.h"
 #include "channel_internal_state.h"
+#include "file_loader.h"
 #include "intrusive_list.h"
 #include "listener_internal_state.h"
 #include "mathfu/constants.h"

@@ -30,8 +30,8 @@ const Uint32 kDelayMilliseconds =
     static_cast<Uint32>(1000.0f * 1.0f / kFramesPerSecond);
 
 const char* kWindowTitle = "Pindrop Demo";
-const char* kAudioConfig = "assets/audio_config.bin";
-const char* kSoundBank = "assets/sound_banks/my_sound_bank.bin";
+const char* kAudioConfig = "assets/audio_config.pinconfig";
+const char* kSoundBank = "assets/sound_banks/my_sound_bank.pinbank";
 const char* kInstructionsTexture = "assets/textures/instructions.bmp";
 const char* kChannelTexture = "assets/textures/channel.bmp";
 const char* kListenerTexture = "assets/textures/listener.bmp";

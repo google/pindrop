@@ -43,7 +43,7 @@ SoundBuffer::~SoundBuffer() {
   }
 }
 
-void SoundBuffer::LoadFile(const char* filename, fpl::AsyncLoader* loader) {
+void SoundBuffer::LoadFile(const char* filename, fplbase::AsyncLoader* loader) {
   set_filename(filename);
   loader->QueueJob(this);
 }
@@ -62,7 +62,8 @@ bool SoundBuffer::Play(ChannelId channel_id, bool loop) {
   return Mix_PlayChannel(channel_id, data_, loops) != kInvalidChannelId;
 }
 
-void SoundStream::LoadFile(const char* filename, fpl::AsyncLoader* /*loader*/) {
+void SoundStream::LoadFile(const char* filename,
+                           fplbase::AsyncLoader* /*loader*/) {
   filename_ = filename;
 }
 

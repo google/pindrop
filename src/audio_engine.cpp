@@ -32,12 +32,6 @@
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
-#define PINDROP_VERSION_MAJOR 1
-#define PINDROP_VERSION_MINOR 0
-#define PINDROP_VERSION_REVISION 0
-#define PINDROP_STRING_EXPAND(X) #X
-#define PINDROP_STRING(X) PINDROP_STRING_EXPAND(X)
-
 namespace pindrop {
 
 // clang-format off

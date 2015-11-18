@@ -23,6 +23,8 @@ class FileLoader;
 
 class Resource {
  public:
+  virtual ~Resource() {}
+
   void LoadFile(const char* filename, FileLoader* loader);
 
   void set_filename(const std::string& filename) { filename_ = filename; }

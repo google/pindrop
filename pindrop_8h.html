@@ -122,7 +122,7 @@ $(document).ready(function(){initNavTree('pindrop_8h.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>The public API consisting of the AudioEngine, Channel, and Listener classes.  
+<p>The public API consisting of the AudioEngine, Channel, Listener and Bus classes.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;string&gt;</code><br/>
 <code>#include &quot;mathfu/matrix.h&quot;</code><br/>
@@ -131,10 +131,13 @@ $(document).ready(function(){initNavTree('pindrop_8h.html','');});
 </div>
 <p><a href="pindrop_8h_source.html">Go to the source code of this file.</a></p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The public API consisting of the AudioEngine, Channel, and Listener classes. </p>
+<div class="textblock"><p>The public API consisting of the AudioEngine, Channel, Listener and Bus classes. </p>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_bus.html">pindrop::Bus</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An object representing one in a tree of buses. Buses are used to adjust a set of channel gains in tandem.  <a href="classpindrop_1_1_bus.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_listener.html">pindrop::Listener</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An object whose distance from sounds determines their gain.  <a href="classpindrop_1_1_listener.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,7 +154,7 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>PINDROP_VERSION_MAJOR</b>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:a48dc2194cb7da828b0d690ca5e65cecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83c77b8b4456d1fb2e88b9ffb8af0b83"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83c77b8b4456d1fb2e88b9ffb8af0b83"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>PINDROP_VERSION_MINOR</b>&#160;&#160;&#160;0</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>PINDROP_VERSION_MINOR</b>&#160;&#160;&#160;1</td></tr>
 <tr class="separator:a83c77b8b4456d1fb2e88b9ffb8af0b83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1149777946594e541396f013c5898531"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1149777946594e541396f013c5898531"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>PINDROP_VERSION_REVISION</b>&#160;&#160;&#160;0</td></tr>
@@ -168,9 +171,6 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a848cd7899d0230085b24f1daa98075f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a848cd7899d0230085b24f1daa98075f2"></a>
 typedef SoundCollection *&#160;</td><td class="memItemRight" valign="bottom"><b>pindrop::SoundHandle</b></td></tr>
 <tr class="separator:a848cd7899d0230085b24f1daa98075f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a8fc0f7560c6f4829f0aae8b7e72940"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a8fc0f7560c6f4829f0aae8b7e72940"></a>
-typedef size_t&#160;</td><td class="memItemRight" valign="bottom"><b>pindrop::ListenerId</b></td></tr>
-<tr class="separator:a9a8fc0f7560c6f4829f0aae8b7e72940"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -146,11 +146,19 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:afd4f4a7762aac71a2882802548234f06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update audio volume per channel each frame.  <a href="#afd4f4a7762aac71a2882802548234f06">More...</a><br/></td></tr>
 <tr class="separator:afd4f4a7762aac71a2882802548234f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4d6ff8d550020fdbf15ad0034bb271d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#af4d6ff8d550020fdbf15ad0034bb271d">LoadSoundBank</a> (const std::string &amp;filename)</td></tr>
-<tr class="memdesc:af4d6ff8d550020fdbf15ad0034bb271d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a sound bank from a file.  <a href="#af4d6ff8d550020fdbf15ad0034bb271d">More...</a><br/></td></tr>
+<tr class="memdesc:af4d6ff8d550020fdbf15ad0034bb271d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a sound bank from a file. Queue the sound files in that sound bank for loading. Call <a class="el" href="classpindrop_1_1_audio_engine.html#a8d87b26f63fadabf8dd8ad4122ae3635" title="Kick off loading thread to load all sound files queued with LoadSoundBank(). ">StartLoadingSoundFiles()</a> to trigger loading of the sound files on a separate thread.  <a href="#af4d6ff8d550020fdbf15ad0034bb271d">More...</a><br/></td></tr>
 <tr class="separator:af4d6ff8d550020fdbf15ad0034bb271d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af949f3902423ddec93760d7bfac54d53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#af949f3902423ddec93760d7bfac54d53">UnloadSoundBank</a> (const std::string &amp;filename)</td></tr>
 <tr class="memdesc:af949f3902423ddec93760d7bfac54d53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unload a sound bank.  <a href="#af949f3902423ddec93760d7bfac54d53">More...</a><br/></td></tr>
 <tr class="separator:af949f3902423ddec93760d7bfac54d53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d87b26f63fadabf8dd8ad4122ae3635"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8d87b26f63fadabf8dd8ad4122ae3635"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a8d87b26f63fadabf8dd8ad4122ae3635">StartLoadingSoundFiles</a> ()</td></tr>
+<tr class="memdesc:a8d87b26f63fadabf8dd8ad4122ae3635"><td class="mdescLeft">&#160;</td><td class="mdescRight">Kick off loading thread to load all sound files queued with <a class="el" href="classpindrop_1_1_audio_engine.html#af4d6ff8d550020fdbf15ad0034bb271d" title="Load a sound bank from a file. Queue the sound files in that sound bank for loading. Call StartLoadingSoundFiles() to trigger loading of the sound files on a separate thread. ">LoadSoundBank()</a>. <br/></td></tr>
+<tr class="separator:a8d87b26f63fadabf8dd8ad4122ae3635"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab73e3527597133f21bf9cca217e52f11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab73e3527597133f21bf9cca217e52f11"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#ab73e3527597133f21bf9cca217e52f11">TryFinalize</a> ()</td></tr>
+<tr class="memdesc:ab73e3527597133f21bf9cca217e52f11"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return true if all sound files have been loaded. Must call <a class="el" href="classpindrop_1_1_audio_engine.html#a8d87b26f63fadabf8dd8ad4122ae3635" title="Kick off loading thread to load all sound files queued with LoadSoundBank(). ">StartLoadingSoundFiles()</a> first. <br/></td></tr>
+<tr class="separator:ab73e3527597133f21bf9cca217e52f11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6130e4f8c4412990d25ec0333c4b3f6c"><td class="memItemLeft" align="right" valign="top">SoundHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a6130e4f8c4412990d25ec0333c4b3f6c">GetSoundHandle</a> (const std::string &amp;name) const </td></tr>
 <tr class="memdesc:a6130e4f8c4412990d25ec0333c4b3f6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a SoundHandle given its name as defined in its JSON data.  <a href="#a6130e4f8c4412990d25ec0333c4b3f6c">More...</a><br/></td></tr>
 <tr class="separator:a6130e4f8c4412990d25ec0333c4b3f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,18 +186,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a47c9487d241ee7742f66e73d44552476"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a47c9487d241ee7742f66e73d44552476">RemoveListener</a> (<a class="el" href="classpindrop_1_1_listener.html">Listener</a> *listener)</td></tr>
 <tr class="memdesc:a47c9487d241ee7742f66e73d44552476"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a <a class="el" href="classpindrop_1_1_listener.html" title="An object whose distance from sounds determines their gain. ">Listener</a>.  <a href="#a47c9487d241ee7742f66e73d44552476">More...</a><br/></td></tr>
 <tr class="separator:a47c9487d241ee7742f66e73d44552476"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a442a5155b3d6d953a3e4e6d549a86579"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_bus.html">Bus</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a442a5155b3d6d953a3e4e6d549a86579">FindBus</a> (const char *bus_name)</td></tr>
+<tr class="memdesc:a442a5155b3d6d953a3e4e6d549a86579"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the named bus.  <a href="#a442a5155b3d6d953a3e4e6d549a86579">More...</a><br/></td></tr>
+<tr class="separator:a442a5155b3d6d953a3e4e6d549a86579"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79cb6b58a07a2dc13217ac3b1bbb3ab7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a79cb6b58a07a2dc13217ac3b1bbb3ab7">PlaySound</a> (SoundHandle sound_handle)</td></tr>
 <tr class="memdesc:a79cb6b58a07a2dc13217ac3b1bbb3ab7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound_handle.  <a href="#a79cb6b58a07a2dc13217ac3b1bbb3ab7">More...</a><br/></td></tr>
 <tr class="separator:a79cb6b58a07a2dc13217ac3b1bbb3ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f520583bbb6cf3b9d2483f29e216b29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a1f520583bbb6cf3b9d2483f29e216b29">PlaySound</a> (SoundHandle sound_handle, const mathfu::Vector&lt; float, 3 &gt; &amp;location)</td></tr>
 <tr class="memdesc:a1f520583bbb6cf3b9d2483f29e216b29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound_handle at the given location.  <a href="#a1f520583bbb6cf3b9d2483f29e216b29">More...</a><br/></td></tr>
 <tr class="separator:a1f520583bbb6cf3b9d2483f29e216b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a684c42afc544ef8e6218bf23a95ae8aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a684c42afc544ef8e6218bf23a95ae8aa">PlaySound</a> (SoundHandle sound_handle, const mathfu::Vector&lt; float, 3 &gt; &amp;location, float gain)</td></tr>
+<tr class="memdesc:a684c42afc544ef8e6218bf23a95ae8aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound_handle at the given location with the given gain.  <a href="#a684c42afc544ef8e6218bf23a95ae8aa">More...</a><br/></td></tr>
+<tr class="separator:a684c42afc544ef8e6218bf23a95ae8aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e9c9febc0fe805e6946f9a2bc8a1956"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a0e9c9febc0fe805e6946f9a2bc8a1956">PlaySound</a> (const std::string &amp;sound_name)</td></tr>
 <tr class="memdesc:a0e9c9febc0fe805e6946f9a2bc8a1956"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound name.  <a href="#a0e9c9febc0fe805e6946f9a2bc8a1956">More...</a><br/></td></tr>
 <tr class="separator:a0e9c9febc0fe805e6946f9a2bc8a1956"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebcadaee693d6cf97c8767f56afa8286"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#aebcadaee693d6cf97c8767f56afa8286">PlaySound</a> (const std::string &amp;sound_name, const mathfu::Vector&lt; float, 3 &gt; &amp;location)</td></tr>
 <tr class="memdesc:aebcadaee693d6cf97c8767f56afa8286"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound name at the given location.  <a href="#aebcadaee693d6cf97c8767f56afa8286">More...</a><br/></td></tr>
 <tr class="separator:aebcadaee693d6cf97c8767f56afa8286"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3698b48fe1e195d76f13b7373c85cf51"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpindrop_1_1_channel.html">Channel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a3698b48fe1e195d76f13b7373c85cf51">PlaySound</a> (const std::string &amp;sound_name, const mathfu::Vector&lt; float, 3 &gt; &amp;location, float gain)</td></tr>
+<tr class="memdesc:a3698b48fe1e195d76f13b7373c85cf51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Play a sound associated with the given sound name at the given location with the given gain.  <a href="#a3698b48fe1e195d76f13b7373c85cf51">More...</a><br/></td></tr>
+<tr class="separator:a3698b48fe1e195d76f13b7373c85cf51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06a9a32f9417cee86c229423b7796226"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpindrop_1_1_audio_engine.html#a06a9a32f9417cee86c229423b7796226">version_string</a> () const </td></tr>
 <tr class="memdesc:a06a9a32f9417cee86c229423b7796226"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the version string.  <a href="#a06a9a32f9417cee86c229423b7796226">More...</a><br/></td></tr>
 <tr class="separator:a06a9a32f9417cee86c229423b7796226"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -237,6 +254,25 @@ AudioEngineInternalState *&#160;</td><td class="memItemRight" valign="bottom"><b
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="a442a5155b3d6d953a3e4e6d549a86579"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpindrop_1_1_bus.html">Bus</a> pindrop::AudioEngine::FindBus </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>bus_name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the named bus. </p>
+<dl class="section return"><dt>Returns</dt><dd>The named bus. </dd></dl>
 
 </div>
 </div>
@@ -352,7 +388,7 @@ AudioEngineInternalState *&#160;</td><td class="memItemRight" valign="bottom"><b
       </table>
 </div><div class="memdoc">
 
-<p>Load a sound bank from a file. </p>
+<p>Load a sound bank from a file. Queue the sound files in that sound bank for loading. Call <a class="el" href="classpindrop_1_1_audio_engine.html#a8d87b26f63fadabf8dd8ad4122ae3635" title="Kick off loading thread to load all sound files queued with LoadSoundBank(). ">StartLoadingSoundFiles()</a> to trigger loading of the sound files on a separate thread. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">filename</td><td>The file containing the SoundBank flatbuffer binary data. </td></tr>
@@ -484,6 +520,49 @@ AudioEngineInternalState *&#160;</td><td class="memItemRight" valign="bottom"><b
 
 </div>
 </div>
+<a class="anchor" id="a684c42afc544ef8e6218bf23a95ae8aa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpindrop_1_1_channel.html">Channel</a> pindrop::AudioEngine::PlaySound </td>
+          <td>(</td>
+          <td class="paramtype">SoundHandle&#160;</td>
+          <td class="paramname"><em>sound_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const mathfu::Vector&lt; float, 3 &gt; &amp;&#160;</td>
+          <td class="paramname"><em>location</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>gain</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Play a sound associated with the given sound_handle at the given location with the given gain. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sound_handle</td><td>A handle to the sound to play. </td></tr>
+    <tr><td class="paramname">location</td><td>The location of the sound. </td></tr>
+    <tr><td class="paramname">gain</td><td>The gain of the sound. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The channel the sound is played on. If the sound could not be played, an invalid <a class="el" href="classpindrop_1_1_channel.html" title="An object that represents a single channel of audio. ">Channel</a> is returned. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a0e9c9febc0fe805e6946f9a2bc8a1956"></a>
 <div class="memitem">
 <div class="memproto">
@@ -540,6 +619,50 @@ AudioEngineInternalState *&#160;</td><td class="memItemRight" valign="bottom"><b
   <table class="params">
     <tr><td class="paramname">sound_name</td><td>A handle to the sound to play. </td></tr>
     <tr><td class="paramname">location</td><td>The location of the sound. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The channel the sound is played on. If the sound could not be played, an invalid <a class="el" href="classpindrop_1_1_channel.html" title="An object that represents a single channel of audio. ">Channel</a> is returned. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a3698b48fe1e195d76f13b7373c85cf51"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpindrop_1_1_channel.html">Channel</a> pindrop::AudioEngine::PlaySound </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>sound_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const mathfu::Vector&lt; float, 3 &gt; &amp;&#160;</td>
+          <td class="paramname"><em>location</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>gain</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Play a sound associated with the given sound name at the given location with the given gain. </p>
+<p>Note: Playing a sound with its SoundHandle is faster than using the sound name as using the name requires a map lookup internally.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sound_name</td><td>A handle to the sound to play. </td></tr>
+    <tr><td class="paramname">location</td><td>The location of the sound. </td></tr>
+    <tr><td class="paramname">gain</td><td>The gain of the sound. </td></tr>
   </table>
   </dd>
 </dl>

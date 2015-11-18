@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['master_5fgain',['master_gain',['../classpindrop_1_1_audio_engine.html#ab3b64ede34e428fea39392627b19409b',1,'pindrop::AudioEngine']]],
-  ['matrix',['Matrix',['../classpindrop_1_1_listener.html#a7f4a52a13c50161d2b88a3dc5a14b92e',1,'pindrop::Listener']]],
-  ['mute',['mute',['../classpindrop_1_1_audio_engine.html#a370e972f08393aa0fa0ff146cc6c9b61',1,'pindrop::AudioEngine']]],
-  ['modifying_20assets',['Modifying Assets',['../pindrop_guide_assets.html',1,'']]]
+  ['listener',['Listener',['../classpindrop_1_1_listener.html',1,'pindrop']]],
+  ['listener',['Listener',['../classpindrop_1_1_listener.html#a07cf77cb1e56df7e930554142e0f25ae',1,'pindrop::Listener']]],
+  ['loadsoundbank',['LoadSoundBank',['../classpindrop_1_1_audio_engine.html#af4d6ff8d550020fdbf15ad0034bb271d',1,'pindrop::AudioEngine']]],
+  ['location',['Location',['../classpindrop_1_1_listener.html#ac7f894e1850e00c1e6867cbef95eaa39',1,'pindrop::Listener::Location()'],['../classpindrop_1_1_channel.html#aec570fa952b3e5487889b740182c8ba1',1,'pindrop::Channel::Location()']]],
+  ['listener',['Listener',['../pindrop_guide_listener.html',1,'']]]
 ];

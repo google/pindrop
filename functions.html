@@ -94,7 +94,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow4" class="tabs3">
     <ul class="tablist">
       <li><a href="#index_a"><span>a</span></a></li>
+      <li><a href="#index_b"><span>b</span></a></li>
       <li><a href="#index_c"><span>c</span></a></li>
+      <li><a href="#index_f"><span>f</span></a></li>
       <li><a href="#index_g"><span>g</span></a></li>
       <li><a href="#index_i"><span>i</span></a></li>
       <li><a href="#index_l"><span>l</span></a></li>
@@ -102,6 +104,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="#index_p"><span>p</span></a></li>
       <li><a href="#index_r"><span>r</span></a></li>
       <li><a href="#index_s"><span>s</span></a></li>
+      <li><a href="#index_t"><span>t</span></a></li>
       <li><a href="#index_u"><span>u</span></a></li>
       <li class="current"><a href="#index_v"><span>v</span></a></li>
     </ul>
@@ -151,18 +154,43 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </ul>
 
 
+<h3><a class="anchor" id="index_b"></a>- b -</h3><ul>
+<li>Bus()
+: <a class="el" href="classpindrop_1_1_bus.html#ab239b27b1e9e72b1165a8d04a2fb5756">pindrop::Bus</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
 <li>Channel()
 : <a class="el" href="classpindrop_1_1_channel.html#a13e337dabb35ed233fe11330affa548d">pindrop::Channel</a>
 </li>
 <li>Clear()
-: <a class="el" href="classpindrop_1_1_channel.html#a0e5e0219ecbb8875cf63b9e66d7ed2b1">pindrop::Channel</a>
+: <a class="el" href="classpindrop_1_1_bus.html#ac42aa2191d7b786db528422a53a10797">pindrop::Bus</a>
+, <a class="el" href="classpindrop_1_1_channel.html#a0e5e0219ecbb8875cf63b9e66d7ed2b1">pindrop::Channel</a>
 , <a class="el" href="classpindrop_1_1_listener.html#ab1b15d517eb3e447af59c6662860002c">pindrop::Listener</a>
 </li>
 </ul>
 
 
+<h3><a class="anchor" id="index_f"></a>- f -</h3><ul>
+<li>FadeTo()
+: <a class="el" href="classpindrop_1_1_bus.html#a2701827547a7a9290502307a24340d42">pindrop::Bus</a>
+</li>
+<li>FinalGain()
+: <a class="el" href="classpindrop_1_1_bus.html#a1af69574d80f0872f0b320b27e74668d">pindrop::Bus</a>
+</li>
+<li>FindBus()
+: <a class="el" href="classpindrop_1_1_audio_engine.html#a442a5155b3d6d953a3e4e6d549a86579">pindrop::AudioEngine</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
+<li>Gain()
+: <a class="el" href="classpindrop_1_1_bus.html#a2c85bd83f71667cd8e23dcad8a3fb323">pindrop::Bus</a>
+, <a class="el" href="classpindrop_1_1_channel.html#a79e81ff7acdcfd69869eaf06e5364acb">pindrop::Channel</a>
+</li>
 <li>GetSoundHandle()
 : <a class="el" href="classpindrop_1_1_audio_engine.html#a6130e4f8c4412990d25ec0333c4b3f6c">pindrop::AudioEngine</a>
 </li>
@@ -198,7 +226,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 : <a class="el" href="classpindrop_1_1_audio_engine.html#ab3b64ede34e428fea39392627b19409b">pindrop::AudioEngine</a>
 </li>
 <li>Matrix()
-: <a class="el" href="classpindrop_1_1_listener.html#a7f4a52a13c50161d2b88a3dc5a14b92e">pindrop::Listener</a>
+: <a class="el" href="classpindrop_1_1_listener.html#ae120028cea966c76cda03814cae4de69">pindrop::Listener</a>
 </li>
 <li>mute()
 : <a class="el" href="classpindrop_1_1_audio_engine.html#a370e972f08393aa0fa0ff146cc6c9b61">pindrop::AudioEngine</a>
@@ -209,12 +237,13 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <h3><a class="anchor" id="index_p"></a>- p -</h3><ul>
 <li>Pause()
 : <a class="el" href="classpindrop_1_1_audio_engine.html#ac57a67e6b25bc006453b7f999f288f58">pindrop::AudioEngine</a>
+, <a class="el" href="classpindrop_1_1_channel.html#af26bb9d313e721ec14cd0b508e4383eb">pindrop::Channel</a>
 </li>
 <li>Playing()
 : <a class="el" href="classpindrop_1_1_channel.html#af16064dd80895cfcc766d89aa07f4df1">pindrop::Channel</a>
 </li>
 <li>PlaySound()
-: <a class="el" href="classpindrop_1_1_audio_engine.html#a0e9c9febc0fe805e6946f9a2bc8a1956">pindrop::AudioEngine</a>
+: <a class="el" href="classpindrop_1_1_audio_engine.html#a79cb6b58a07a2dc13217ac3b1bbb3ab7">pindrop::AudioEngine</a>
 </li>
 </ul>
 
@@ -222,6 +251,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <h3><a class="anchor" id="index_r"></a>- r -</h3><ul>
 <li>RemoveListener()
 : <a class="el" href="classpindrop_1_1_audio_engine.html#a47c9487d241ee7742f66e73d44552476">pindrop::AudioEngine</a>
+</li>
+<li>Resume()
+: <a class="el" href="classpindrop_1_1_channel.html#a6a147f3cb2675ba57432b934b14ce315">pindrop::Channel</a>
 </li>
 </ul>
 
@@ -233,6 +265,10 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>set_mute()
 : <a class="el" href="classpindrop_1_1_audio_engine.html#a733495932e573c4329cb62bb750a6d8d">pindrop::AudioEngine</a>
 </li>
+<li>SetGain()
+: <a class="el" href="classpindrop_1_1_bus.html#a21e116200ad886ddf4bb01587bfd8fa3">pindrop::Bus</a>
+, <a class="el" href="classpindrop_1_1_channel.html#a4ae661723e0c57008dc1cec359f69686">pindrop::Channel</a>
+</li>
 <li>SetLocation()
 : <a class="el" href="classpindrop_1_1_channel.html#add8893f5c47147a20fe96d322ae32ae3">pindrop::Channel</a>
 , <a class="el" href="classpindrop_1_1_listener.html#a8e786627bd5247e758cd39840f9d3af9">pindrop::Listener</a>
@@ -243,8 +279,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>SetOrientation()
 : <a class="el" href="classpindrop_1_1_listener.html#ae967db95fb6c6bbb25432636d9a56d40">pindrop::Listener</a>
 </li>
+<li>StartLoadingSoundFiles()
+: <a class="el" href="classpindrop_1_1_audio_engine.html#a8d87b26f63fadabf8dd8ad4122ae3635">pindrop::AudioEngine</a>
+</li>
 <li>Stop()
 : <a class="el" href="classpindrop_1_1_channel.html#a4d8c7a0b2cc46c453ac1082d28fcdfaa">pindrop::Channel</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_t"></a>- t -</h3><ul>
+<li>TryFinalize()
+: <a class="el" href="classpindrop_1_1_audio_engine.html#ab73e3527597133f21bf9cca217e52f11">pindrop::AudioEngine</a>
 </li>
 </ul>
 
@@ -258,7 +304,8 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 <h3><a class="anchor" id="index_v"></a>- v -</h3><ul>
 <li>Valid()
-: <a class="el" href="classpindrop_1_1_channel.html#ace7ff568798ea69e55d0ccee294ea120">pindrop::Channel</a>
+: <a class="el" href="classpindrop_1_1_bus.html#afcc0e833de991e213e1c910b7758b072">pindrop::Bus</a>
+, <a class="el" href="classpindrop_1_1_channel.html#ace7ff568798ea69e55d0ccee294ea120">pindrop::Channel</a>
 , <a class="el" href="classpindrop_1_1_listener.html#a6b3544c826a33714f31081735875aa95">pindrop::Listener</a>
 </li>
 <li>version_string()

@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['master_5fgain',['master_gain',['../classpindrop_1_1_audio_engine.html#ab3b64ede34e428fea39392627b19409b',1,'pindrop::AudioEngine']]],
-  ['matrix',['Matrix',['../classpindrop_1_1_listener.html#a7f4a52a13c50161d2b88a3dc5a14b92e',1,'pindrop::Listener']]],
-  ['mute',['mute',['../classpindrop_1_1_audio_engine.html#a370e972f08393aa0fa0ff146cc6c9b61',1,'pindrop::AudioEngine']]]
+  ['initialize',['Initialize',['../classpindrop_1_1_audio_engine.html#a82e0336baaf7a567a0ed7f9e99bad347',1,'pindrop::AudioEngine::Initialize(const char *config_file)'],['../classpindrop_1_1_audio_engine.html#ada3b3d585ed14a9fd6e369fe43e63be1',1,'pindrop::AudioEngine::Initialize(const AudioConfig *config)']]]
 ];

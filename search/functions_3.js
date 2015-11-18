@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['initialize',['Initialize',['../classpindrop_1_1_audio_engine.html#a82e0336baaf7a567a0ed7f9e99bad347',1,'pindrop::AudioEngine::Initialize(const char *config_file)'],['../classpindrop_1_1_audio_engine.html#ada3b3d585ed14a9fd6e369fe43e63be1',1,'pindrop::AudioEngine::Initialize(const AudioConfig *config)']]]
+  ['fadeto',['FadeTo',['../classpindrop_1_1_bus.html#a2701827547a7a9290502307a24340d42',1,'pindrop::Bus']]],
+  ['finalgain',['FinalGain',['../classpindrop_1_1_bus.html#a1af69574d80f0872f0b320b27e74668d',1,'pindrop::Bus']]],
+  ['findbus',['FindBus',['../classpindrop_1_1_audio_engine.html#a442a5155b3d6d953a3e4e6d549a86579',1,'pindrop::AudioEngine']]]
 ];

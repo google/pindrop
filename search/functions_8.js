@@ -1,9 +1,6 @@
 var searchData=
 [
-  ['set_5fmaster_5fgain',['set_master_gain',['../classpindrop_1_1_audio_engine.html#a7674584e8b5c0ef3d682c33f5777f409',1,'pindrop::AudioEngine']]],
-  ['set_5fmute',['set_mute',['../classpindrop_1_1_audio_engine.html#a733495932e573c4329cb62bb750a6d8d',1,'pindrop::AudioEngine']]],
-  ['setlocation',['SetLocation',['../classpindrop_1_1_listener.html#a8e786627bd5247e758cd39840f9d3af9',1,'pindrop::Listener::SetLocation()'],['../classpindrop_1_1_channel.html#add8893f5c47147a20fe96d322ae32ae3',1,'pindrop::Channel::SetLocation()']]],
-  ['setmatrix',['SetMatrix',['../classpindrop_1_1_listener.html#a70c4d9228de17cada94791217cbb26d2',1,'pindrop::Listener']]],
-  ['setorientation',['SetOrientation',['../classpindrop_1_1_listener.html#ae967db95fb6c6bbb25432636d9a56d40',1,'pindrop::Listener']]],
-  ['stop',['Stop',['../classpindrop_1_1_channel.html#a4d8c7a0b2cc46c453ac1082d28fcdfaa',1,'pindrop::Channel']]]
+  ['pause',['Pause',['../classpindrop_1_1_channel.html#af26bb9d313e721ec14cd0b508e4383eb',1,'pindrop::Channel::Pause()'],['../classpindrop_1_1_audio_engine.html#ac57a67e6b25bc006453b7f999f288f58',1,'pindrop::AudioEngine::Pause()']]],
+  ['playing',['Playing',['../classpindrop_1_1_channel.html#af16064dd80895cfcc766d89aa07f4df1',1,'pindrop::Channel']]],
+  ['playsound',['PlaySound',['../classpindrop_1_1_audio_engine.html#a79cb6b58a07a2dc13217ac3b1bbb3ab7',1,'pindrop::AudioEngine::PlaySound(SoundHandle sound_handle)'],['../classpindrop_1_1_audio_engine.html#a1f520583bbb6cf3b9d2483f29e216b29',1,'pindrop::AudioEngine::PlaySound(SoundHandle sound_handle, const mathfu::Vector&lt; float, 3 &gt; &amp;location)'],['../classpindrop_1_1_audio_engine.html#a684c42afc544ef8e6218bf23a95ae8aa',1,'pindrop::AudioEngine::PlaySound(SoundHandle sound_handle, const mathfu::Vector&lt; float, 3 &gt; &amp;location, float gain)'],['../classpindrop_1_1_audio_engine.html#a0e9c9febc0fe805e6946f9a2bc8a1956',1,'pindrop::AudioEngine::PlaySound(const std::string &amp;sound_name)'],['../classpindrop_1_1_audio_engine.html#aebcadaee693d6cf97c8767f56afa8286',1,'pindrop::AudioEngine::PlaySound(const std::string &amp;sound_name, const mathfu::Vector&lt; float, 3 &gt; &amp;location)'],['../classpindrop_1_1_audio_engine.html#a3698b48fe1e195d76f13b7373c85cf51',1,'pindrop::AudioEngine::PlaySound(const std::string &amp;sound_name, const mathfu::Vector&lt; float, 3 &gt; &amp;location, float gain)']]]
 ];

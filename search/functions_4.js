@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['listener',['Listener',['../classpindrop_1_1_listener.html#a07cf77cb1e56df7e930554142e0f25ae',1,'pindrop::Listener']]],
-  ['loadsoundbank',['LoadSoundBank',['../classpindrop_1_1_audio_engine.html#af4d6ff8d550020fdbf15ad0034bb271d',1,'pindrop::AudioEngine']]],
-  ['location',['Location',['../classpindrop_1_1_listener.html#ac7f894e1850e00c1e6867cbef95eaa39',1,'pindrop::Listener::Location()'],['../classpindrop_1_1_channel.html#aec570fa952b3e5487889b740182c8ba1',1,'pindrop::Channel::Location()']]]
+  ['gain',['Gain',['../classpindrop_1_1_bus.html#a2c85bd83f71667cd8e23dcad8a3fb323',1,'pindrop::Bus::Gain()'],['../classpindrop_1_1_channel.html#a79e81ff7acdcfd69869eaf06e5364acb',1,'pindrop::Channel::Gain()']]],
+  ['getsoundhandle',['GetSoundHandle',['../classpindrop_1_1_audio_engine.html#a6130e4f8c4412990d25ec0333c4b3f6c',1,'pindrop::AudioEngine']]],
+  ['getsoundhandlefromfile',['GetSoundHandleFromFile',['../classpindrop_1_1_audio_engine.html#a2c71c7af69466d5079ebcc488ad7eb61',1,'pindrop::AudioEngine']]]
 ];

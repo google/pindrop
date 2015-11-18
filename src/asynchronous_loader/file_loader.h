@@ -12,24 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/pindrop.h"
+#ifndef PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
+#define PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
 
-#include "bus_internal_state.h"
+#include "fplbase/async_loader.h"
 
 namespace pindrop {
 
-void Bus::Clear() { state_ = nullptr; }
+class FileLoader;
 
-bool Bus::Valid() const { return state_ != nullptr; }
+class Resource : public fplbase::AsyncResource {
+ public:
+  void LoadFile(const char* filename, FileLoader* loader);
 
-void Bus::SetGain(float gain) { return state_->set_user_gain(gain); }
+ private:
+  virtual void Finalize() {};
+};
 
-float Bus::Gain() const { return state_->user_gain(); }
+class FileLoader {
+ public:
+  void StartLoading();
 
-void Bus::FadeTo(float gain, float duration) {
-  state_->FadeTo(gain, duration);
-}
+  bool TryFinalize();
 
-float Bus::FinalGain() const { return state_->gain(); }
+  void QueueJob(Resource* resource);
 
-}  // pindrop
+ private:
+  fplbase::AsyncLoader loader;
+};
+
+}  // namespace pindrop
+
+#endif  // PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_

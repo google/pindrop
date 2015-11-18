@@ -12,24 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/pindrop.h"
+#ifndef PINDROP_SYNCHRONOUS_LOADER_FILE_LOADER_H_
+#define PINDROP_SYNCHRONOUS_LOADER_FILE_LOADER_H_
 
-#include "bus_internal_state.h"
+#include <string>
 
 namespace pindrop {
 
-void Bus::Clear() { state_ = nullptr; }
+class FileLoader;
 
-bool Bus::Valid() const { return state_ != nullptr; }
+class Resource {
+ public:
+  virtual ~Resource() {}
 
-void Bus::SetGain(float gain) { return state_->set_user_gain(gain); }
+  void LoadFile(const char* filename, FileLoader* loader);
 
-float Bus::Gain() const { return state_->user_gain(); }
+  void set_filename(const std::string& filename) { filename_ = filename; }
 
-void Bus::FadeTo(float gain, float duration) {
-  state_->FadeTo(gain, duration);
-}
+  const std::string& filename() { return filename_; }
 
-float Bus::FinalGain() const { return state_->gain(); }
+ private:
+  virtual void Load() = 0;
 
-}  // pindrop
+  std::string filename_;
+};
+
+class FileLoader {
+ public:
+  void StartLoading() {}
+
+  bool TryFinalize() { return true; }
+};
+
+}  // namespace pindrop
+
+#endif  // PINDROP_SYNCHRONOUS_LOADER_FILE_LOADER_H_

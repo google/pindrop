@@ -43,9 +43,7 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
     } else {
       sound_source.reset(new SoundBuffer(entry));
     }
-    if (!sound_source->LoadFile(entry_filename)) {
-      return false;
-    }
+    sound_source->LoadFile(entry_filename, &state->loader);
     sum_of_probabilities_ += entry->playback_probability();
   }
   if (!def->bus()) {
@@ -54,7 +52,7 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
     return false;
   }
   if (state) {
-    bus_ = FindBus(state, def->bus()->c_str());
+    bus_ = FindBusInternalState(state, def->bus()->c_str());
     if (!bus_) {
       SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                    "Sound collection %s specifies an unknown bus: %s",

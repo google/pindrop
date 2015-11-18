@@ -17,8 +17,9 @@
 
 #include <string>
 
-#include "pindrop/pindrop.h"
 #include "channel_internal_state.h"
+#include "file_loader.h"
+#include "pindrop/pindrop.h"
 
 struct Mix_Chunk;
 typedef struct _Mix_Music Mix_Music;
@@ -28,14 +29,11 @@ namespace pindrop {
 struct AudioSampleSetEntry;
 
 // SoundSource is a base class for both SoundStreams and SoundBuffers.
-class SoundSource {
+class SoundSource : public Resource {
  public:
   explicit SoundSource(const AudioSampleSetEntry* entry)
       : audio_sample_set_entry_(entry) {}
   virtual ~SoundSource() {}
-
-  // Load the sound from the given filename.
-  virtual bool LoadFile(const char* filename) = 0;
 
   // Play this sound on the given channel, and loop if necessary.
   virtual bool Play(ChannelId channel_id, bool loop) = 0;
@@ -52,10 +50,11 @@ class SoundSource {
 // memory.
 class SoundBuffer : public SoundSource {
  public:
-  explicit SoundBuffer(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
+  explicit SoundBuffer(const AudioSampleSetEntry* entry)
+      : SoundSource(entry), data_(nullptr) {}
   virtual ~SoundBuffer();
 
-  virtual bool LoadFile(const char* filename);
+  virtual void Load();
 
   virtual bool Play(ChannelId channel_id, bool loop);
 
@@ -70,12 +69,9 @@ class SoundStream : public SoundSource {
   explicit SoundStream(const AudioSampleSetEntry* entry) : SoundSource(entry) {}
   virtual ~SoundStream() {}
 
-  virtual bool LoadFile(const char* filename);
+  virtual void Load();
 
   virtual bool Play(ChannelId channel_id, bool loop);
-
- private:
-  std::string filename_;
 };
 
 #ifdef PINDROP_MULTISTREAM

@@ -30,8 +30,8 @@ const Uint32 kDelayMilliseconds =
     static_cast<Uint32>(1000.0f * 1.0f / kFramesPerSecond);
 
 const char* kWindowTitle = "Pindrop Demo";
-const char* kAudioConfig = "assets/audio_config.bin";
-const char* kSoundBank = "assets/sound_banks/my_sound_bank.bin";
+const char* kAudioConfig = "assets/audio_config.pinconfig";
+const char* kSoundBank = "assets/sound_banks/my_sound_bank.pinbank";
 const char* kInstructionsTexture = "assets/textures/instructions.bmp";
 const char* kChannelTexture = "assets/textures/channel.bmp";
 const char* kListenerTexture = "assets/textures/listener.bmp";
@@ -62,6 +62,7 @@ class DemoState {
       : quit_(false),
         audio_config_source_(),
         audio_engine_(),
+        master_bus_(),
         window_(nullptr),
         renderer_(nullptr),
         sound_handle_(nullptr),
@@ -95,6 +96,7 @@ class DemoState {
   bool quit_;
   std::string audio_config_source_;
   pindrop::AudioEngine audio_engine_;
+  pindrop::Bus master_bus_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
   pindrop::SoundHandle sound_handle_;
@@ -170,6 +172,15 @@ bool DemoState::Initialize() {
       !audio_engine_.LoadSoundBank(kSoundBank)) {
     return false;
   }
+
+  // Wait for the sound files to complete loading.
+  audio_engine_.StartLoadingSoundFiles();
+  while (!audio_engine_.TryFinalize()) {
+    SDL_Delay(1);
+  }
+
+  // Cache the master bus so we can demonstrate adjusting the gain.
+  master_bus_ = audio_engine_.FindBus("master");
 
   // Cache the SoundHandle to the sound we want to play.
   sound_handle_ = audio_engine_.GetSoundHandle(kSoundHandleName);
@@ -329,6 +340,13 @@ void DemoState::HandleInput() {
           break;
         }
         break;
+      }
+      case SDL_MOUSEMOTION: {
+        // Set the master gain to be based on a x position of the mouse such
+        // that at x = 0 the gain is 0% and at x = kScreenWidth the master gain
+        // is at 100%.
+        float percentage = static_cast<float>(event.motion.x) / kScreenWidth;
+        master_bus_.SetGain(percentage);
       }
       default:
         ;  // Do nothing.

@@ -17,12 +17,13 @@
 
 #include "pindrop/pindrop.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "backend.h"
-#include "bus.h"
+#include "bus_internal_state.h"
 #include "channel_internal_state.h"
+#include "file_loader.h"
 #include "mathfu/utilities.h"
 #include "sound.h"
 #include "sound_bank.h"
@@ -60,10 +61,10 @@ struct AudioEngineInternalState {
   std::string buses_source;
 
   // The state of the buses.
-  std::vector<Bus> buses;
+  std::vector<BusInternalState> buses;
 
   // The master bus, cached to prevent needless lookups.
-  Bus* master_bus;
+  BusInternalState* master_bus;
 
   // The gain applied to all buses.
   float master_gain;
@@ -101,6 +102,9 @@ struct AudioEngineInternalState {
   ListenerStateVector listener_state_memory;
   std::vector<ListenerInternalState*> listener_state_free_list;
 
+  // Loads the sound files.
+  FileLoader loader;
+
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;
 
@@ -108,7 +112,8 @@ struct AudioEngineInternalState {
 };
 
 // Find a bus with the given name.
-Bus* FindBus(AudioEngineInternalState* state, const char* name);
+BusInternalState* FindBusInternalState(AudioEngineInternalState* state,
+                                       const char* name);
 
 // Given a playing sound, find where a new sound with the given priority should
 // be inserted into the list.
@@ -158,4 +163,3 @@ bool LoadFile(const char* filename, std::string* dest);
 }  // namespace pindrop
 
 #endif  // PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
-

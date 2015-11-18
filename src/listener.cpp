@@ -24,27 +24,27 @@ bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
 void Listener::SetOrientation(const mathfu::Vector<float, 3>& location,
                               const mathfu::Vector<float, 3>& direction,
                               const mathfu::Vector<float, 3>& up) {
-  state_->set_matrix(
+  assert(Valid());
+  state_->set_inverse_matrix(
       mathfu::Matrix<float, 4>::LookAt(location + direction, location, up));
 }
 
 mathfu::Vector<float, 3> Listener::Location() const {
-  return state_->matrix().Inverse().TranslationVector3D();
+  return state_->inverse_matrix().TranslationVector3D();
 }
 
 void Listener::SetLocation(const mathfu::Vector<float, 3>& location) {
-  state_->set_matrix(
-      mathfu::Matrix<float, 4>::FromTranslationVector(-location));
+  assert(Valid());
+  SetMatrix(mathfu::Matrix<float, 4>::FromTranslationVector(location));
 }
 
 void Listener::SetMatrix(const mathfu::Matrix<float, 4>& matrix) {
   assert(Valid());
-  state_->set_matrix(matrix);
+  state_->set_inverse_matrix(matrix.Inverse());
 }
 
-const mathfu::Matrix<float, 4>& Listener::Matrix() const {
-  return state_->matrix();
+const mathfu::Matrix<float, 4> Listener::Matrix() const {
+  return state_->inverse_matrix().Inverse();
 }
 
 }  // namespace pindrop
-

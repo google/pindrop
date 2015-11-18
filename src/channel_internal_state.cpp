@@ -16,15 +16,15 @@
 
 #ifdef _WIN32
 #if !defined(_USE_MATH_DEFINES)
-#define _USE_MATH_DEFINES  // For M_PI.
-#endif                     // !defined(_USE_MATH_DEFINES)
-#endif                     // _WIN32
+#define _USE_MATH_DEFINES
+#endif  // !defined(_USE_MATH_DEFINES)
+#endif  // _WIN32
 
 #include <math.h>
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
-#include "bus.h"
+#include "bus_internal_state.h"
 #include "intrusive_list.h"
 #include "pindrop/pindrop.h"
 #include "sound_collection.h"
@@ -57,7 +57,7 @@ bool ChannelInternalState::Play(SoundHandle handle) {
   handle_ = handle;
   sound_source_ = handle->Select();
   channel_state_ = kChannelStatePlaying;
-  return is_real() ? Resume() : true;
+  return is_real() ? RealChannelPlay() : true;
 }
 
 static bool SoundHandleLoops(SoundHandle handle) {
@@ -66,8 +66,8 @@ static bool SoundHandleLoops(SoundHandle handle) {
   return def->loop() != 0;
 }
 
-bool ChannelInternalState::Resume() {
-  assert(is_real() && channel_state_ == kChannelStatePlaying);
+bool ChannelInternalState::RealChannelPlay() {
+  assert(is_real());
   if (!sound_source_->Play(channel_id_, SoundHandleLoops(handle_))) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not play sound %s\n",
                  Mix_GetError());
@@ -89,12 +89,29 @@ bool ChannelInternalState::RealChannelPlaying() const {
   }
 }
 
+bool ChannelInternalState::RealChannelPaused() const {
+  assert(is_real());
+  if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    return Mix_PausedMusicCh(channel_id_) != 0;
+#else
+    return Mix_PausedMusic() != 0;
+#endif  // PINDROP_MULTISTREAM
+  } else {
+    return Mix_Paused(channel_id_) != 0;
+  }
+}
+
 bool ChannelInternalState::Playing() const {
   return channel_state_ == kChannelStatePlaying;
 }
 
 bool ChannelInternalState::Stopped() const {
   return channel_state_ == kChannelStateStopped;
+}
+
+bool ChannelInternalState::Paused() const {
+  return channel_state_ == kChannelStatePaused;
 }
 
 void ChannelInternalState::SetRealChannelGain(const float gain) {
@@ -157,6 +174,46 @@ void ChannelInternalState::Halt() {
   channel_state_ = kChannelStateStopped;
 }
 
+void ChannelInternalState::RealChannelPause() {
+  assert(is_real());
+  if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    Mix_PauseMusicCh(channel_id_);
+#else
+    Mix_PauseMusic();
+#endif  // PINDROP_MULTISTREAM
+  } else {
+    Mix_Pause(channel_id_);
+  }
+}
+
+void ChannelInternalState::Pause() {
+  if (is_real()) {
+    RealChannelPause();
+  }
+  channel_state_ = kChannelStatePaused;
+}
+
+void ChannelInternalState::RealChannelResume() {
+  assert(is_real());
+  if (IsStream()) {
+#ifdef PINDROP_MULTISTREAM
+    Mix_ResumeMusicCh(channel_id_);
+#else
+    Mix_ResumeMusic();
+#endif  // PINDROP_MULTISTREAM
+  } else {
+    Mix_Resume(channel_id_);
+  }
+}
+
+void ChannelInternalState::Resume() {
+  if (is_real()) {
+    RealChannelResume();
+  }
+  channel_state_ = kChannelStatePlaying;
+}
+
 void ChannelInternalState::FadeOut(int milliseconds) {
   int channels_halted;
   if (IsStream()) {
@@ -189,6 +246,24 @@ void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
   Mix_SetPanning(channel_id_, left, right);
 }
 
+void ChannelInternalState::Devirtualize(ChannelInternalState* other) {
+  assert(channel_id_ == kInvalidChannelId);
+  assert(other->channel_id_ != kInvalidChannelId);
+
+  // Transfer the real channel id to this channel.
+  channel_id_ = other->channel_id_;
+  other->channel_id_ = kInvalidChannelId;
+
+  if (Playing()) {
+    // Resume playing the audio.
+    RealChannelPlay();
+  } else if (Paused()) {
+    // The audio needs to be playing to pause it.
+    RealChannelPlay();
+    RealChannelPause();
+  }
+}
+
 float ChannelInternalState::Priority() const {
   assert(handle_);
   return gain() * handle_->GetSoundCollectionDef()->priority();
@@ -196,40 +271,23 @@ float ChannelInternalState::Priority() const {
 
 void ChannelInternalState::UpdateState() {
   switch (channel_state_) {
+    case kChannelStatePaused:
     case kChannelStateStopped: {
       break;
     }
     case kChannelStatePlaying:
-    case kChannelStateFadingOut: {
       if (is_real() && !RealChannelPlaying()) {
+        channel_state_ = kChannelStateStopped;
+      }
+      break;
+    case kChannelStateFadingOut: {
+      if (!is_real() || !RealChannelPlaying()) {
         channel_state_ = kChannelStateStopped;
       }
       break;
     }
     default: { assert(false); }
   }
-}
-
-// Special value for SDL_Mixer that indicates an operation should be applied
-// to all channels.
-static const ChannelId kAllChannels = -1;
-
-void ChannelInternalState::PauseAll() {
-  Mix_Pause(kAllChannels);
-#ifdef PINDROP_MULTISTREAM
-  Mix_PauseMusicCh(kAllChannels);
-#else
-  Mix_PauseMusic();
-#endif  // PINDROP_MULTISTREAM
-}
-
-void ChannelInternalState::ResumeAll() {
-  Mix_Resume(kAllChannels);
-#ifdef PINDROP_MULTISTREAM
-  Mix_ResumeMusicCh(kAllChannels);
-#else
-  Mix_ResumeMusic();
-#endif  // PINDROP_MULTISTREAM
 }
 
 }  // namespace pindrop

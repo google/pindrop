@@ -106,4 +106,5 @@ table SoundCollectionDef {
 }
 
 root_type SoundCollectionDef;
-
+file_identifier "PSOU";
+file_extension "pinsound";

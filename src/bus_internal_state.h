@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_BUSES_H_
-#define PINDROP_BUSES_H_
+#ifndef PINDROP_BUS_INTERNAL_STATE_H_
+#define PINDROP_BUS_INTERNAL_STATE_H_
 
 #include <vector>
 
@@ -23,10 +23,13 @@ namespace pindrop {
 
 struct BusDef;
 
-class Bus {
+class BusInternalState {
  public:
-  Bus()
+  BusInternalState()
       : bus_def_(nullptr),
+        user_gain_(1.0f),
+        target_user_gain_(1.0f),
+        target_user_gain_step_(0.0f),
         duck_gain_(1.0f),
         playing_sound_list_(),
         transition_percentage_(0.0f) {}
@@ -37,19 +40,32 @@ class Bus {
   const BusDef* bus_def() const { return bus_def_; }
 
   // Return the final gain after all modifiers have been applied (parent gain,
-  // duck gain, bus gain).
+  // duck gain, bus gain, user gain).
   float gain() const { return gain_; }
+
+  // Set the user gain.
+  void set_user_gain(const float user_gain) {
+    user_gain_ = user_gain;
+    target_user_gain_ = user_gain;
+    target_user_gain_step_ = 0.0f;
+  }
+
+  // Return the user gain.
+  float user_gain() const { return user_gain_; }
+
+  // Fade to the given gain over duration seconds.
+  void FadeTo(float gain, float duration);
 
   // Resets the duck gain to 1.0f. Duck gain must be reset each frame before
   // modifying it.
   void ResetDuckGain() { duck_gain_ = 1.0f; }
 
   // Return the vector of child buses.
-  std::vector<Bus*>& child_buses() { return child_buses_; }
+  std::vector<BusInternalState*>& child_buses() { return child_buses_; }
 
   // Return the vector of duck buses, the buses to be ducked when a sound is
   // playing on this bus.
-  std::vector<Bus*>& duck_buses() { return duck_buses_; }
+  std::vector<BusInternalState*>& duck_buses() { return duck_buses_; }
 
   // When a sound begins playing or finishes playing, the sound counter should
   // be incremented or decremented appropriately to track whether or not to
@@ -63,18 +79,27 @@ class Bus {
   void UpdateDuckGain(float delta_time);
 
   // Recursively update the final gain of the bus.
-  void UpdateGain(float parent_gain);
+  void AdvanceFrame(float delta_time, float parent_gain);
 
  private:
   const BusDef* bus_def_;
 
   // Children of a given bus have their gain multiplied against their parent's
   // gain.
-  std::vector<Bus*> child_buses_;
+  std::vector<BusInternalState*> child_buses_;
 
   // When a sound is played on this bus, sounds played on these buses should be
   // ducked.
-  std::vector<Bus*> duck_buses_;
+  std::vector<BusInternalState*> duck_buses_;
+
+  // The current user gain of this bus.
+  float user_gain_;
+
+  // The target user gain of this bus (used for fading).
+  float target_user_gain_;
+
+  // How much to adjust the gain per second while fading.
+  float target_user_gain_step_;
 
   // The current duck_gain_ of this bus to be applied to all buses in
   // duck_buses_.
@@ -93,5 +118,4 @@ class Bus {
 
 }  // namespace pindrop
 
-#endif  // PINDROP_BUSES_H_
-
+#endif  // PINDROP_BUS_INTERNAL_STATE_H_

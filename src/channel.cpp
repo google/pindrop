@@ -41,6 +41,16 @@ void Channel::Stop() {
   }
 }
 
+void Channel::Pause() {
+  assert(Valid());
+  state_->Pause();
+}
+
+void Channel::Resume() {
+  assert(Valid());
+  state_->Resume();
+}
+
 const mathfu::Vector<float, 3> Channel::Location() const {
   assert(Valid());
   return state_->Location();
@@ -51,5 +61,8 @@ void Channel::SetLocation(const mathfu::Vector<float, 3>& location) {
   state_->SetLocation(location);
 }
 
-}  // namespace pindrop
+void Channel::SetGain(float gain) { return state_->set_user_gain(gain); }
 
+float Channel::Gain() const { return state_->user_gain(); }
+
+}  // namespace pindrop

@@ -46,4 +46,6 @@ table AudioConfig {
 }
 
 root_type AudioConfig;
+file_identifier "PCON";
+file_extension "pinconfig";
 

@@ -47,4 +47,6 @@ table BusDefList {
 }
 
 root_type BusDefList;
+file_identifier "PBUS";
+file_extension "pinbus";
 

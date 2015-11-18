@@ -3,7 +3,10 @@ libs/
 bin/
 obj/
 tests/*_test
-*.bin
+*.pinbank
+*.pinbus
+*.pinconfig
+*.pinsound
 *.a
 
 # CMake files

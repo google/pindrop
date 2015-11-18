@@ -11,19 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-cmake_minimum_required(VERSION 2.8.12)
+if(fpl_ios)
+  cmake_minimum_required(VERSION 3.3.1)
+else()
+  cmake_minimum_required(VERSION 2.8.12)
+endif()
 
 project(pindrop)
 
 option(pindrop_multistream "Support multiple channels of streaming audio" off)
+option(pindrop_build_demo "Build the pindrop demo" ON)
+
+# By default file load operations are blocking. FPLBase offers an async loader
+# class that we can optionally use. To enable async loading set
+# pindrop_async_loading=ON as well as the path to fplbase with the variable
+# dependencies_fplbase_dir.
+option(pindrop_async_loading "Support async loading with fplbase" off)
 
 if(pindrop_multistream)
   add_definitions(-DPINDROP_MULTISTREAM)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if(NOT fpl_ios)
+  # This needs to be default for iOS as output dirs are of the form
+  # Debug-iphoneos, Debug-iphonesimulator to distinguish iphone and simulator
+  # builds, otherwise each build overwrites the other if the output dir is the
+  # same
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+endif()
 
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
@@ -56,6 +74,8 @@ set(dependencies_gtest_dir "${fpl_root}/googletest"
     CACHE PATH "Directory containing the GoogleTest library.")
 set(dependencies_flatbuffers_dir "${fpl_root}/flatbuffers"
     CACHE PATH "Directory containing the Flatbuffers library.")
+set(dependencies_fplbase_dir "${fpl_root}/fplbase"
+    CACHE PATH "Directory containing the FplBase library.")
 set(dependencies_mathfu_dir "${fpl_root}/mathfu"
     CACHE PATH "Directory containing the MathFu library.")
 set(dependencies_sdl_dir "${third_party_root}/sdl"
@@ -79,6 +99,38 @@ option(pindrop_build_tests "Build tests for this project." ON)
 # Option to only build flatc
 option(pindrop_only_flatc "Only build FlatBuffers compiler." OFF)
 
+# Detect clang
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
+   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
+  set(CMAKE_COMPILER_IS_CLANGXX 1)
+endif()
+
+# External code should be compiled with these compiler options.
+# Call this function before add_subdirectory([external project]), and then
+# call restore_comiler_flags() after.
+# TODO: This is duplicated from fplbase. We should find a central location
+#       for it, or better yet, create proxy projects for external libraries.
+function(pindrop_set_compiler_flags_for_external_libraries)
+  # Save current compiler flags so that we can restore them in
+  # pindrop_restore_compiler_flags()
+  set(PINDROP_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+  set(PINDROP_SAVED_C_FLAGS "${CMAKE_C_FLAGS}" PARENT_SCOPE)
+
+  # Suppress all warnings.
+  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
+     CMAKE_COMPILER_IS_CLANGXX)
+    set(CMAKE_CXX_FLAGS "-std=c++0x -w" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
+  endif()
+endfunction()
+
+# Restore the compiler flags to the values they had before
+# pindrop_set_compiler_flags_for_external_libraries() was called.
+function(pindrop_restore_compiler_flags)
+  set(CMAKE_CXX_FLAGS "${PINDROP_SAVED_CXX_FLAGS}" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS "${PINDROP_SAVED_C_FLAGS}" PARENT_SCOPE)
+endfunction()
+
 # Include SDL in this project while working around SDL requirement of out of
 # tree builds.
 set(SDL_SHARED OFF CACHE BOOL "Build a shared version of the library")
@@ -94,26 +146,28 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static)
+if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static AND NOT fpl_ios)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-if(NOT pindrop_only_flatc AND NOT TARGET libogg)
+pindrop_set_compiler_flags_for_external_libraries()
+if(NOT pindrop_only_flatc AND NOT TARGET libogg AND NOT fpl_ios)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT pindrop_only_flatc AND NOT TARGET libvorbis)
+if(NOT pindrop_only_flatc AND NOT TARGET libvorbis AND NOT fpl_ios)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer)
+if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer AND NOT fpl_ios)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
+pindrop_restore_compiler_flags()
 
 # Include MathFu in this project with test and benchmark builds disabled.
 set(mathfu_build_benchmarks OFF CACHE BOOL "")
@@ -126,34 +180,34 @@ if(NOT TARGET flatc)
   add_subdirectory("${dependencies_flatbuffers_dir}" ${tmp_dir}/flatbuffers)
 endif()
 
+# Include fplbase in this project.
+set(pindrop_async_loading and FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
+if(NOT TARGET flatc)
+  add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
+endif()
+
+
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
 set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
-set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR} PARENT_SCOPE)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
 # schema files.
-foreach(flatbuffers_schema ${FLATBUFFERS_SCHEMAS})
-  get_filename_component(filename ${flatbuffers_schema} NAME_WE)
-  set(flatbuffers_include
-    ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}/${filename}_generated.h)
-  add_custom_command(
-    OUTPUT ${flatbuffers_include}
-    COMMAND flatc --gen-includes
-        -o ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
-        -c ${flatbuffers_schema}
-    DEPENDS flatc ${flatbuffers_schema})
-  list(APPEND FLATBUFFERS_GENERATED_INCLUDES ${flatbuffers_include})
-endforeach()
-add_custom_target(pindrop_generated_includes DEPENDS ${FLATBUFFERS_GENERATED_INCLUDES})
+build_flatbuffers("${FLATBUFFERS_SCHEMAS}"
+                  ""
+                  pindrop_generated_includes
+                  ""
+                  ${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR}
+                  ""
+                  "")
 
-get_property(flatc_location TARGET flatc PROPERTY LOCATION)
-add_custom_target(pindrop_demo_assets
-  COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
-  --flatc ${flatc_location} DEPENDS flatc)
+if(pindrop_async_loading)
+  set(FILE_LOADER_DIR src/asynchronous_loader)
+else()
+  set(FILE_LOADER_DIR src/synchronous_loader)
+endif()
 
 # AudioEngine source files.
 set(pindrop_SRCS
@@ -163,7 +217,8 @@ set(pindrop_SRCS
     src/backend.cpp
     src/backend.h
     src/bus.cpp
-    src/bus.h
+    src/bus_internal_state.cpp
+    src/bus_internal_state.h
     src/channel.cpp
     src/channel_internal_state.cpp
     src/channel_internal_state.h
@@ -177,21 +232,29 @@ set(pindrop_SRCS
     src/sound_bank.cpp
     src/sound_bank.h
     src/sound_collection.cpp
-    src/sound_collection.h)
-
-set(pindrop_demo_SRCS src/main.cpp)
+    src/sound_collection.h
+    ${FILE_LOADER_DIR}/file_loader.cpp
+    ${FILE_LOADER_DIR}/file_loader.h)
 
 # Includes for this project.
 include_directories(src include)
+if(pindrop_async_loading)
+  include_directories(src/asynchronous_loader)
+else()
+  include_directories(src/synchronous_loader)
+endif()
 if(WIN32)
   include_directories(external/include/windows)
 endif()
-include_directories(${PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR})
+if (pindrop_async_loading)
+  include_directories(${dependencies_fplbase_dir}/include)
+endif()
 include_directories(${dependencies_flatbuffers_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
 
 # SDL includes.
+set(SDL2_SOURCE_DIR "${dependencies_sdl_dir}")
 include_directories(${SDL2_BINARY_DIR}/include ${SDL2_SOURCE_DIR}/include)
 
 # libogg includes.
@@ -202,11 +265,6 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 
 # SDL Mixer includes.
 include_directories(${dependencies_sdl_mixer_distr_dir})
-
-# Detect clang
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-endif()
 
 # Compiler flags.
 set(C_FLAGS_WARNINGS "")
@@ -222,7 +280,16 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
 
-set (SDL_LIBRARIES SDL2-static)
+if(NOT fpl_ios)
+  set(SDL_LIBRARIES SDL2-static)
+else()
+  set(SDL_LIBRARIES "")
+endif()
+if (pindrop_async_loading)
+  set(FPLBASE_LIBRARY fplbase)
+else()
+  set(FPL_LIBRARY "")
+endif()
 if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
   set(SDL_LIBRARIES SDL2main ${SDL_LIBRARIES})
@@ -231,24 +298,40 @@ endif()
 
 # Executable target.
 add_library(pindrop ${pindrop_SRCS})
+mathfu_set_ios_attributes(pindrop)
 mathfu_configure_flags(pindrop)
+add_dependencies(pindrop pindrop_generated_includes)
+if(fpl_ios)
+  target_link_libraries(pindrop ${FPLBASE_LIBRARY})
+else()
+  target_link_libraries(pindrop
+    ${SDL_LIBRARIES}
+    ${FPLBASE_LIBRARY}
+    sdl_mixer
+    libvorbis
+    libogg)
+endif()
 
-# Dependencies for the executable target.
-add_dependencies(pindrop pindrop_generated_includes pindrop_demo_assets)
-target_link_libraries(pindrop
-  ${SDL_LIBRARIES}
-  sdl_mixer
-  libvorbis
-  libogg)
+if(NOT fpl_ios)
+  if(pindrop_build_demo)
+    add_custom_target(pindrop_demo_assets
+      COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
+      --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
 
-add_executable(pindrop_demo ${pindrop_demo_SRCS})
-target_link_libraries(pindrop_demo
-  pindrop
-  ${SDL_LIBRARIES}
-  sdl_mixer
-  libvorbis
-  libogg)
-mathfu_configure_flags(pindrop_demo)
+    set(pindrop_demo_SRCS demo/main.cpp)
+    add_executable(pindrop_demo ${pindrop_demo_SRCS})
+    target_link_libraries(pindrop_demo
+      pindrop
+      ${SDL_LIBRARIES}
+      ${FPLBASE_LIBRARY}
+      sdl_mixer
+      libvorbis
+      libogg)
+    mathfu_configure_flags(pindrop_demo)
+    add_dependencies(pindrop_demo pindrop pindrop_demo_assets)
+  endif()
+endif()
+
 
 # gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
 # everything else.
@@ -258,10 +341,13 @@ option(
   ON)
 
 # Tests.
-if(NOT pindrop_only_flatc AND pindrop_build_tests)
+if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
-  add_subdirectory(${dependencies_gtest_dir} googletest)
+  add_subdirectory("${dependencies_gtest_dir}" googletest)
+  if (pindrop_async_loading)
+    add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
+  endif()
   include(${GTEST_LIBDIR}/cmake/internal_utils.cmake)
   config_compiler_and_linker()
   string(REPLACE "-W4" "-W3" cxx_default "${cxx_default}")
@@ -284,7 +370,7 @@ if(NOT pindrop_only_flatc AND pindrop_build_tests)
 
   function(test_executable name libs)
     cxx_executable_with_flags(${name}_test "${cxx_default}"
-        "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/src/${name}_test.cpp
+        "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/${name}_test.cpp
         ${ARGN})
     mathfu_configure_flags(${name}_test)
   endfunction()

@@ -38,6 +38,7 @@ int Mix_FadeOutChannel(int, int) { return 0; }
 int Mix_HaltChannel(int) { return 0; }
 int Mix_Init(int) { return 0; }
 int Mix_OpenAudio(int, Uint16, int, int) { return 0; }
+int Mix_Paused(int) { return 0; }
 int Mix_Playing(int) { return 0; }
 int Mix_SetPanning(int, Uint8, Uint8) { return 0; }
 int Mix_Volume(int, int) { return MIX_MAX_VOLUME; }
@@ -47,6 +48,7 @@ void Mix_FreeMusic(Mix_Music*) {}
 #ifdef PINDROP_MULTISTREAM
 int Mix_FadeOutMusicCh(int, int) { return 0; }
 int Mix_HaltMusicCh(int) { return 0; }
+int Mix_PausedMusicCh(int) { return 0; }
 int Mix_PlayChannelTimed(int, Mix_Chunk*, int, int, int) { return 0; }
 int Mix_PlayMusicCh(Mix_Music*, int, int) { return 0; }
 int Mix_PlayingMusicCh(int) { return 0; }
@@ -56,16 +58,17 @@ void Mix_HookMusicFinishedCh(void*, void (*)(void* userdata, Mix_Music* music,
 void Mix_PauseMusicCh(int) {}
 void Mix_ResumeMusicCh(int) {}
 #else
-void Mix_Resume(int) {}
-void Mix_Pause(int) {}
 int Mix_FadeOutMusic(int) { return 0; }
 int Mix_HaltMusic() { return 0; }
+int Mix_PausedMusic() { return 0; }
 int Mix_PlayChannelTimed(int, Mix_Chunk*, int, int) { return 0; }
 int Mix_PlayMusic(Mix_Music*, int) { return 0; }
 int Mix_PlayingMusic() { return 0; }
 int Mix_VolumeMusic(int) { return MIX_MAX_VOLUME; }
 void Mix_HookMusicFinished(void (*)(void)) {}
+void Mix_Pause(int) {}
 void Mix_PauseMusic() {}
+void Mix_Resume(int) {}
 void Mix_ResumeMusic() {}
 #endif  // PINDROP_MULTISTREAM
 }
@@ -516,4 +519,3 @@ int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-

@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All rights reserved.
+// Copyright 2015 Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace pindrop;
+#include "file_loader.h"
 
-// A SoundBankDef is a list of SoundCollection files to load. A SoundCollection
-// may be present in more than one SoundBank and can only be played once it
-// has been loaded by at least one SoundBank.
-table SoundBankDef {
-  filenames:[string];
+namespace pindrop {
+
+void Resource::LoadFile(const char* filename, FileLoader* /*loader*/) {
+  set_filename(filename);
+  this->Load();
 }
 
-root_type SoundBankDef;
-file_identifier "PBAN";
-file_extension "pinbank";
-
+}  // namespace pindrop

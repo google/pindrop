@@ -22,3 +22,6 @@
 [submodule "dependencies/libvorbis"]
 	path = dependencies/libvorbis
 	url = https://git.xiph.org/mirrors/vorbis.git
+[submodule "dependencies/vectorial"]
+	path = dependencies/vectorial
+	url = http://github.com/scoopr/vectorial

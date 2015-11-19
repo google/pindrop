@@ -25,6 +25,10 @@ PINDROP_DIR := $(LOCAL_PATH)
 include $(PINDROP_DIR)/jni/android_config.mk
 include $(DEPENDENCIES_FLATBUFFERS_DIR)/android/jni/include.mk
 
+# realpath-portable From flatbuffers/android/jni/include.mk
+LOCAL_PATH := $(call realpath-portable,$(LOCAL_PATH))
+PINDROP_DIR := $(LOCAL_PATH)
+
 PINDROP_ASYNC_LOADING ?= 0
 
 PINDROP_GENERATED_OUTPUT_DIR := $(PINDROP_DIR)/gen/include

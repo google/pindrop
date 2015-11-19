@@ -21,12 +21,12 @@ As well as these important schemas:
   * [AudioConfig][] - The basic configuration for the engine.
   * [Buses][] - A set of interrelated buses which can adjust channel gains
                 automatically.
-  * [SoundBankDef][] - A set of [SoundCollectionDefs][] that are to be loaded
+  * [SoundBankDef][] - A set of [SoundCollectionDef][]s that are to be loaded
                        and unloaded in tandem.
   * [SoundCollectionDef][] - A set of one or more related sounds that can be
                              played.
 
-[Pindrop is built on top of [SDL][], a low-level cross platform library.
+[Pindrop][] is built on top of [SDL][], a low-level cross platform library.
 [SDL][] abstracts input, file loading, threading, system events, logging, and
 other systems from the underlying operating system.
 
@@ -55,7 +55,7 @@ The following bullets describe the directory structure of the library.
   [fplutil]: http://google.github.io/fplutil
   [Listener]: @ref pindrop_guide_listener
   [MathFu]: http://googledevelopers.blogspot.ca/2014/11/geometry-math-library-for-c-game.html
-  [Pindrop]: @ref pindrop_guide_audio
+  [Pindrop]: @ref pindrop_guide_overview
   [SDL-mixer]: http://www.libsdl.org/projects/SDL_mixer/
   [SDL]: https://www.libsdl.org/
   [SoundBankDef]: @ref pindrop_guide_sound_bank_def

@@ -18,12 +18,16 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := pindrop
 LOCAL_ARM_MODE := arm
-LOCAL_STATIC_LIBRARIES := libfplbase libmathfu SDL2_mixer_static
+LOCAL_STATIC_LIBRARIES := libmathfu SDL2_mixer_static
 
 PINDROP_DIR := $(LOCAL_PATH)
 
 include $(PINDROP_DIR)/jni/android_config.mk
 include $(DEPENDENCIES_FLATBUFFERS_DIR)/android/jni/include.mk
+
+# realpath-portable From flatbuffers/android/jni/include.mk
+LOCAL_PATH := $(call realpath-portable,$(LOCAL_PATH))
+PINDROP_DIR := $(LOCAL_PATH)
 
 PINDROP_ASYNC_LOADING ?= 0
 
@@ -34,18 +38,10 @@ LOCAL_EXPORT_C_INCLUDES := \
   $(PINDROP_DIR)/include \
   $(PINDROP_GENERATED_OUTPUT_DIR)
 
-ifneq (0,$(PINDROP_ASYNC_LOADING))
-FILE_LOADER_DIR := src/asynchronous_loader
-else
-FILE_LOADER_DIR := src/synchronous_loader
-endif
-
 LOCAL_C_INCLUDES := \
   $(LOCAL_EXPORT_C_INCLUDES) \
   $(PINDROP_DIR)/src \
-  $(PINDROP_DIR)/${FILE_LOADER_DIR} \
   $(DEPENDENCIES_FLATBUFFERS_DIR)/include \
-  $(DEPENDENCIES_FPLBASE_DIR)/include \
   $(DEPENDENCIES_SDL_DIR) \
   $(DEPENDENCIES_SDL_DIR)/include \
   $(DEPENDENCIES_SDL_MIXER_DIR)
@@ -61,8 +57,18 @@ LOCAL_SRC_FILES := \
   src/ref_counter.cpp \
   src/sound.cpp \
   src/sound_bank.cpp \
-  src/sound_collection.cpp \
-  ${FILE_LOADER_DIR}/file_loader.cpp
+  src/sound_collection.cpp
+
+ifneq (0,$(PINDROP_ASYNC_LOADING))
+LOCAL_SRC_FILES += src/asynchronous_loader/file_loader.cpp
+LOCAL_STATIC_LIBRARIES += libfplbase
+LOCAL_C_INCLUDES += ${PINDROP_DIR}/src/asynchronous_loader \
+                    $(DEPENDENCIES_FPLBASE_DIR)/include
+else
+LOCAL_SRC_FILES += src/synchronous_loader/file_loader.cpp
+LOCAL_C_INCLUDES += ${PINDROP_DIR}/src/synchronous_loader
+endif
+
 
 PINDROP_SCHEMA_DIR := $(PINDROP_DIR)/schemas
 PINDROP_SCHEMA_INCLUDE_DIRS :=

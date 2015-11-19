@@ -6,6 +6,8 @@ Pindrop   {#pindrop_readme}
 Pindrop is a simple-to-use, open-source, cross-platform audio library designed
 for games.
 
+Go to our [landing page][] to browse our documentation and see some examples.
+
 ## Features
 
   * Distance Attenuation
@@ -22,6 +24,13 @@ Pindrop depends on the following libraries:
   * [SDL_Mixer][]
   * [libogg][]
   * [libvorbis][]
+
+**Important**: The Pindrop audio library requires these submodules, so download
+the source using:
+
+~~~{.sh}
+  git clone --recursive https://github.com/google/corgi.git
+~~~
 
 Additionally, on Linux you will need:
 
@@ -41,6 +50,7 @@ in.
   [FlatBuffers]: http://google.github.io/flatbuffers/
   [SDL]: https://www.libsdl.org/
   [SDL_Mixer]: http://www.libsdl.org/projects/SDL_mixer/
+  [landing page]: http://google.github.io/pindrop/
   [libogg]: http://xiph.org/ogg/
   [libvorbis]: http://xiph.org/vorbis/
   [osspd]: http://sourceforge.net/projects/osspd/

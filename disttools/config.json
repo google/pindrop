@@ -66,6 +66,15 @@
       "is_library": 1,
       "third_party": 1,
       "push": 0
+    },
+    {
+      "name": "fplbase",
+      "url": "http://github.com/google/fplbase.git",
+      "branch": "develop",
+      "is_library": 1,
+      "third_party": 0,
+      "push": 0,
+      "fetch_dependencies": 1
     }
   ]
 }

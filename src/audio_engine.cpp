@@ -206,6 +206,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   state_->stream_channel = nullptr;
 #endif  // PINDROP_MULTISTREAM
 
+  state_->paused = false;
   state_->mute = false;
   state_->master_gain = 1.0f;
 

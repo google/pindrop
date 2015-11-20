@@ -29,7 +29,7 @@ Pindrop depends on the following libraries:
 the source using:
 
 ~~~{.sh}
-  git clone --recursive https://github.com/google/corgi.git
+  git clone --recursive https://github.com/google/pindrop.git
 ~~~
 
 Additionally, on Linux you will need:

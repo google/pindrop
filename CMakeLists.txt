@@ -20,7 +20,7 @@ endif()
 project(pindrop)
 
 option(pindrop_multistream "Support multiple channels of streaming audio" off)
-option(pindrop_build_demo "Build the pindrop demo" ON)
+option(pindrop_build_sample "Build the pindrop sample" ON)
 
 # By default file load operations are blocking. FPLBase offers an async loader
 # class that we can optionally use. To enable async loading set
@@ -312,26 +312,9 @@ else()
     libogg)
 endif()
 
-if(NOT fpl_ios)
-  if(pindrop_build_demo)
-    add_custom_target(pindrop_demo_assets
-      COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_assets.py
-      --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
-
-    set(pindrop_demo_SRCS demo/main.cpp)
-    add_executable(pindrop_demo ${pindrop_demo_SRCS})
-    target_link_libraries(pindrop_demo
-      pindrop
-      ${SDL_LIBRARIES}
-      ${FPLBASE_LIBRARY}
-      sdl_mixer
-      libvorbis
-      libogg)
-    mathfu_configure_flags(pindrop_demo)
-    add_dependencies(pindrop_demo pindrop pindrop_demo_assets)
-  endif()
+if(NOT fpl_ios AND pindrop_build_sample)
+  add_subdirectory(samples)
 endif()
-
 
 # gtest seems to prefer the non-DLL runtime on Windows, which conflicts with
 # everything else.

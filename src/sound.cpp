@@ -29,11 +29,16 @@ void FreeFinishedMusicMultistream(void* /*userdata*/, Mix_Music* music,
   Mix_FreeMusic(music);
 }
 #else
-static Mix_Music* playing_music;
+static int s_music_channel_id;
+int GetMusicChannel() {
+  return s_music_channel_id;
+}
+
+static Mix_Music* s_playing_music;
 
 void FreeFinishedMusic() {
-  Mix_FreeMusic(playing_music);
-  playing_music = nullptr;
+  Mix_FreeMusic(s_playing_music);
+  s_playing_music = nullptr;
 }
 #endif  // PINDROP_MULTISTREAM
 
@@ -65,7 +70,7 @@ bool SoundStream::Play(ChannelId channel_id, bool loop) {
 #ifdef PINDROP_MULTISTREAM
   result = Mix_PlayMusicCh(Mix_LoadMUS(filename().c_str()), loops, channel_id);
 #else
-  (void)channel_id;
+  s_music_channel_id = channel_id;
   FreeFinishedMusic();
   result = Mix_PlayMusic(Mix_LoadMUS(filename().c_str()), loops);
 #endif

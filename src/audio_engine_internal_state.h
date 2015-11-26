@@ -92,11 +92,6 @@ struct AudioEngineInternalState {
   IntrusiveListNode real_channel_free_list;
   IntrusiveListNode virtual_channel_free_list;
 
-#ifndef PINDROP_MULTISTREAM
-  // In single stream mode, track the currently playing stream.
-  ChannelInternalState* stream_channel;
-#endif  // PINDROP_MULTISTREAM
-
   // The list of listeners.
   TypedIntrusiveListNode<ListenerInternalState> listener_list;
   ListenerStateVector listener_state_memory;

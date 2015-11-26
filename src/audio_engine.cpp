@@ -202,10 +202,6 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
     return false;
   }
 
-#ifndef PINDROP_MULTISTREAM
-  state_->stream_channel = nullptr;
-#endif  // PINDROP_MULTISTREAM
-
   state_->paused = false;
   state_->mute = false;
   state_->master_gain = 1.0f;
@@ -479,17 +475,6 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
     new_channel->SetRealChannelGain(gain);
     new_channel->SetPan(pan);
   }
-
-#ifndef PINDROP_MULTISTREAM
-  // If we only support a single stream, stop tracking the channel assigned to
-  // the old stream.
-  if (new_channel->IsStream()) {
-    if (state_->stream_channel) {
-      InsertIntoFreeList(state_, state_->stream_channel);
-    }
-    state_->stream_channel = new_channel;
-  }
-#endif  // PINDROP_MULTISTREAM
 
   return Channel(new_channel);
 }

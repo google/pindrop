@@ -78,6 +78,7 @@ class SoundStream : public SoundSource {
 void FreeFinishedMusicMultistream(void* userdata, Mix_Music* music,
                                   int channel);
 #else
+int GetMusicChannel();
 void FreeFinishedMusic();
 #endif  // PINDROP_MULTISTREAM
 

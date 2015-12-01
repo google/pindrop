@@ -156,6 +156,11 @@ class BestListenerTests : public ::testing::Test {
   BestListenerTests()
       : listener_list_(), listeners_(), listener_(), distance_squared_() {}
   virtual void SetUp() {
+    listener_list_.InsertAfter(&listeners_[0]);
+    listeners_[0].InsertAfter(&listeners_[1]);
+    listeners_[1].InsertAfter(&listeners_[2]);
+    listeners_[2].InsertAfter(&listeners_[3]);
+
     Listener listener;
     listener = Listener(&listeners_[0]);
     listener.SetLocation(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f));
@@ -165,11 +170,6 @@ class BestListenerTests : public ::testing::Test {
     listener.SetLocation(mathfu::Vector<float, 3>(10.0f, 0.0f, 10.0f));
     listener = Listener(&listeners_[3]);
     listener.SetLocation(mathfu::Vector<float, 3>(0.0f, 0.0f, 10.0f));
-
-    listener_list_.InsertAfter(&listeners_[0]);
-    listeners_[0].InsertAfter(&listeners_[1]);
-    listeners_[1].InsertAfter(&listeners_[2]);
-    listeners_[2].InsertAfter(&listeners_[3]);
   }
   virtual void TearDown() {}
 
@@ -335,6 +335,9 @@ class ListenerSpaceTests : public ::testing::Test {
         distance_squared_(),
         transformed_location_() {}
   virtual void SetUp() {
+    listener_list_1_.InsertAfter(&state_1_);
+    listener_list_2_.InsertAfter(&state_2_);
+    listener_list_3_.InsertAfter(&state_3_);
     Listener listener;
 
     // The Matrix::LookAt function is hardcoded to be left handed
@@ -352,10 +355,6 @@ class ListenerSpaceTests : public ::testing::Test {
     listener.SetOrientation(mathfu::Vector<float, 3>(10.0f, 10.0f, 10.0f),
                             mathfu::Vector<float, 3>(20.0f, 0.0f, 0.0f),
                             -mathfu::kAxisY3f);
-
-    listener_list_1_.InsertAfter(&state_1_);
-    listener_list_2_.InsertAfter(&state_2_);
-    listener_list_3_.InsertAfter(&state_3_);
   }
   virtual void TearDown() {}
 

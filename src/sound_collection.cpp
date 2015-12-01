@@ -21,6 +21,7 @@
 
 #include "SDL_log.h"
 #include "audio_engine_internal_state.h"
+#include "file_loader.h"
 #include "pindrop/pindrop.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
@@ -31,20 +32,17 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
                                              AudioEngineInternalState* state) {
   source_ = source;
   const SoundCollectionDef* def = GetSoundCollectionDef();
-  unsigned int sample_count =
+  flatbuffers::uoffset_t sample_count =
       def->audio_sample_set() ? def->audio_sample_set()->Length() : 0;
-  sound_sources_.resize(sample_count);
-  for (unsigned int i = 0; i < sample_count; ++i) {
+  sounds_.resize(sample_count);
+  for (flatbuffers::uoffset_t i = 0; i < sample_count; ++i) {
     const AudioSampleSetEntry* entry = def->audio_sample_set()->Get(i);
     const char* entry_filename = entry->audio_sample()->filename()->c_str();
-    auto& sound_source = sound_sources_[i];
-    if (def->stream()) {
-      sound_source.reset(new SoundStream(entry));
-    } else {
-      sound_source.reset(new SoundBuffer(entry));
-    }
-    sound_source->LoadFile(entry_filename, &state->loader);
     sum_of_probabilities_ += entry->playback_probability();
+
+    Sound& sound = sounds_[i];
+    sound.Initialize(this);
+    sound.LoadFile(entry_filename, &state->loader);
   }
   if (!def->bus()) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
@@ -75,24 +73,23 @@ const SoundCollectionDef* SoundCollection::GetSoundCollectionDef() const {
   return pindrop::GetSoundCollectionDef(source_.c_str());
 }
 
-SoundSource* SoundCollection::Select() const {
+Sound* SoundCollection::Select() {
   const SoundCollectionDef* sound_def = GetSoundCollectionDef();
   // Choose a random number between 0 and the sum of the probabilities, then
   // iterate over the list, subtracting the weight of each entry until 0 is
   // reached.
   float selection =
       rand() / static_cast<float>(RAND_MAX) * sum_of_probabilities_;
-  for (unsigned int i = 0; i < sound_sources_.size(); ++i) {
+  for (size_t i = 0; i < sounds_.size(); ++i) {
     const AudioSampleSetEntry* entry = sound_def->audio_sample_set()->Get(i);
     selection -= entry->playback_probability();
     if (selection <= 0) {
-      return sound_sources_[i].get();
+      return &sounds_[i];
     }
   }
   // If we've reached here and didn't return a sound, assume there was some
   // floating point rounding error and just return the last one.
-  return sound_sources_.back().get();
+  return &sounds_.back();
 }
 
 }  // namespace pindrop
-

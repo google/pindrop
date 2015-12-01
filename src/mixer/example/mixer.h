@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All rights reserved.
+// Copyright 2015 Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,39 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_SOUND_BANK_H_
-#define PINDROP_SOUND_BANK_H_
-
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "ref_counter.h"
+#ifndef PINDROP_MIXER_EXAMPLE_BACKEND_H_
+#define PINDROP_MIXER_EXAMPLE_BACKEND_H_
 
 namespace pindrop {
 
-struct SoundBankDef;
+struct AudioConfig;
 
-typedef int SoundId;
-
-class AudioEngine;
-
-class SoundBank {
+// This class represents the audio mixer backend that does the actual audio
+// mixing.
+//
+// This class represents the mixer interface to the underlying audio mixer
+// backend being used.
+class Mixer {
  public:
-  bool Initialize(const std::string& filename, AudioEngine* audio_engine);
-
-  void Deinitialize(AudioEngine* audio_engine);
-
-  RefCounter* ref_counter() { return &ref_counter_; }
-
- private:
-  RefCounter ref_counter_;
-  std::string sound_bank_def_source_;
-  const SoundBankDef* sound_bank_def_;
+  // Initalize the audio Mixer.
+  bool Initialize(const AudioConfig* config);
 };
 
 }  // namespace pindrop
 
-#endif  // PINDROP_SOUND_BANK_H_
-
+#endif  // PINDROP_MIXER_EXAMPLE_BACKEND_H_

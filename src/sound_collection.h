@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_AUDIO_COLLECTION_H_
-#define PINDROP_AUDIO_COLLECTION_H_
+#ifndef PINDROP_SOUND_COLLECTION_H_
+#define PINDROP_SOUND_COLLECTION_H_
 
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "real_channel.h"
 #include "ref_counter.h"
 #include "sound.h"
 
 namespace pindrop {
 
 class BusInternalState;
-class SoundSource;
 struct AudioEngineInternalState;
 struct SoundCollectionDef;
 
@@ -38,7 +38,7 @@ class SoundCollection {
   SoundCollection()
       : bus_(nullptr),
         source_(),
-        sound_sources_(),
+        sounds_(),
         sum_of_probabilities_(0.0f),
         ref_counter_() {}
 
@@ -54,7 +54,7 @@ class SoundCollection {
   const SoundCollectionDef* GetSoundCollectionDef() const;
 
   // Return a random piece of audio from the set of audio for this sound.
-  SoundSource* Select() const;
+  Sound* Select();
 
   // Return the bus this SoundCollection will play on.
   BusInternalState* bus() { return bus_; }
@@ -66,7 +66,7 @@ class SoundCollection {
   BusInternalState* bus_;
 
   std::string source_;
-  std::vector<std::unique_ptr<SoundSource>> sound_sources_;
+  std::vector<Sound> sounds_;
   float sum_of_probabilities_;
 
   RefCounter ref_counter_;
@@ -74,5 +74,4 @@ class SoundCollection {
 
 }  // namespace pindrop
 
-#endif  // PINDROP_AUDIO_COLLECTION_H_
-
+#endif  // PINDROP_SOUND_COLLECTION_H_

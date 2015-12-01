@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_BACKEND_H_
-#define PINDROP_BACKEND_H_
+#include "SDL_log.h"
+#include "file_loader.h"
+#include "sound.h"
+#include "sound_collection.h"
+#include "sound_collection_def_generated.h"
 
 namespace pindrop {
 
-struct AudioConfig;
+void Sound::Initialize(const SoundCollection* sound_collection) {
+  stream_ = sound_collection->GetSoundCollectionDef()->stream();
+}
 
-class Backend {
- public:
-  Backend();
-  ~Backend();
-
-  bool Initialize(const AudioConfig* config);
-
- private:
-  bool initialized_;
-};
+void Sound::Load() {
+  if (!stream_) {
+    chunk_ = Mix_LoadWAV(filename().c_str());
+    if (chunk_ == nullptr) {
+      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load sound file: %s.",
+                   filename().c_str());
+    }
+  }
+}
 
 }  // namespace pindrop
-
-#endif  // PINDROP_BACKEND_H_
-

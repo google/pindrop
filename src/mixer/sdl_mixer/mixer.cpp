@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "backend.h"
+#include "mixer.h"
 
 #include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "audio_config_generated.h"
-#include "sound.h"
+#include "real_channel.h"
 
 namespace pindrop {
 
-Backend::Backend() : initialized_(false) {}
+Mixer::Mixer() : initialized_(false) {}
 
-Backend::~Backend() {
+Mixer::~Mixer() {
   if (initialized_) {
     Mix_CloseAudio();
   }
 }
 
-bool Backend::Initialize(const AudioConfig* config) {
+bool Mixer::Initialize(const AudioConfig* config) {
   if (initialized_) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                  "SDL_Mixer has already been initialized.\n");
@@ -65,4 +65,3 @@ bool Backend::Initialize(const AudioConfig* config) {
 }
 
 }  // namespace pindrop
-

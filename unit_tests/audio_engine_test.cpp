@@ -102,10 +102,10 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
     channels_[1].priority_node()->InsertAfter(channels_[2].priority_node());
     channels_[2].priority_node()->InsertAfter(channels_[3].priority_node());
 
-    channels_[0].SetHandle(&collections_[2]);
-    channels_[1].SetHandle(&collections_[1]);
-    channels_[2].SetHandle(&collections_[1]);
-    channels_[3].SetHandle(&collections_[0]);
+    channels_[0].SetSoundCollection(&collections_[2]);
+    channels_[1].SetSoundCollection(&collections_[1]);
+    channels_[2].SetSoundCollection(&collections_[1]);
+    channels_[3].SetSoundCollection(&collections_[0]);
 
     channels_[0].set_gain(1.0f);
     channels_[1].set_gain(1.0f);

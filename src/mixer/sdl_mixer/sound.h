@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All rights reserved.
+// Copyright 2015 Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,39 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_SOUND_BANK_H_
-#define PINDROP_SOUND_BANK_H_
+#ifndef PINDROP_MIXER_SDL_MIXER_SOUND_H_
+#define PINDROP_MIXER_SDL_MIXER_SOUND_H_
 
-#include <map>
-#include <memory>
 #include <string>
-#include <vector>
 
-#include "ref_counter.h"
+#include "SDL_mixer.h"
+#include "file_loader.h"
 
 namespace pindrop {
 
-struct SoundBankDef;
+class SoundCollection;
 
-typedef int SoundId;
-
-class AudioEngine;
-
-class SoundBank {
+class Sound : public Resource {
  public:
-  bool Initialize(const std::string& filename, AudioEngine* audio_engine);
+  void Initialize(const SoundCollection* sound_collection);
 
-  void Deinitialize(AudioEngine* audio_engine);
+  virtual void Load();
 
-  RefCounter* ref_counter() { return &ref_counter_; }
+  Mix_Chunk* chunk() { return chunk_; }
 
  private:
-  RefCounter ref_counter_;
-  std::string sound_bank_def_source_;
-  const SoundBankDef* sound_bank_def_;
+  Mix_Chunk* chunk_;
+  bool stream_;
 };
 
 }  // namespace pindrop
 
-#endif  // PINDROP_SOUND_BANK_H_
-
+#endif  // PINDROP_MIXER_SDL_MIXER_SOUND_H_

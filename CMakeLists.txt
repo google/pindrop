@@ -29,6 +29,16 @@ option(pindrop_build_sample "Build the pindrop sample"
 option(pindrop_build_tests "Build tests for this project."
        ${pindrop_standalone_mode})
 
+# By default Pindrop uses SDL_Mixer to do all it's audio mixing. Other libraries
+# may be specified instead as well.
+set(pindrop_mixer "sdl_mixer" CACHE STRING
+    "The audio mixer library that backs Pindrop.")
+
+if(${pindrop_mixer} STREQUAL sdl_mixer)
+  option(pindrop_sdl_mixer_multistream
+         "Support multiple channels of streaming audio" off)
+endif()
+
 # By default file load operations are blocking. FPLBase offers an async loader
 # class that we can optionally use. To enable async loading set
 # pindrop_async_loading=ON as well as the path to fplbase with the variable
@@ -205,18 +215,22 @@ build_flatbuffers("${FLATBUFFERS_SCHEMAS}"
                   "")
 
 if(pindrop_async_loading)
-  set(FILE_LOADER_DIR src/asynchronous_loader)
+  set(pindrop_file_loader_dir src/asynchronous_loader)
 else()
-  set(FILE_LOADER_DIR src/synchronous_loader)
+  set(pindrop_file_loader_dir src/synchronous_loader)
 endif()
+
+# Only a small handful of files actually interface with the underlying mixer
+# library. If you are not using a backend that has built in support you can
+# supply your own mixer implementation.
+set(pindrop_mixer_dir src/mixer/${pindrop_mixer} CACHE PATH
+    "The path to the audio mixer backend files.")
 
 # AudioEngine source files.
 set(pindrop_SRCS
     include/pindrop/pindrop.h
     src/audio_engine.cpp
     src/audio_engine_internal_state.h
-    src/backend.cpp
-    src/backend.h
     src/bus.cpp
     src/bus_internal_state.cpp
     src/bus_internal_state.h
@@ -228,22 +242,21 @@ set(pindrop_SRCS
     src/listener_internal_state.h
     src/ref_counter.cpp
     src/ref_counter.h
-    src/sound.cpp
-    src/sound.h
     src/sound_bank.cpp
     src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h
-    ${FILE_LOADER_DIR}/file_loader.cpp
-    ${FILE_LOADER_DIR}/file_loader.h)
+    ${pindrop_mixer_dir}/mixer.cpp
+    ${pindrop_mixer_dir}/mixer.h
+    ${pindrop_mixer_dir}/real_channel.cpp
+    ${pindrop_mixer_dir}/real_channel.h
+    ${pindrop_mixer_dir}/sound.cpp
+    ${pindrop_mixer_dir}/sound.h
+    ${pindrop_file_loader_dir}/file_loader.cpp
+    ${pindrop_file_loader_dir}/file_loader.h)
 
 # Includes for this project.
-include_directories(src include)
-if(pindrop_async_loading)
-  include_directories(src/asynchronous_loader)
-else()
-  include_directories(src/synchronous_loader)
-endif()
+include_directories(src include ${pindrop_mixer_dir} ${pindrop_file_loader_dir})
 if(WIN32)
   include_directories(external/include/windows)
 endif()

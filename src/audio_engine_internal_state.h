@@ -20,11 +20,12 @@
 #include <map>
 #include <vector>
 
-#include "backend.h"
 #include "bus_internal_state.h"
 #include "channel_internal_state.h"
 #include "file_loader.h"
 #include "mathfu/utilities.h"
+#include "mathfu/vector.h"
+#include "mixer.h"
 #include "sound.h"
 #include "sound_bank.h"
 #include "sound_collection.h"
@@ -36,17 +37,12 @@ struct AudioConfig;
 struct BusDefList;
 struct SoundBankDef;
 
-typedef SoundCollection* SoundHandle;
-
 typedef std::map<std::string, std::unique_ptr<SoundCollection>>
     SoundCollectionMap;
 
 typedef std::map<std::string, std::string> SoundIdMap;
 
 typedef std::map<std::string, std::unique_ptr<SoundBank>> SoundBankMap;
-
-typedef flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>
-    BusNameList;
 
 typedef std::vector<ChannelInternalState> ChannelStateVector;
 
@@ -55,7 +51,7 @@ typedef std::vector<ListenerInternalState,
     ListenerStateVector;
 
 struct AudioEngineInternalState {
-  Backend backend;
+  Mixer mixer;
 
   // Hold the audio bus list.
   std::string buses_source;

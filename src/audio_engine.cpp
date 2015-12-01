@@ -34,6 +34,9 @@
 
 namespace pindrop {
 
+typedef flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>
+    BusNameList;
+
 // clang-format off
 static const char* kPindropVersionString =
     "pindrop "
@@ -116,10 +119,9 @@ static void InitializeChannelFreeLists(
 
     // Track real channels separately from virtual channels.
     if (i < real_channels) {
-      channel.set_channel_id(static_cast<ChannelId>(i));
+      channel.real_channel().Initialize(i);
       real_channel_free_list->InsertAfter(channel.free_node());
     } else {
-      channel.set_channel_id(static_cast<ChannelId>(kInvalidChannelId));
       virtual_channel_free_list->InsertAfter(channel.free_node());
     }
   }
@@ -155,7 +157,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
   state_->version_string = kPindropVersionString;
 
   // Initialize audio engine.
-  if (!state_->backend.Initialize(config)) {
+  if (!state_->mixer.Initialize(config)) {
     return false;
   }
 
@@ -457,7 +459,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
 
   // Now that we have our new sound, set the data on it and update the next
   // pointers.
-  new_channel->SetHandle(sound_handle);
+  new_channel->SetSoundCollection(sound_handle);
   new_channel->set_user_gain(user_gain);
 
   // Attempt to play the sound if the engine is not paused.
@@ -472,8 +474,8 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
   new_channel->set_gain(gain);
   new_channel->SetLocation(location);
   if (new_channel->is_real()) {
-    new_channel->SetRealChannelGain(gain);
-    new_channel->SetPan(pan);
+    new_channel->real_channel().SetGain(gain);
+    new_channel->real_channel().SetPan(pan);
   }
 
   return Channel(new_channel);
@@ -552,10 +554,10 @@ void AudioEngine::Pause(bool pause) {
         // playback of the channel without marking it as paused from the audio
         // engine's point of view, so that we know to restart it when the audio
         // engine is unpaused.
-        channel->RealChannelPause();
+        channel->real_channel().Pause();
       } else {
         // Unpause all channels that were not explicitly paused.
-        channel->RealChannelResume();
+        channel->real_channel().Resume();
       }
     }
   }
@@ -580,12 +582,13 @@ static void UpdateChannel(ChannelInternalState* channel,
                           AudioEngineInternalState* state) {
   float gain;
   mathfu::Vector<float, 2> pan;
-  CalculateGainAndPan(&gain, &pan, channel->handle(), channel->Location(),
-                      state->listener_list, channel->user_gain());
+  CalculateGainAndPan(&gain, &pan, channel->sound_collection(),
+                      channel->Location(), state->listener_list,
+                      channel->user_gain());
   channel->set_gain(gain);
   if (channel->is_real()) {
-    channel->SetRealChannelGain(gain);
-    channel->SetPan(pan);
+    channel->real_channel().SetGain(gain);
+    channel->real_channel().SetPan(pan);
   }
 }
 
@@ -640,7 +643,7 @@ static void UpdateRealChannels(IntrusiveListNode* priority_list,
         // channel.
         ChannelInternalState* reverse_channel =
             ChannelInternalState::GetInstanceFromPriorityNode(reverse_node);
-        reverse_channel->RealChannelHalt();
+        reverse_channel->real_channel().Halt();
         channel->Devirtualize(reverse_channel);
       }
     }

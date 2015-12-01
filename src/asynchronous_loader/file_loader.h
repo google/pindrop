@@ -23,6 +23,8 @@ class FileLoader;
 
 class Resource : public fplbase::AsyncResource {
  public:
+  virtual ~Resource() {}
+
   void LoadFile(const char* filename, FileLoader* loader);
 
  private:

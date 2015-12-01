@@ -27,6 +27,7 @@
 #include "bus_internal_state.h"
 #include "intrusive_list.h"
 #include "pindrop/pindrop.h"
+#include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
 
@@ -82,7 +83,7 @@ bool ChannelInternalState::RealChannelPlaying() const {
 #ifdef PINDROP_MULTISTREAM
     return Mix_PlayingMusicCh(channel_id_) != 0;
 #else
-    return Mix_PlayingMusic() != 0;
+    return Mix_PlayingMusic() != 0 && channel_id_ == GetMusicChannel();
 #endif  // PINDROP_MULTISTREAM
   } else {
     return Mix_Playing(channel_id_) != 0;

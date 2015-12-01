@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Builds all assets under demo/rawassets/, writing the results to assets/.
+"""Builds all assets under samples/rawassets/, writing the results to assets/.
 
 Finds the flatbuffer compiler then uses it to convert the JSON files to
 flatbuffer binary files.  If you would like to clean all generated files, you
@@ -45,7 +45,7 @@ FLATBUFFERS_PATHS = [
 ASSETS_PATH = os.path.join(PROJECT_ROOT, 'assets')
 
 # Directory where unprocessed assets can be found.
-RAW_ASSETS_PATH = os.path.join(PROJECT_ROOT, 'demo', 'rawassets')
+RAW_ASSETS_PATH = os.path.join(PROJECT_ROOT, 'samples', 'rawassets')
 
 # Directory where unprocessed sound flatbuffer data can be found.
 RAW_SOUND_PATH = os.path.join(RAW_ASSETS_PATH, 'sounds')
@@ -245,7 +245,7 @@ def handle_build_error(error):
 def main(argv):
   """Builds or cleans the assets needed for the game.
 
-  This script will build all the assets in demo/rawassets.  To clean all
+  This script will build all the assets in samples/rawassets.  To clean all
   converted files, call it with 'clean'.
 
   Returns:

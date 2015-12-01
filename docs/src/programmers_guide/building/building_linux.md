@@ -29,10 +29,10 @@ For example, on Ubuntu:
 
 When building Pindrop, you can either build the library as part of another
 project, or you can build it as a stand-alone library. To simply build the
-library (and the demo project) do the following:
+library (and the sample project) do the following:
 
   * Generate makefiles from the [cmake][] project in the `pindrop` directory.
-  * Execute `make` to build the library and demo.
+  * Execute `make` to build the library and sample.
 
 For example:
 

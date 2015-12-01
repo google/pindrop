@@ -37,12 +37,13 @@ The following bullets describe the directory structure of the library.
 | Path                          | Description                                  |
 |-------------------------------|----------------------------------------------|
 | `pindrop` base directory      | Project build files and run script.          |
-| `assets`                      | Assets loaded by the demo project.           |
+| `assets`                      | Assets loaded by the sample project.         |
 | `jni`                         | The android makefile for the library.        |
 | `schemas`                     | Schemas for [FlatBuffers][] data.            |
 | `scripts`                     | Various utility scripts.                     |
 | `src`                         | The library's source.                        |
-| `src/rawdata`                 | JSON [FlatBuffers] data for the demo.        |
+| `samples`                     | Source for a sample project.                 |
+| `samples/rawdata`             | JSON [FlatBuffers] data for the sample.      |
 
 <br>
 

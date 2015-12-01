@@ -29,7 +29,7 @@ const float kFramesPerSecond = 60.0f;
 const Uint32 kDelayMilliseconds =
     static_cast<Uint32>(1000.0f * 1.0f / kFramesPerSecond);
 
-const char* kWindowTitle = "Pindrop Demo";
+const char* kWindowTitle = "Pindrop Sample";
 const char* kAudioConfig = "assets/audio_config.pinconfig";
 const char* kSoundBank = "assets/sound_banks/my_sound_bank.pinbank";
 const char* kInstructionsTexture = "assets/textures/instructions.bmp";
@@ -56,9 +56,9 @@ struct ChannelIcon : public IconState {
   pindrop::Channel channel;
 };
 
-class DemoState {
+class SampleState {
  public:
-  DemoState()
+  SampleState()
       : quit_(false),
         audio_config_source_(),
         audio_engine_(),
@@ -74,9 +74,9 @@ class DemoState {
         listener_texture_(nullptr),
         new_listener_location_() {}
 
-  ~DemoState();
+  ~SampleState();
 
-  // Initialize the demo.
+  // Initialize the sample.
   bool Initialize();
 
   // Run the main loop.
@@ -111,7 +111,7 @@ class DemoState {
   Vector2f new_listener_location_;
 };
 
-DemoState::~DemoState() {
+SampleState::~SampleState() {
   SDL_DestroyTexture(instructions_texture_);
   SDL_DestroyTexture(channel_texture_);
   SDL_DestroyTexture(listener_texture_);
@@ -120,7 +120,7 @@ DemoState::~DemoState() {
   SDL_Quit();
 }
 
-SDL_Texture* DemoState::LoadTexture(const char* texture_path) {
+SDL_Texture* SampleState::LoadTexture(const char* texture_path) {
   SDL_Surface* surface = SDL_LoadBMP(texture_path);
   if (surface == nullptr) {
     fprintf(stderr, "Could not load `%s`: %s\n", texture_path, SDL_GetError());
@@ -136,7 +136,7 @@ SDL_Texture* DemoState::LoadTexture(const char* texture_path) {
   return texture;
 }
 
-bool DemoState::Initialize() {
+bool SampleState::Initialize() {
   // Initialize SDL.
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
@@ -179,7 +179,7 @@ bool DemoState::Initialize() {
     SDL_Delay(1);
   }
 
-  // Cache the master bus so we can demonstrate adjusting the gain.
+  // Cache the master bus so we can samplenstrate adjusting the gain.
   master_bus_ = audio_engine_.FindBus("master");
 
   // Cache the SoundHandle to the sound we want to play.
@@ -193,7 +193,7 @@ bool DemoState::Initialize() {
   return true;
 }
 
-void DemoState::UpdateIconState(IconState* icon_state, float delta_time) {
+void SampleState::UpdateIconState(IconState* icon_state, float delta_time) {
   icon_state->location += icon_state->velocity * delta_time;
   if (icon_state->location.x() < 0) {
     icon_state->location.x() *= -1;
@@ -211,7 +211,7 @@ void DemoState::UpdateIconState(IconState* icon_state, float delta_time) {
   }
 }
 
-void DemoState::UpdateIcons(float delta_time) {
+void SampleState::UpdateIcons(float delta_time) {
   for (size_t i = 0; i < channel_icons_.size(); ++i) {
     ChannelIcon& icon = channel_icons_[i];
     UpdateIconState(&icon, delta_time);
@@ -232,13 +232,13 @@ void TextureRect(SDL_Rect* rect, const Vector2f& location,
   rect->y = static_cast<int>(location.y() - rect->h / 2);
 }
 
-void DemoState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
+void SampleState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
   SDL_Rect rect = {0, 0, 0, 0};
   TextureRect(&rect, icon_state.location, texture);
   SDL_RenderCopy(renderer_, texture, nullptr, &rect);
 }
 
-void DemoState::RemoveInvalidSounds() {
+void SampleState::RemoveInvalidSounds() {
   channel_icons_.erase(
       std::remove_if(channel_icons_.begin(), channel_icons_.end(),
                      [](const ChannelIcon& icon) {
@@ -247,13 +247,13 @@ void DemoState::RemoveInvalidSounds() {
       channel_icons_.end());
 }
 
-void DemoState::DrawInstructions() {
+void SampleState::DrawInstructions() {
   SDL_Rect rect = {0, 0, 0, 0};
   SDL_QueryTexture(instructions_texture_, nullptr, nullptr, &rect.w, &rect.h);
   SDL_RenderCopy(renderer_, instructions_texture_, nullptr, &rect);
 }
 
-void DemoState::DrawIcons() {
+void SampleState::DrawIcons() {
   for (size_t i = 0; i < channel_icons_.size(); ++i) {
     DrawIcon(channel_icons_[i], channel_texture_);
   }
@@ -267,7 +267,7 @@ bool RectContains(const SDL_Rect& rect, const Vector2f& point) {
          point.y() >= rect.y && point.y() < rect.y + rect.h;
 }
 
-void DemoState::HandleInput() {
+void SampleState::HandleInput() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
     switch (event.type) {
@@ -348,13 +348,12 @@ void DemoState::HandleInput() {
         float percentage = static_cast<float>(event.motion.x) / kScreenWidth;
         master_bus_.SetGain(percentage);
       }
-      default:
-        ;  // Do nothing.
+      default:;  // Do nothing.
     }
   }
 }
 
-void DemoState::AdvanceFrame(float delta_time) {
+void SampleState::AdvanceFrame(float delta_time) {
   HandleInput();
   UpdateIcons(delta_time);
   audio_engine_.AdvanceFrame(delta_time);
@@ -366,7 +365,7 @@ void DemoState::AdvanceFrame(float delta_time) {
   SDL_Delay(kDelayMilliseconds);
 }
 
-void DemoState::Run() {
+void SampleState::Run() {
   Uint32 previous_time = 0;
   Uint32 time = 0;
   while (!quit_) {
@@ -380,12 +379,11 @@ void DemoState::Run() {
 int main(int argc, char* argv[]) {
   (void)argc;
   (void)argv;
-  DemoState demo;
-  if (!demo.Initialize()) {
+  SampleState sample;
+  if (!sample.Initialize()) {
     fprintf(stderr, "Failed to initialize!\n");
     return 1;
   }
-  demo.Run();
+  sample.Run();
   return 0;
 }
-

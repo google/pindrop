@@ -96,9 +96,6 @@ set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
 # Option to enable / disable the test build.
 option(pindrop_build_tests "Build tests for this project." ON)
 
-# Option to only build flatc
-option(pindrop_only_flatc "Only build FlatBuffers compiler." OFF)
-
 # Detect clang
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
    CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
@@ -146,25 +143,25 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static AND NOT fpl_ios)
+if(NOT TARGET SDL2-static AND NOT fpl_ios)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
 pindrop_set_compiler_flags_for_external_libraries()
-if(NOT pindrop_only_flatc AND NOT TARGET libogg AND NOT fpl_ios)
+if(NOT TARGET libogg AND NOT fpl_ios)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT pindrop_only_flatc AND NOT TARGET libvorbis AND NOT fpl_ios)
+if(NOT TARGET libvorbis AND NOT fpl_ios)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer AND NOT fpl_ios)
+if(NOT TARGET sdl_mixer AND NOT fpl_ios)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 pindrop_restore_compiler_flags()
@@ -185,7 +182,6 @@ set(pindrop_async_loading and FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "")
 if(NOT TARGET flatc)
   add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
 endif()
-
 
 # Generate source files for all FlatBuffers schema files under the src
 # directory.

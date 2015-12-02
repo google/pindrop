@@ -19,15 +19,23 @@ endif()
 
 project(pindrop)
 
-option(pindrop_multistream "Support multiple channels of streaming audio" off)
-option(pindrop_build_sample "Build the pindrop sample" ON)
+set(pindrop_standalone_mode OFF)
+if("${CMAKE_CURRENT_LIST_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
+  set(pindrop_standalone_mode ON)
+  message(STATUS "Pindrop standalone: building library and samples")
+endif()
+option(pindrop_build_sample "Build the pindrop sample"
+       ${pindrop_standalone_mode})
+option(pindrop_build_tests "Build tests for this project."
+       ${pindrop_standalone_mode})
 
 # By default file load operations are blocking. FPLBase offers an async loader
 # class that we can optionally use. To enable async loading set
 # pindrop_async_loading=ON as well as the path to fplbase with the variable
 # dependencies_fplbase_dir.
-option(pindrop_async_loading "Support async loading with fplbase" off)
+option(pindrop_async_loading "Support async loading with fplbase" OFF)
 
+option(pindrop_multistream "Support multiple channels of streaming audio" OFF)
 if(pindrop_multistream)
   add_definitions(-DPINDROP_MULTISTREAM)
 endif()
@@ -92,9 +100,6 @@ set(dependencies_sdl_mixer_cmake_dir "${CMAKE_MODULE_PATH}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer cmake project.")
 set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer library.")
-
-# Option to enable / disable the test build.
-option(pindrop_build_tests "Build tests for this project." ON)
 
 # Detect clang
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
@@ -320,7 +325,7 @@ option(
   ON)
 
 # Tests.
-if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
+if(pindrop_build_tests AND NOT fpl_ios)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
   add_subdirectory("${dependencies_gtest_dir}" googletest)

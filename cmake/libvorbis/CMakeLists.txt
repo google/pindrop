@@ -30,7 +30,6 @@ include_directories(${libvorbis_dir}/lib)
 
 set(libvorbis_SRCS
     ${libvorbis_dir}/lib/analysis.c
-    ${libvorbis_dir}/lib/barkmel.c
     ${libvorbis_dir}/lib/bitrate.c
     ${libvorbis_dir}/lib/block.c
     ${libvorbis_dir}/lib/codebook.c

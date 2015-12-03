@@ -191,7 +191,7 @@ endif()
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
 set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
+    ${CMAKE_SOURCE_DIR}/${CMAKE_FILES_DIRECTORY}/include/pindrop)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input

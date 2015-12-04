@@ -25,7 +25,6 @@
 
 #include "bus_internal_state.h"
 #include "intrusive_list.h"
-#include "pindrop/pindrop.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"

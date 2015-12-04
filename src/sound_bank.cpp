@@ -14,9 +14,8 @@
 
 #include "sound_bank.h"
 
-#include "SDL_log.h"
 #include "audio_engine_internal_state.h"
-#include "pindrop/pindrop.h"
+#include "pindrop/log.h"
 #include "sound_bank_def_generated.h"
 
 namespace pindrop {
@@ -84,8 +83,7 @@ void SoundBank::Deinitialize(AudioEngine* audio_engine) {
        ++i) {
     const char* filename = sound_bank_def_->filenames()->Get(i)->c_str();
     if (!DeinitializeSoundCollection(filename, audio_engine->state())) {
-      SDL_LogError(
-          SDL_LOG_CATEGORY_ERROR,
+      CallLogFunc(
           "Error while deinitializing SoundCollection %s in SoundBank.\n",
           filename);
       assert(0);

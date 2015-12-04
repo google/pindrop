@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "file_loader.h"
+#include "pindrop/log.h"
 #include "real_channel.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
@@ -72,8 +72,7 @@ bool RealChannel::Play(SoundCollection* collection, Sound* sound) {
   // not.
   bool success = result != kInvalidChannelId;
   if (!success) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not play sound %s\n",
-                 Mix_GetError());
+    CallLogFunc("Could not play sound %s\n", Mix_GetError());
   }
   return success;
 }

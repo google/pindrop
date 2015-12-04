@@ -19,10 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "SDL_log.h"
 #include "audio_engine_internal_state.h"
 #include "file_loader.h"
-#include "pindrop/pindrop.h"
+#include "pindrop/log.h"
 #include "sound.h"
 #include "sound_collection_def_generated.h"
 
@@ -45,16 +44,14 @@ bool SoundCollection::LoadSoundCollectionDef(const std::string& source,
     sound.LoadFile(entry_filename, &state->loader);
   }
   if (!def->bus()) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Sound collection %s does not specify a bus", def->name());
+    CallLogFunc("Sound collection %s does not specify a bus", def->name());
     return false;
   }
   if (state) {
     bus_ = FindBusInternalState(state, def->bus()->c_str());
     if (!bus_) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                   "Sound collection %s specifies an unknown bus: %s",
-                   def->name(), def->bus()->c_str());
+      CallLogFunc("Sound collection %s specifies an unknown bus: %s",
+                  def->name(), def->bus()->c_str());
       return false;
     }
   }

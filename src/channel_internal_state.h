@@ -18,7 +18,7 @@
 #include "intrusive_list.h"
 #include "mathfu/vector_2.h"
 #include "mathfu/vector_3.h"
-#include "pindrop/pindrop.h"
+#include "pindrop/channel.h"
 #include "real_channel.h"
 #include "sound.h"
 

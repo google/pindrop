@@ -15,7 +15,7 @@
 #ifndef PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 #define PINDROP_AUDIO_ENGINE_INTERNAL_STATE_H_
 
-#include "pindrop/pindrop.h"
+#include "pindrop/audio_engine.h"
 
 #include <map>
 #include <vector>
@@ -99,7 +99,7 @@ struct AudioEngineInternalState {
   // The current frame, i.e. the number of times AdvanceFrame has been called.
   unsigned int current_frame;
 
-  const char* version_string;
+  const PindropVersion* version;
 };
 
 // Find a bus with the given name.

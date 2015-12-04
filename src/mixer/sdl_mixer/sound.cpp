@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "SDL_log.h"
+#include "pindrop/log.h"
 #include "file_loader.h"
 #include "sound.h"
 #include "sound_collection.h"
@@ -28,8 +28,7 @@ void Sound::Load() {
   if (!stream_) {
     chunk_ = Mix_LoadWAV(filename().c_str());
     if (chunk_ == nullptr) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load sound file: %s.",
-                   filename().c_str());
+      CallLogFunc("Could not load sound file: %s.", filename().c_str());
     }
   }
 }

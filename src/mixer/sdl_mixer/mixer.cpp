@@ -14,9 +14,9 @@
 
 #include "mixer.h"
 
-#include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "audio_config_generated.h"
+#include "pindrop/log.h"
 #include "real_channel.h"
 
 namespace pindrop {
@@ -31,8 +31,7 @@ Mixer::~Mixer() {
 
 bool Mixer::Initialize(const AudioConfig* config) {
   if (initialized_) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "SDL_Mixer has already been initialized.\n");
+    CallLogFunc("SDL_Mixer has already been initialized.\n");
     return false;
   }
 
@@ -45,7 +44,7 @@ bool Mixer::Initialize(const AudioConfig* config) {
   if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
                     config->output_channels(),
                     config->output_buffer_size()) != 0) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not open audio stream\n");
+    CallLogFunc("Could not open audio stream\n");
     return false;
   }
   initialized_ = true;
@@ -58,7 +57,7 @@ bool Mixer::Initialize(const AudioConfig* config) {
   // Even without Ogg support we can still play .wav files, so don't return
   // false.
   if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error initializing Ogg support\n");
+    CallLogFunc("Error initializing Ogg support\n");
   }
 
   return true;

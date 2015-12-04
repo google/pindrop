@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/pindrop.h"
+#include "pindrop/bus.h"
 
 #include "bus_internal_state.h"
 

@@ -74,9 +74,11 @@ LOCAL_SRC_FILES := \
   src/channel.cpp \
   src/channel_internal_state.cpp \
   src/listener.cpp \
+  src/log.cpp \
   src/ref_counter.cpp \
   src/sound_bank.cpp \
   src/sound_collection.cpp \
+  src/version.cpp \
   $(PINDROP_MIXER_DIR)/mixer.cpp \
   $(PINDROP_MIXER_DIR)/real_channel.cpp \
   $(PINDROP_MIXER_DIR)/sound.cpp \

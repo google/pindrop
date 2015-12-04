@@ -228,7 +228,13 @@ set(pindrop_mixer_dir src/mixer/${pindrop_mixer} CACHE PATH
 
 # AudioEngine source files.
 set(pindrop_SRCS
+    include/pindrop/audio_engine.h
+    include/pindrop/bus.h
+    include/pindrop/channel.h
+    include/pindrop/listener.h
+    include/pindrop/log.h
     include/pindrop/pindrop.h
+    include/pindrop/version.h
     src/audio_engine.cpp
     src/audio_engine_internal_state.h
     src/bus.cpp
@@ -240,12 +246,14 @@ set(pindrop_SRCS
     src/intrusive_list.h
     src/listener.cpp
     src/listener_internal_state.h
+    src/log.cpp
     src/ref_counter.cpp
     src/ref_counter.h
     src/sound_bank.cpp
     src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h
+    src/version.cpp
     ${pindrop_mixer_dir}/mixer.cpp
     ${pindrop_mixer_dir}/mixer.h
     ${pindrop_mixer_dir}/real_channel.cpp

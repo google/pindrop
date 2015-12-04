@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/pindrop.h"
+#include "pindrop/audio_engine.h"
 
 #include <algorithm>
 #include <cmath>
@@ -28,6 +28,8 @@
 #include "intrusive_list.h"
 #include "listener_internal_state.h"
 #include "mathfu/constants.h"
+#include "pindrop/log.h"
+#include "pindrop/version.h"
 #include "sound.h"
 #include "sound_collection.h"
 #include "sound_collection_def_generated.h"
@@ -37,18 +39,10 @@ namespace pindrop {
 typedef flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>
     BusNameList;
 
-// clang-format off
-static const char* kPindropVersionString =
-    "pindrop "
-    PINDROP_STRING(PINDROP_VERSION_MAJOR) "."
-    PINDROP_STRING(PINDROP_VERSION_MINOR) "."
-    PINDROP_STRING(PINDROP_VERSION_REVISION);
-// clang-format on
-
 bool LoadFile(const char* filename, std::string* dest) {
   auto handle = SDL_RWFromFile(filename, "rb");
   if (!handle) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "LoadFile fail on %s", filename);
+    CallLogFunc("LoadFile fail on %s", filename);
     return false;
   }
   size_t len = static_cast<size_t>(SDL_RWsize(handle));
@@ -85,8 +79,7 @@ static bool PopulateBuses(AudioEngineInternalState* state,
     if (bus) {
       output->push_back(bus);
     } else {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown bus \"%s\" listed in %s.\n",
-                   bus_name, list_name);
+      CallLogFunc("Unknown bus \"%s\" listed in %s.\n", bus_name, list_name);
       return false;
     }
   }
@@ -145,7 +138,7 @@ static void InitializeListenerFreeList(
 bool AudioEngine::Initialize(const char* config_file) {
   std::string audio_config_source;
   if (!LoadFile(config_file, &audio_config_source)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load audio config file.\n");
+    CallLogFunc("Could not load audio config file.\n");
     return false;
   }
   return Initialize(GetAudioConfig(audio_config_source.c_str()));
@@ -154,7 +147,7 @@ bool AudioEngine::Initialize(const char* config_file) {
 bool AudioEngine::Initialize(const AudioConfig* config) {
   // Construct internals.
   state_ = new AudioEngineInternalState();
-  state_->version_string = kPindropVersionString;
+  state_->version = &Version();
 
   // Initialize audio engine.
   if (!state_->mixer.Initialize(config)) {
@@ -174,7 +167,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
 
   // Load the audio buses.
   if (!LoadFile(config->bus_file()->c_str(), &state_->buses_source)) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load audio bus file.\n");
+    CallLogFunc("Could not load audio bus file.\n");
     return false;
   }
   const BusDefList* bus_def_list =
@@ -200,7 +193,7 @@ bool AudioEngine::Initialize(const AudioConfig* config) {
 
   state_->master_bus = FindBusInternalState(state_, "master");
   if (!state_->master_bus) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "No master bus specified.\n");
+    CallLogFunc("No master bus specified.\n");
     return false;
   }
 
@@ -230,8 +223,7 @@ bool AudioEngine::LoadSoundBank(const std::string& filename) {
 void AudioEngine::UnloadSoundBank(const std::string& filename) {
   auto iter = state_->sound_bank_map.find(filename);
   if (iter == state_->sound_bank_map.end()) {
-    SDL_LogError(
-        SDL_LOG_CATEGORY_ERROR,
+    CallLogFunc(
         "Error while deinitializing SoundBank %s - sound bank not loaded.\n",
         filename.c_str());
     assert(0);
@@ -432,8 +424,7 @@ Channel AudioEngine::PlaySound(SoundHandle sound_handle,
                                float user_gain) {
   SoundCollection* collection = sound_handle;
   if (!collection) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Cannot play sound: invalid sound handle\n");
+    CallLogFunc("Cannot play sound: invalid sound handle\n");
     return Channel(nullptr);
   }
 
@@ -497,8 +488,7 @@ Channel AudioEngine::PlaySound(const std::string& sound_name,
   if (handle) {
     return PlaySound(handle, location, user_gain);
   } else {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "Cannot play sound: invalid name (%s)\n", sound_name.c_str());
+    CallLogFunc("Cannot play sound: invalid name (%s)\n", sound_name.c_str());
     return Channel(nullptr);
   }
 }
@@ -685,8 +675,6 @@ void AudioEngine::AdvanceFrame(float delta_time) {
   }
 }
 
-const char* AudioEngine::version_string() const {
-  return state_->version_string;
-}
+const PindropVersion* AudioEngine::version() const { return state_->version; }
 
 }  // namespace pindrop

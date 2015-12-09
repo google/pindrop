@@ -19,15 +19,23 @@ endif()
 
 project(pindrop)
 
-option(pindrop_multistream "Support multiple channels of streaming audio" off)
-option(pindrop_build_sample "Build the pindrop sample" ON)
+set(pindrop_standalone_mode OFF)
+if("${CMAKE_CURRENT_LIST_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
+  set(pindrop_standalone_mode ON)
+  message(STATUS "Pindrop standalone: building library and samples")
+endif()
+option(pindrop_build_sample "Build the pindrop sample"
+       ${pindrop_standalone_mode})
+option(pindrop_build_tests "Build tests for this project."
+       ${pindrop_standalone_mode})
 
 # By default file load operations are blocking. FPLBase offers an async loader
 # class that we can optionally use. To enable async loading set
 # pindrop_async_loading=ON as well as the path to fplbase with the variable
 # dependencies_fplbase_dir.
-option(pindrop_async_loading "Support async loading with fplbase" off)
+option(pindrop_async_loading "Support async loading with fplbase" OFF)
 
+option(pindrop_multistream "Support multiple channels of streaming audio" OFF)
 if(pindrop_multistream)
   add_definitions(-DPINDROP_MULTISTREAM)
 endif()
@@ -93,12 +101,6 @@ set(dependencies_sdl_mixer_cmake_dir "${CMAKE_MODULE_PATH}/sdl_mixer"
 set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer library.")
 
-# Option to enable / disable the test build.
-option(pindrop_build_tests "Build tests for this project." ON)
-
-# Option to only build flatc
-option(pindrop_only_flatc "Only build FlatBuffers compiler." OFF)
-
 # Detect clang
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
    CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
@@ -146,25 +148,25 @@ set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/.)
 if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
-if(NOT pindrop_only_flatc AND NOT TARGET SDL2-static AND NOT fpl_ios)
+if(NOT TARGET SDL2-static AND NOT fpl_ios)
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
 pindrop_set_compiler_flags_for_external_libraries()
-if(NOT pindrop_only_flatc AND NOT TARGET libogg AND NOT fpl_ios)
+if(NOT TARGET libogg AND NOT fpl_ios)
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
 endif()
 
 # Include libvorbis.
-if(NOT pindrop_only_flatc AND NOT TARGET libvorbis AND NOT fpl_ios)
+if(NOT TARGET libvorbis AND NOT fpl_ios)
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
-if(NOT pindrop_only_flatc AND NOT TARGET sdl_mixer AND NOT fpl_ios)
+if(NOT TARGET sdl_mixer AND NOT fpl_ios)
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
 endif()
 pindrop_restore_compiler_flags()
@@ -186,11 +188,10 @@ if(NOT TARGET flatc)
   add_subdirectory("${dependencies_fplbase_dir}" ${tmp_dir}/fplbase)
 endif()
 
-
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
 set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}${CMAKE_FILES_DIRECTORY}/include)
+    ${CMAKE_SOURCE_DIR}/${CMAKE_FILES_DIRECTORY}/include/pindrop)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
@@ -324,7 +325,7 @@ option(
   ON)
 
 # Tests.
-if(NOT pindrop_only_flatc AND pindrop_build_tests AND NOT fpl_ios)
+if(pindrop_build_tests AND NOT fpl_ios)
   set(GUNIT_INCDIR "${dependencies_gtest_dir}/include")
   set(GTEST_LIBDIR "${dependencies_gtest_dir}")
   add_subdirectory("${dependencies_gtest_dir}" googletest)

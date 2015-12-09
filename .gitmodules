@@ -31,3 +31,6 @@
 [submodule "dependencies/fplbase"]
 	path = dependencies/fplbase
 	url = http://github.com/google/fplbase.git
+[submodule "dependencies/flatbuffers"]
+	path = dependencies/flatbuffers
+	url = http://github.com/google/flatbuffers.git

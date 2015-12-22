@@ -21,7 +21,7 @@ namespace pindrop {
 
 class FileLoader;
 
-class Resource : public fplbase::AsyncResource {
+class Resource : public fplbase::AsyncAsset {
  public:
   virtual ~Resource() {}
 

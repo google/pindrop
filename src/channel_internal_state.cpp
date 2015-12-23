@@ -115,8 +115,8 @@ void ChannelInternalState::SetPan(const mathfu::Vector<float, 2>& pan) {
 }
 
 void ChannelInternalState::Devirtualize(ChannelInternalState* other) {
-  assert(real_channel_.Valid());
-  assert(!other->real_channel_.Valid());
+  assert(!real_channel_.Valid());
+  assert(other->real_channel_.Valid());
 
   // Transfer the real channel id to this channel.
   std::swap(real_channel_, other->real_channel_);

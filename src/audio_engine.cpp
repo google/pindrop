@@ -571,7 +571,6 @@ static void UpdateRealChannels(PriorityList* priority_list,
                                FreeList* real_free_list,
                                FreeList* virtual_free_list) {
   PriorityList::reverse_iterator reverse_iter = priority_list->rbegin();
-  PriorityList::iterator iter = priority_list->begin();
   for (auto iter = priority_list->begin(); iter != priority_list->end();
        ++iter) {
     if (!iter->is_real()) {

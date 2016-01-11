@@ -155,6 +155,9 @@ TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointLowest) {
 }
 
 class BestListenerTests : public ::testing::Test {
+ public:
+  MATHFU_DEFINE_CLASS_SIMD_AWARE_NEW_DELETE
+
  protected:
   BestListenerTests()
       : listener_list_(&ListenerInternalState::node), listeners_(), listener_(), distance_squared_() {}
@@ -326,6 +329,9 @@ TEST(CalculateDistanceAttenuation, RollInOut) {
 }
 
 class ListenerSpaceTests : public ::testing::Test {
+ public:
+  MATHFU_DEFINE_CLASS_SIMD_AWARE_NEW_DELETE
+
  protected:
   ListenerSpaceTests()
       : listener_list_1_(&ListenerInternalState::node),

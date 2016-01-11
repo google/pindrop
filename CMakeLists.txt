@@ -133,8 +133,12 @@ function(pindrop_set_compiler_flags_for_external_libraries)
   # Suppress all warnings.
   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
      CMAKE_COMPILER_IS_CLANGXX)
-    set(CMAKE_CXX_FLAGS "-std=c++0x -w" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "-std=c++0x -w -Wno-deprecated-declarations" PARENT_SCOPE)
     set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
+  elseif(MSVC)
+    set(CMAKE_CXX_FLAGS "/W0 /MP" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS "/W0 /MP" PARENT_SCOPE)
+    add_definitions(-DNOMINMAX -D_HAS_EXCEPTIONS=0 -D_CRT_SECURE_NO_WARNINGS)
   endif()
 endfunction()
 
@@ -161,19 +165,25 @@ if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
 if(NOT TARGET SDL2-static AND NOT fpl_ios)
+  pindrop_set_compiler_flags_for_external_libraries()
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
+  pindrop_restore_compiler_flags()
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
 pindrop_set_compiler_flags_for_external_libraries()
 if(NOT TARGET libogg AND NOT fpl_ios)
+  pindrop_set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
+  pindrop_restore_compiler_flags()
 endif()
 
 # Include libvorbis.
 if(NOT TARGET libvorbis AND NOT fpl_ios)
+  pindrop_set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
+  pindrop_restore_compiler_flags()
 endif()
 
 # Include SDL Mixer.
@@ -293,7 +303,11 @@ include_directories(${dependencies_sdl_mixer_distr_dir})
 # Compiler flags.
 set(C_FLAGS_WARNINGS "")
 if(MSVC)
-  set(C_FLAGS_WARNINGS "/W4 /WX")
+  # C4127: conditional expression is constant
+  # C4577: 'noexcept' used with no exception handling mode specified.
+  set(C_FLAGS_WARNINGS "/W4 /WX /wd4127 /wd4577")
+  set(CMAKE_CXX_FLAGS "/MP")
+  add_definitions(-DNOMINMAX -D_HAS_EXCEPTIONS=0 -D_CRT_SECURE_NO_WARNINGS)
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
        CMAKE_COMPILER_IS_CLANGXX)
   add_definitions(-g)

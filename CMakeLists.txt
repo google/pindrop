@@ -64,90 +64,24 @@ endif()
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
 
-# Directory which contains the source for 3rd party libraries.
-if(NOT DEFINED third_party_root)
-  get_filename_component(
-    third_party_root "${CMAKE_CURRENT_SOURCE_DIR}/../../../../external"
-    REALPATH)
-endif()
-
-# Directory which contains source for FPL libraries.
-if(NOT DEFINED fpl_root)
-  get_filename_component(
-      fpl_root "${CMAKE_CURRENT_SOURCE_DIR}/../../libs" REALPATH)
-endif()
-
-# If the dependencies directory exists, assume this is the root directory for
-# all libraries required by this project.
-if(NOT DEFINED dependencies_root)
-  set(dependencies_root "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
-  if(EXISTS "${dependencies_root}")
-    set(third_party_root "${dependencies_root}")
-    set(fpl_root "${dependencies_root}")
-  endif()
-endif()
-
 # Configurable locations of dependencies of this project.
-set(dependencies_gtest_dir "${fpl_root}/googletest"
-    CACHE PATH "Directory containing the GoogleTest library.")
-set(dependencies_flatbuffers_dir "${fpl_root}/flatbuffers"
-    CACHE PATH "Directory containing the Flatbuffers library.")
-set(dependencies_fplbase_dir "${fpl_root}/fplbase"
-    CACHE PATH "Directory containing the FplBase library.")
-set(dependencies_mathfu_dir "${fpl_root}/mathfu"
-    CACHE PATH "Directory containing the MathFu library.")
-set(dependencies_libfplutil_dir "${fpl_root}/fplutil/libfplutil"
-    CACHE PATH "Directory containing the libfplutil library.")
-set(dependencies_sdl_dir "${third_party_root}/sdl"
-    CACHE PATH "Directory containing the SDL library.")
+if(NOT DEFINED fpl_root)
+  get_filename_component(fpl_root "${CMAKE_CURRENT_LIST_DIR}/../../libs"
+       REALPATH)
+  if(NOT EXISTS "${fpl_root}")
+    set(fpl_root "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
+  endif ()
+endif()
+
+include (${fpl_root}/fplutil/buildutil/cmake_common.txt)
+set_common_build_variables()
+
 set(dependencies_libogg_cmake_dir "${CMAKE_MODULE_PATH}/libogg"
     CACHE PATH "Directory containing the libogg cmake project.")
-set(dependencies_libogg_distr_dir "${third_party_root}/libogg"
-    CACHE PATH "Directory containing the libogg library.")
 set(dependencies_libvorbis_cmake_dir "${CMAKE_MODULE_PATH}/libvorbis"
     CACHE PATH "Directory containing the libvorbis cmake project.")
-set(dependencies_libvorbis_distr_dir "${third_party_root}/libvorbis"
-    CACHE PATH "Directory containing the libvorbis library.")
 set(dependencies_sdl_mixer_cmake_dir "${CMAKE_MODULE_PATH}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer cmake project.")
-set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
-    CACHE PATH "Directory containing the SDL Mixer library.")
-
-# Detect clang
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
-   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-endif()
-
-# External code should be compiled with these compiler options.
-# Call this function before add_subdirectory([external project]), and then
-# call restore_comiler_flags() after.
-# TODO: This is duplicated from fplbase. We should find a central location
-#       for it, or better yet, create proxy projects for external libraries.
-function(pindrop_set_compiler_flags_for_external_libraries)
-  # Save current compiler flags so that we can restore them in
-  # pindrop_restore_compiler_flags()
-  set(PINDROP_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
-  set(PINDROP_SAVED_C_FLAGS "${CMAKE_C_FLAGS}" PARENT_SCOPE)
-
-  # Suppress all warnings.
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
-     CMAKE_COMPILER_IS_CLANGXX)
-    set(CMAKE_CXX_FLAGS "-std=c++0x -w -Wno-deprecated-declarations" PARENT_SCOPE)
-    set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
-  elseif(MSVC)
-    set(CMAKE_CXX_FLAGS "/W0 /MP" PARENT_SCOPE)
-    set(CMAKE_C_FLAGS "/W0 /MP" PARENT_SCOPE)
-    add_definitions(-DNOMINMAX -D_HAS_EXCEPTIONS=0 -D_CRT_SECURE_NO_WARNINGS)
-  endif()
-endfunction()
-
-# Restore the compiler flags to the values they had before
-# pindrop_set_compiler_flags_for_external_libraries() was called.
-function(pindrop_restore_compiler_flags)
-  set(CMAKE_CXX_FLAGS "${PINDROP_SAVED_CXX_FLAGS}" PARENT_SCOPE)
-  set(CMAKE_C_FLAGS "${PINDROP_SAVED_C_FLAGS}" PARENT_SCOPE)
-endfunction()
 
 # Include SDL in this project while working around SDL requirement of out of
 # tree builds.
@@ -165,33 +99,34 @@ if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
 if(NOT TARGET SDL2-static AND NOT fpl_ios)
-  pindrop_set_compiler_flags_for_external_libraries()
+  set_compiler_flags_for_external_libraries()
+  list(APPEND EXTRA_CFLAGS ${CMAKE_C_FLAGS})
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
-  pindrop_restore_compiler_flags()
+  restore_compiler_flags()
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-pindrop_set_compiler_flags_for_external_libraries()
 if(NOT TARGET libogg AND NOT fpl_ios)
-  pindrop_set_compiler_flags_for_external_libraries()
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
-  pindrop_restore_compiler_flags()
+  restore_compiler_flags()
 endif()
 
 # Include libvorbis.
 if(NOT TARGET libvorbis AND NOT fpl_ios)
-  pindrop_set_compiler_flags_for_external_libraries()
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
-  pindrop_restore_compiler_flags()
+  restore_compiler_flags()
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
 if(NOT TARGET sdl_mixer AND NOT fpl_ios)
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
+  restore_compiler_flags()
 endif()
-pindrop_restore_compiler_flags()
 
 # Include MathFu in this project with test and benchmark builds disabled.
 set(mathfu_build_benchmarks OFF CACHE BOOL "")
@@ -299,24 +234,6 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 
 # SDL Mixer includes.
 include_directories(${dependencies_sdl_mixer_distr_dir})
-
-# Compiler flags.
-set(C_FLAGS_WARNINGS "")
-if(MSVC)
-  # C4127: conditional expression is constant
-  # C4577: 'noexcept' used with no exception handling mode specified.
-  set(C_FLAGS_WARNINGS "/W4 /WX /wd4127 /wd4577")
-  set(CMAKE_CXX_FLAGS "/MP")
-  add_definitions(-DNOMINMAX -D_HAS_EXCEPTIONS=0 -D_CRT_SECURE_NO_WARNINGS)
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
-       CMAKE_COMPILER_IS_CLANGXX)
-  add_definitions(-g)
-  set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -pedantic -Werror -Wextra -Wno-unused-function")
-  # -Wno-unused-function is because of webp encode.h
-endif()
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
 
 if(NOT fpl_ios)
   set(SDL_LIBRARIES SDL2-static)

@@ -13,9 +13,7 @@
 # limitations under the License.
 
 APP_MODULES:=pindrop
-APP_STL:=gnustl_static
-APP_ABI:=armeabi armeabi-v7a-hard mips x86 x86_64
-
-APP_CPPFLAGS += -std=c++11 -Wno-literal-suffix
-
-APP_PLATFORM := android-15
+APP_STL:=c++_static
+APP_ABI:=armeabi armeabi-v7a mips x86 x86_64
+APP_CPPFLAGS+=-std=c++11 -Wno-literal-suffix
+APP_PLATFORM:=android-15

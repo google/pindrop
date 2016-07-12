@@ -78,7 +78,8 @@ Sound* SoundCollection::Select() {
   float selection =
       rand() / static_cast<float>(RAND_MAX) * sum_of_probabilities_;
   for (size_t i = 0; i < sounds_.size(); ++i) {
-    const AudioSampleSetEntry* entry = sound_def->audio_sample_set()->Get(i);
+    const AudioSampleSetEntry* entry = sound_def->audio_sample_set()->Get(
+        static_cast<flatbuffers::uoffset_t>(i));
     selection -= entry->playback_probability();
     if (selection <= 0) {
       return &sounds_[i];

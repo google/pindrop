@@ -25,6 +25,13 @@
 #include "pindrop/listener.h"
 #include "pindrop/version.h"
 
+// In windows.h, PlaySound is #defined to be either PlaySoundW or PlaySoundA.
+// We need to undef this macro or AudioEngine::PlaySound() won't compile.
+// TODO(amablue): Change our PlaySound to have a different name (b/30090037).
+#if defined(PlaySound)
+#undef PlaySound
+#endif  // defined(PlaySound)
+
 namespace pindrop {
 
 class SoundCollection;

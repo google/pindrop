@@ -104,7 +104,7 @@ static void InitializeChannelFreeLists(
 
     // Track real channels separately from virtual channels.
     if (i < real_channels) {
-      channel.real_channel().Initialize(i);
+      channel.real_channel().Initialize(static_cast<int>(i));
       real_channel_free_list->push_front(channel);
     } else {
       virtual_channel_free_list->push_front(channel);

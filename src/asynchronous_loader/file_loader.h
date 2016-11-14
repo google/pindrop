@@ -28,7 +28,8 @@ class Resource : public fplbase::AsyncAsset {
   void LoadFile(const char* filename, FileLoader* loader);
 
  private:
-  virtual void Finalize() {};
+  virtual bool Finalize() { return true; };
+  virtual bool IsValid() { return true; };
 };
 
 class FileLoader {

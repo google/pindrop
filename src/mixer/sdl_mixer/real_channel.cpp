@@ -192,7 +192,7 @@ void RealChannel::SetPan(const mathfu::Vector<float, 2>& pan) {
   if (!stream_) {
     // This formula is explained in the following paper:
     // http://www.rs-met.com/documents/tutorials/PanRules.pdf
-    float p = static_cast<float>(M_PI) * (pan.x() + 1.0f) / 4.0f;
+    float p = static_cast<float>(M_PI) * (pan.x + 1.0f) / 4.0f;
     unsigned char left = static_cast<unsigned char>(cos(p) * kMaxPanValue);
     unsigned char right = static_cast<unsigned char>(sin(p) * kMaxPanValue);
     Mix_SetPanning(channel_id_, left, right);

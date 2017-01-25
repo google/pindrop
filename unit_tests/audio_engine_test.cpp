@@ -383,100 +383,100 @@ TEST_F(ListenerSpaceTests, DirectlyToTheRight) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(1.0f, 0.0f, 0.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 134.0f, 56.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(10.0f, 10.0f, 100.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyToTheLeft) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(-1.0f, 0.0f, 0.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 0.0f, 56.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(10.0f, 10.0f, 0.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyInFront) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(0.0f, 1.0f, 0.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 34.0f, 156.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(100.0f, 10.0f, 10.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyBehind) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(0.0f, -1.0f, 0.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 34.0f, -56.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(0.0f, 10.0f, 10.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 }
 
 TEST_F(ListenerSpaceTests, Diagonal) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(1.0f, 1.0f, 0.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 0.0f, 156.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(0.0f, 10.0f, 100.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_GT(0.0f, transformed_location_.z);
 }
 
 TEST(AttenuationCurve, Linear) {

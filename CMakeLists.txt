@@ -64,16 +64,9 @@ endif()
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
 
-# Configurable locations of dependencies of this project.
-if(NOT DEFINED fpl_root)
-  get_filename_component(fpl_root "${CMAKE_CURRENT_LIST_DIR}/../../libs"
-       REALPATH)
-  if(NOT EXISTS "${fpl_root}")
-    set(fpl_root "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
-  endif ()
-endif()
-
-include (${fpl_root}/fplutil/buildutil/cmake_common.txt)
+# Call fplutil to get locations of dependencies and set common build settings.
+include("cmake/find_fplutil.cmake")
+include("${fplutil_dir}/buildutil/cmake_common.txt")
 set_common_build_variables()
 
 set(dependencies_libogg_cmake_dir "${CMAKE_MODULE_PATH}/libogg"
@@ -147,8 +140,7 @@ endif()
 
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
-set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${CMAKE_SOURCE_DIR}/${CMAKE_FILES_DIRECTORY}/include/pindrop)
+set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR ${tmp_dir}/include/pindrop)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
@@ -312,6 +304,7 @@ if(pindrop_build_tests AND NOT fpl_ios)
         "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/${name}_test.cpp
         ${ARGN})
     mathfu_configure_flags(${name}_test)
+    fpl_absolute_include_dir(${dependencies_gtest_dir})
   endfunction()
 
   test_executable(audio_engine "gtest;pindrop;${SDL_LIBRARIES}")

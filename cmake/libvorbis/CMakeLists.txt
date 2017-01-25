@@ -23,6 +23,7 @@ endif()
 
 # Include libogg header files.
 include_directories(${dependencies_libogg_distr_dir}/include)
+fpl_absolute_include_dir(${dependencies_libogg_distr_dir})
 
 # Include libvorbis header files.
 include_directories(${libvorbis_dir}/include)

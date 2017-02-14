@@ -19,7 +19,7 @@
 
 #include "mathfu/matrix.h"
 #include "mathfu/matrix_4x4.h"
-#include "mathfu/vector_3.h"
+#include "mathfu/vector.h"
 #include "pindrop/bus.h"
 #include "pindrop/channel.h"
 #include "pindrop/listener.h"

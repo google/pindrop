@@ -17,7 +17,7 @@
 
 #include "mathfu/matrix.h"
 #include "mathfu/matrix_4x4.h"
-#include "mathfu/vector_3.h"
+#include "mathfu/vector.h"
 
 namespace pindrop {
 

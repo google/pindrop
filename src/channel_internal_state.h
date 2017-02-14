@@ -16,8 +16,7 @@
 #define PINDROP_CHANNEL_INTERNAL_STATE_H_
 
 #include "fplutil/intrusive_list.h"
-#include "mathfu/vector_2.h"
-#include "mathfu/vector_3.h"
+#include "mathfu/vector.h"
 #include "pindrop/channel.h"
 #include "real_channel.h"
 #include "sound.h"

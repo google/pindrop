@@ -19,8 +19,7 @@
 #include "SDL.h"
 #include "audio_config_generated.h"
 #include "mathfu/constants.h"
-#include "mathfu/vector_2.h"
-#include "mathfu/vector_3.h"
+#include "mathfu/vector.h"
 #include "pindrop/pindrop.h"
 
 const int kScreenWidth = 640;

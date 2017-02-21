@@ -108,7 +108,7 @@ depends upon, so download the source from [GitHub][] using:
   [MathFu]: http://googledevelopers.blogspot.ca/2014/11/geometry-math-library-for-c-game.html
   [Nexus Player]: http://www.google.com/nexus/player/
   [OS X]: http://www.apple.com/osx/
-  [Pindrop Google Group]: http://group.google.com/group/pindrop
+  [Pindrop Google Group]: http://groups.google.com/group/pindrop
   [Pindrop Issues Tracker]: http://github.com/google/pindrop/issues
   [Pindrop]: @ref pindrop_index
   [SDL]: https://www.libsdl.org/

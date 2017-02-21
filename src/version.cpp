@@ -18,7 +18,7 @@ namespace pindrop {
 
 #define PINDROP_VERSION_MAJOR 1
 #define PINDROP_VERSION_MINOR 1
-#define PINDROP_VERSION_REVISION 1
+#define PINDROP_VERSION_REVISION 2
 
 // Turn X into a string literal.
 #define PINDROP_STRING_EXPAND(X) #X

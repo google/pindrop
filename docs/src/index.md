@@ -93,7 +93,8 @@ depends upon, so download the source from [GitHub][] using:
    * Discuss Pindrop with other developers and users on the
      [Pindrop Google Group][].
    * File issues on the [Pindrop Issues Tracker][].
-   * Post your questions to [stackoverflow.com][] with a mention of **pindrop**.
+   * Post your questions to [stackoverflow.com][] with a mention of
+     **fpl pindrop**.
 
 <br>
 
@@ -112,6 +113,7 @@ depends upon, so download the source from [GitHub][] using:
   [Pindrop Issues Tracker]: http://github.com/google/pindrop/issues
   [Pindrop]: @ref pindrop_index
   [SDL]: https://www.libsdl.org/
+  [stackoverflow.com]: http://stackoverflow.com/search?q=fpl+pindrop
   [stackoverflow.com]: http://www.stackoverflow.com
   [WebP]: https://developers.google.com/speed/webp
   [Windows]: http://windows.microsoft.com/

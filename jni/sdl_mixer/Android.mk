@@ -55,8 +55,8 @@ SMPEG_LIBRARY_PATH := external/smpeg2-2.0.0
 # Enable this if you want to support loading OGG Vorbis music via Tremor
 # The library path should be a relative path to this directory.
 SUPPORT_OGG := true
-OGG_LIBRARY_PATH := external/libogg-1.3.1
-VORBIS_LIBRARY_PATH := external/libvorbisidec-1.2.1
+OGG_LIBRARY_PATH := $(DEPENDENCIES_LIBOGG_REL_SDL_MIXER)
+TREMOR_LIBRARY_PATH := $(DEPENDENCIES_TREMOR_REL_SDL_MIXER)
 
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
@@ -120,22 +120,28 @@ ifeq ($(SUPPORT_MP3_SMPEG),true)
 endif
 
 ifeq ($(SUPPORT_OGG),true)
-    LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(OGG_LIBRARY_PATH)/include $(LOCAL_PATH)/$(VORBIS_LIBRARY_PATH)
-    LOCAL_CFLAGS += -DOGG_MUSIC -DOGG_USE_TREMOR
+    LOCAL_C_INCLUDES += \
+        $(LOCAL_PATH)/$(OGG_LIBRARY_PATH)/include \
+        $(LOCAL_PATH)/$(TREMOR_LIBRARY_PATH) \
+        $(FPL_ABSOLUTE_INCLUDE_DIR)
+    # Some versions of Tremor are missing #include <endian.h> in misc.h.
+    # This generates "union magic already defined" errors because BYTE_ORDER
+    # is undefined. We force include it here.
+    LOCAL_CFLAGS += -DOGG_MUSIC -DOGG_USE_TREMOR -include "endian.h"
     LOCAL_SRC_FILES += \
-        $(VORBIS_LIBRARY_PATH)/mdct.c \
-        $(VORBIS_LIBRARY_PATH)/block.c \
-        $(VORBIS_LIBRARY_PATH)/window.c \
-        $(VORBIS_LIBRARY_PATH)/synthesis.c \
-        $(VORBIS_LIBRARY_PATH)/info.c \
-        $(VORBIS_LIBRARY_PATH)/floor1.c \
-        $(VORBIS_LIBRARY_PATH)/floor0.c \
-        $(VORBIS_LIBRARY_PATH)/vorbisfile.c \
-        $(VORBIS_LIBRARY_PATH)/res012.c \
-        $(VORBIS_LIBRARY_PATH)/mapping0.c \
-        $(VORBIS_LIBRARY_PATH)/registry.c \
-        $(VORBIS_LIBRARY_PATH)/codebook.c \
-        $(VORBIS_LIBRARY_PATH)/sharedbook.c \
+        $(TREMOR_LIBRARY_PATH)/mdct.c \
+        $(TREMOR_LIBRARY_PATH)/block.c \
+        $(TREMOR_LIBRARY_PATH)/window.c \
+        $(TREMOR_LIBRARY_PATH)/synthesis.c \
+        $(TREMOR_LIBRARY_PATH)/info.c \
+        $(TREMOR_LIBRARY_PATH)/floor1.c \
+        $(TREMOR_LIBRARY_PATH)/floor0.c \
+        $(TREMOR_LIBRARY_PATH)/vorbisfile.c \
+        $(TREMOR_LIBRARY_PATH)/res012.c \
+        $(TREMOR_LIBRARY_PATH)/mapping0.c \
+        $(TREMOR_LIBRARY_PATH)/registry.c \
+        $(TREMOR_LIBRARY_PATH)/codebook.c \
+        $(TREMOR_LIBRARY_PATH)/sharedbook.c \
         $(OGG_LIBRARY_PATH)/src/framing.c \
         $(OGG_LIBRARY_PATH)/src/bitwise.c
 endif
@@ -160,7 +166,7 @@ LOCAL_ARM_MODE := arm  # (1) arm code generation.
 LOCAL_C_INCLUDES := $(SDL_MIXER_C_INCLUDES)
 LOCAL_CFLAGS := $(SDL_MIXER_CFLAGS)
 LOCAL_SRC_FILES := $(SDL_MIXER_SRC_FILES)
-LOCAL_LDLIBS := $(SDL_MIXER_LDLIBS)
+LOCAL_EXPORT_LDLIBS := $(SDL_MIXER_LDLIBS)
 LOCAL_EXPORT_C_INCLUDES := $(SDL_MIXER_EXPORT_C_INCLUDES)
 LOCAL_STATIC_LIBRARIES := SDL2_static
 include $(BUILD_STATIC_LIBRARY)

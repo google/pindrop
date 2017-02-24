@@ -12,38 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
-#define PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
-
-#include "fplbase/async_loader.h"
+#include "pindrop/log.h"
 
 namespace pindrop {
 
-class FileLoader;
+LogFunc g_log_func;
 
-class Resource : public fplbase::AsyncAsset {
- public:
-  virtual ~Resource() {}
+// Register a logging function with the library.
+void RegisterLogFunc(LogFunc log_func) { g_log_func = log_func; }
 
-  void LoadFile(const char* filename, FileLoader* loader);
-
- private:
-  virtual bool Finalize() { return true; };
-  virtual bool IsValid() { return true; };
-};
-
-class FileLoader {
- public:
-  void StartLoading();
-
-  bool TryFinalize();
-
-  void QueueJob(Resource* resource);
-
- private:
-  fplbase::AsyncLoader loader;
-};
+// Call the registered log function with the provided format string. This does
+// nothing if no logging function has been registered.
+void CallLogFunc(const char* format, ...) {
+  if (g_log_func) {
+    va_list args;
+    va_start(args, format);
+    g_log_func(format, args);
+    va_end(args);
+  }
+}
 
 }  // namespace pindrop
-
-#endif  // PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_

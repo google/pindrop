@@ -14,14 +14,14 @@
 // misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <vector>
 #include <cmath>
+#include <vector>
 
 #include "SDL_mixer.h"
 #include "audio_engine_internal_state.h"
 #include "channel_internal_state.h"
+#include "fplutil/intrusive_list.h"
 #include "gtest/gtest.h"
-#include "intrusive_list.h"
 #include "listener_internal_state.h"
 #include "pindrop/pindrop.h"
 #include "sound.h"
@@ -79,7 +79,10 @@ namespace pindrop {
 
 class ChannelInternalStatePriorityTests : public ::testing::Test {
  protected:
-  ChannelInternalStatePriorityTests() : collections_(), list_(), channels_() {}
+  ChannelInternalStatePriorityTests()
+      : collections_(),
+        list_(&ChannelInternalState::priority_node),
+        channels_() {}
   virtual void SetUp() {
     // Make a bunch of sound defs with various priorities.
     for (size_t i = 0; i < static_cast<unsigned int>(kCollectionCount); ++i) {
@@ -97,15 +100,15 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
           nullptr);
     }
 
-    list_.InsertAfter(channels_[0].priority_node());
-    channels_[0].priority_node()->InsertAfter(channels_[1].priority_node());
-    channels_[1].priority_node()->InsertAfter(channels_[2].priority_node());
-    channels_[2].priority_node()->InsertAfter(channels_[3].priority_node());
+    list_.push_back(channels_[0]);
+    list_.push_back(channels_[1]);
+    list_.push_back(channels_[2]);
+    list_.push_back(channels_[3]);
 
-    channels_[0].SetHandle(&collections_[2]);
-    channels_[1].SetHandle(&collections_[1]);
-    channels_[2].SetHandle(&collections_[1]);
-    channels_[3].SetHandle(&collections_[0]);
+    channels_[0].SetSoundCollection(&collections_[2]);
+    channels_[1].SetSoundCollection(&collections_[1]);
+    channels_[2].SetSoundCollection(&collections_[1]);
+    channels_[3].SetSoundCollection(&collections_[0]);
 
     channels_[0].set_gain(1.0f);
     channels_[1].set_gain(1.0f);
@@ -118,48 +121,51 @@ class ChannelInternalStatePriorityTests : public ::testing::Test {
   static const std::size_t kCollectionCount = 3;
   SoundCollection collections_[kCollectionCount];
 
-  IntrusiveListNode list_;
+  PriorityList list_;
   static const std::size_t kSoundCount = 4;
   ChannelInternalState channels_[kSoundCount];
 };
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointAtHead) {
   // New sound's priority is greater than highest priority.
-  EXPECT_EQ(list_.GetTerminator(), FindInsertionPoint(&list_, 2.5f));
+  EXPECT_EQ(&channels_[0], &*FindInsertionPoint(&list_, 2.5f));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointWithEqualPriority) {
   // New sound's priority is...
   // ...equal to highest priority.
-  EXPECT_EQ(channels_[0].priority_node(), FindInsertionPoint(&list_, 2.0f));
+  EXPECT_EQ(&channels_[0], &*FindInsertionPoint(&list_, 2.0f));
   // ...equal to a sound with the same priority as the previous sound.
-  EXPECT_EQ(channels_[2].priority_node(), FindInsertionPoint(&list_, 1.0f));
+  EXPECT_EQ(&channels_[1], &*FindInsertionPoint(&list_, 1.0f));
   // ...equal to the lowest priority.
-  EXPECT_EQ(channels_[3].priority_node(), FindInsertionPoint(&list_, 0));
+  EXPECT_EQ(&channels_[3], &*FindInsertionPoint(&list_, 0));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointMiddlePriority) {
   // New sound's priority is...
   // ...between highest and second highest.
-  EXPECT_EQ(channels_[0].priority_node(), FindInsertionPoint(&list_, 1.5f));
+  EXPECT_EQ(&channels_[1], &*FindInsertionPoint(&list_, 1.5f));
   // ...lower than a sound with the same priority as the previous sound.
-  EXPECT_EQ(channels_[2].priority_node(), FindInsertionPoint(&list_, 0.5));
+  EXPECT_EQ(&channels_[3], &*FindInsertionPoint(&list_, 0.5));
 }
 
 TEST_F(ChannelInternalStatePriorityTests, FindInsertionPointLowest) {
   // New sound's priority is less than the lowest prioity.
-  EXPECT_EQ(channels_[3].priority_node(), FindInsertionPoint(&list_, -1.0f));
+  EXPECT_EQ(list_.end(), FindInsertionPoint(&list_, -1.0f));
 }
 
 class BestListenerTests : public ::testing::Test {
+ public:
+  MATHFU_DEFINE_CLASS_SIMD_AWARE_NEW_DELETE
+
  protected:
   BestListenerTests()
-      : listener_list_(), listeners_(), listener_(), distance_squared_() {}
+      : listener_list_(&ListenerInternalState::node), listeners_(), listener_(), distance_squared_() {}
   virtual void SetUp() {
-    listener_list_.InsertAfter(&listeners_[0]);
-    listeners_[0].InsertAfter(&listeners_[1]);
-    listeners_[1].InsertAfter(&listeners_[2]);
-    listeners_[2].InsertAfter(&listeners_[3]);
+    listener_list_.push_back(listeners_[0]);
+    listener_list_.push_back(listeners_[1]);
+    listener_list_.push_back(listeners_[2]);
+    listener_list_.push_back(listeners_[3]);
 
     Listener listener;
     listener = Listener(&listeners_[0]);
@@ -174,10 +180,10 @@ class BestListenerTests : public ::testing::Test {
   virtual void TearDown() {}
 
  protected:
-  TypedIntrusiveListNode<ListenerInternalState> listener_list_;
+  ListenerList listener_list_;
   ListenerInternalState listeners_[4];
 
-  ListenerInternalState* listener_;
+  ListenerList::const_iterator listener_;
   float distance_squared_;
   mathfu::Vector<float, 3> transformed_location_;
 };
@@ -188,25 +194,25 @@ TEST_F(BestListenerTests, OverlapsWithListener) {
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
   EXPECT_EQ(0.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[0], listener_);
+  EXPECT_EQ(&listeners_[0], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(10.0f, 0.0f, 0.0f)));
   EXPECT_EQ(0.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[1], listener_);
+  EXPECT_EQ(&listeners_[1], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(10.0f, 0.0f, 10.0f)));
   EXPECT_EQ(0.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[2], listener_);
+  EXPECT_EQ(&listeners_[2], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(0.0f, 0.0f, 10.0f)));
   EXPECT_EQ(0.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[3], listener_);
+  EXPECT_EQ(&listeners_[3], &*listener_);
 }
 
 // Nearest listener_ is 10 units away.
@@ -215,13 +221,13 @@ TEST_F(BestListenerTests, NearestIsTenUnitsAway) {
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(0.0f, 10.0f, 10.0f)));
   EXPECT_EQ(100.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[3], listener_);
+  EXPECT_EQ(&listeners_[3], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(20.0f, 0.0f, 10.0f)));
   EXPECT_EQ(100.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[2], listener_);
+  EXPECT_EQ(&listeners_[2], &*listener_);
 }
 
 // Location is in the center of multiple listeners.
@@ -238,25 +244,25 @@ TEST_F(BestListenerTests, SingleClosestListener) {
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(1.0f, 0.0f, 1.0f)));
   EXPECT_EQ(2.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[0], listener_);
+  EXPECT_EQ(&listeners_[0], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(8.0f, 0.0f, 2.0f)));
   EXPECT_EQ(8.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[1], listener_);
+  EXPECT_EQ(&listeners_[1], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(7.0f, 0.0f, 7.0f)));
   EXPECT_EQ(18.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[2], listener_);
+  EXPECT_EQ(&listeners_[2], &*listener_);
 
   EXPECT_TRUE(BestListener(&listener_, &distance_squared_,
                            &transformed_location_, listener_list_,
                            mathfu::Vector<float, 3>(4.0f, 0.0f, 6.0f)));
   EXPECT_EQ(32.0f, distance_squared_);
-  EXPECT_EQ(&listeners_[3], listener_);
+  EXPECT_EQ(&listeners_[3], &*listener_);
 }
 
 TEST(CalculateDistanceAttenuation, RollOutCentered) {
@@ -323,11 +329,14 @@ TEST(CalculateDistanceAttenuation, RollInOut) {
 }
 
 class ListenerSpaceTests : public ::testing::Test {
+ public:
+  MATHFU_DEFINE_CLASS_SIMD_AWARE_NEW_DELETE
+
  protected:
   ListenerSpaceTests()
-      : listener_list_1_(),
-        listener_list_2_(),
-        listener_list_3_(),
+      : listener_list_1_(&ListenerInternalState::node),
+        listener_list_2_(&ListenerInternalState::node),
+        listener_list_3_(&ListenerInternalState::node),
         state_1_(),
         state_2_(),
         state_3_(),
@@ -335,11 +344,11 @@ class ListenerSpaceTests : public ::testing::Test {
         distance_squared_(),
         transformed_location_() {}
   virtual void SetUp() {
-    listener_list_1_.InsertAfter(&state_1_);
-    listener_list_2_.InsertAfter(&state_2_);
-    listener_list_3_.InsertAfter(&state_3_);
-    Listener listener;
+    listener_list_1_.push_back(state_1_);
+    listener_list_2_.push_back(state_2_);
+    listener_list_3_.push_back(state_3_);
 
+    Listener listener;
     // The Matrix::LookAt function is hardcoded to be left handed
     listener = Listener(&state_1_);
     listener.SetOrientation(mathfu::Vector<float, 3>(0.0f, 0.0f, 0.0f),
@@ -359,13 +368,13 @@ class ListenerSpaceTests : public ::testing::Test {
   virtual void TearDown() {}
 
  protected:
-  TypedIntrusiveListNode<ListenerInternalState> listener_list_1_;
-  TypedIntrusiveListNode<ListenerInternalState> listener_list_2_;
-  TypedIntrusiveListNode<ListenerInternalState> listener_list_3_;
+  ListenerList listener_list_1_;
+  ListenerList listener_list_2_;
+  ListenerList listener_list_3_;
   ListenerInternalState state_1_;
   ListenerInternalState state_2_;
   ListenerInternalState state_3_;
-  ListenerInternalState* best_state_;
+  ListenerList::const_iterator best_state_;
   float distance_squared_;
   mathfu::Vector<float, 3> transformed_location_;
 };
@@ -374,100 +383,100 @@ TEST_F(ListenerSpaceTests, DirectlyToTheRight) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(1.0f, 0.0f, 0.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 134.0f, 56.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(10.0f, 10.0f, 100.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyToTheLeft) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(-1.0f, 0.0f, 0.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 0.0f, 56.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(10.0f, 10.0f, 0.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_NEAR(0.0f, transformed_location_.z(), kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_NEAR(0.0f, transformed_location_.z, kEpsilon);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyInFront) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(0.0f, 1.0f, 0.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 34.0f, 156.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(100.0f, 10.0f, 10.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_LT(0.0f, transformed_location_.z);
 }
 
 TEST_F(ListenerSpaceTests, DirectlyBehind) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(0.0f, -1.0f, 0.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 34.0f, -56.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(0.0f, 10.0f, 10.0f)));
-  EXPECT_NEAR(0.0f, transformed_location_.x(), kEpsilon);
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_NEAR(0.0f, transformed_location_.x, kEpsilon);
+  EXPECT_GT(0.0f, transformed_location_.z);
 }
 
 TEST_F(ListenerSpaceTests, Diagonal) {
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_1_,
                            mathfu::Vector<float, 3>(1.0f, 1.0f, 0.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_2_,
                            mathfu::Vector<float, 3>(12.0f, 0.0f, 156.0f)));
-  EXPECT_GT(0.0f, transformed_location_.x());
-  EXPECT_LT(0.0f, transformed_location_.z());
+  EXPECT_GT(0.0f, transformed_location_.x);
+  EXPECT_LT(0.0f, transformed_location_.z);
 
   EXPECT_TRUE(BestListener(&best_state_, &distance_squared_,
                            &transformed_location_, listener_list_3_,
                            mathfu::Vector<float, 3>(0.0f, 10.0f, 100.0f)));
-  EXPECT_LT(0.0f, transformed_location_.x());
-  EXPECT_GT(0.0f, transformed_location_.z());
+  EXPECT_LT(0.0f, transformed_location_.x);
+  EXPECT_GT(0.0f, transformed_location_.z);
 }
 
 TEST(AttenuationCurve, Linear) {

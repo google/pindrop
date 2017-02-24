@@ -28,11 +28,10 @@ void BusInternalState::Initialize(const BusDef* bus_def) {
   // Make sure we only initiliaze once.
   assert(bus_def_ == nullptr);
   bus_def_ = bus_def;
-  playing_sound_list_.Initialize();
 }
 
 void BusInternalState::UpdateDuckGain(float delta_time) {
-  bool playing = !playing_sound_list_.IsEmpty();
+  bool playing = !playing_sound_list_.empty();
   if (playing && transition_percentage_ <= 1.0f) {
     // Fading to duck gain.
     float fade_in_time = bus_def_->duck_fade_in_time();

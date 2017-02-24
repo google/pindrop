@@ -22,6 +22,7 @@ if (${SDL_MIXER_OGG_SUPPORT})
 
   # Include libogg header files.
   include_directories(${dependencies_libogg_distr_dir}/include)
+  fpl_absolute_include_dir(${dependencies_libogg_distr_dir})
 
   # Include libvorbis header files.
   include_directories(${dependencies_libvorbis_distr_dir}/include)

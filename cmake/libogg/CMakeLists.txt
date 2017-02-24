@@ -18,6 +18,7 @@ project(libogg)
 set(libogg_dir ${dependencies_libogg_distr_dir})
 
 include_directories(${libogg_dir}/include)
+fpl_absolute_include_dir(${libogg_dir})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux"
     AND NOT EXISTS "${libogg_dir}/include/ogg/config_types.h")

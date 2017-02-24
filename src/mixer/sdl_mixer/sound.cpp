@@ -12,38 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
-#define PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_
-
-#include "fplbase/async_loader.h"
+#include "pindrop/log.h"
+#include "file_loader.h"
+#include "sound.h"
+#include "sound_collection.h"
+#include "sound_collection_def_generated.h"
 
 namespace pindrop {
 
-class FileLoader;
+void Sound::Initialize(const SoundCollection* sound_collection) {
+  stream_ = sound_collection->GetSoundCollectionDef()->stream();
+}
 
-class Resource : public fplbase::AsyncAsset {
- public:
-  virtual ~Resource() {}
-
-  void LoadFile(const char* filename, FileLoader* loader);
-
- private:
-  virtual bool Finalize() { return true; };
-  virtual bool IsValid() { return true; };
-};
-
-class FileLoader {
- public:
-  void StartLoading();
-
-  bool TryFinalize();
-
-  void QueueJob(Resource* resource);
-
- private:
-  fplbase::AsyncLoader loader;
-};
+void Sound::Load() {
+  if (!stream_) {
+    chunk_ = Mix_LoadWAV(filename().c_str());
+    if (chunk_ == nullptr) {
+      CallLogFunc("Could not load sound file: %s.", filename().c_str());
+    }
+  }
+}
 
 }  // namespace pindrop
-
-#endif  // PINDROP_ASYNCHRONOUS_LOADER_FILE_LOADER_H_

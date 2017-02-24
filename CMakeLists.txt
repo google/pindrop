@@ -29,6 +29,16 @@ option(pindrop_build_sample "Build the pindrop sample"
 option(pindrop_build_tests "Build tests for this project."
        ${pindrop_standalone_mode})
 
+# By default Pindrop uses SDL_Mixer to do all it's audio mixing. Other libraries
+# may be specified instead as well.
+set(pindrop_mixer "sdl_mixer" CACHE STRING
+    "The audio mixer library that backs Pindrop.")
+
+if(${pindrop_mixer} STREQUAL sdl_mixer)
+  option(pindrop_sdl_mixer_multistream
+         "Support multiple channels of streaming audio" off)
+endif()
+
 # By default file load operations are blocking. FPLBase offers an async loader
 # class that we can optionally use. To enable async loading set
 # pindrop_async_loading=ON as well as the path to fplbase with the variable
@@ -54,84 +64,17 @@ endif()
 # Temporary files (like object files) created while compiling projects.
 set(tmp_dir ${CMAKE_CURRENT_BINARY_DIR}/obj)
 
-# Directory which contains the source for 3rd party libraries.
-if(NOT DEFINED third_party_root)
-  get_filename_component(
-    third_party_root "${CMAKE_CURRENT_SOURCE_DIR}/../../../../external"
-    REALPATH)
-endif()
+# Call fplutil to get locations of dependencies and set common build settings.
+include("cmake/find_fplutil.cmake")
+include("${fplutil_dir}/buildutil/cmake_common.txt")
+set_common_build_variables()
 
-# Directory which contains source for FPL libraries.
-if(NOT DEFINED fpl_root)
-  get_filename_component(
-      fpl_root "${CMAKE_CURRENT_SOURCE_DIR}/../../libs" REALPATH)
-endif()
-
-# If the dependencies directory exists, assume this is the root directory for
-# all libraries required by this project.
-if(NOT DEFINED dependencies_root)
-  set(dependencies_root "${CMAKE_CURRENT_SOURCE_DIR}/dependencies")
-  if(EXISTS "${dependencies_root}")
-    set(third_party_root "${dependencies_root}")
-    set(fpl_root "${dependencies_root}")
-  endif()
-endif()
-
-# Configurable locations of dependencies of this project.
-set(dependencies_gtest_dir "${fpl_root}/googletest"
-    CACHE PATH "Directory containing the GoogleTest library.")
-set(dependencies_flatbuffers_dir "${fpl_root}/flatbuffers"
-    CACHE PATH "Directory containing the Flatbuffers library.")
-set(dependencies_fplbase_dir "${fpl_root}/fplbase"
-    CACHE PATH "Directory containing the FplBase library.")
-set(dependencies_mathfu_dir "${fpl_root}/mathfu"
-    CACHE PATH "Directory containing the MathFu library.")
-set(dependencies_sdl_dir "${third_party_root}/sdl"
-    CACHE PATH "Directory containing the SDL library.")
 set(dependencies_libogg_cmake_dir "${CMAKE_MODULE_PATH}/libogg"
     CACHE PATH "Directory containing the libogg cmake project.")
-set(dependencies_libogg_distr_dir "${third_party_root}/libogg"
-    CACHE PATH "Directory containing the libogg library.")
 set(dependencies_libvorbis_cmake_dir "${CMAKE_MODULE_PATH}/libvorbis"
     CACHE PATH "Directory containing the libvorbis cmake project.")
-set(dependencies_libvorbis_distr_dir "${third_party_root}/libvorbis"
-    CACHE PATH "Directory containing the libvorbis library.")
 set(dependencies_sdl_mixer_cmake_dir "${CMAKE_MODULE_PATH}/sdl_mixer"
     CACHE PATH "Directory containing the SDL Mixer cmake project.")
-set(dependencies_sdl_mixer_distr_dir "${third_party_root}/sdl_mixer"
-    CACHE PATH "Directory containing the SDL Mixer library.")
-
-# Detect clang
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR
-   CMAKE_CXX_COMPILER_ID MATCHES ".*clang")
-  set(CMAKE_COMPILER_IS_CLANGXX 1)
-endif()
-
-# External code should be compiled with these compiler options.
-# Call this function before add_subdirectory([external project]), and then
-# call restore_comiler_flags() after.
-# TODO: This is duplicated from fplbase. We should find a central location
-#       for it, or better yet, create proxy projects for external libraries.
-function(pindrop_set_compiler_flags_for_external_libraries)
-  # Save current compiler flags so that we can restore them in
-  # pindrop_restore_compiler_flags()
-  set(PINDROP_SAVED_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
-  set(PINDROP_SAVED_C_FLAGS "${CMAKE_C_FLAGS}" PARENT_SCOPE)
-
-  # Suppress all warnings.
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
-     CMAKE_COMPILER_IS_CLANGXX)
-    set(CMAKE_CXX_FLAGS "-std=c++0x -w" PARENT_SCOPE)
-    set(CMAKE_C_FLAGS "-w" PARENT_SCOPE)
-  endif()
-endfunction()
-
-# Restore the compiler flags to the values they had before
-# pindrop_set_compiler_flags_for_external_libraries() was called.
-function(pindrop_restore_compiler_flags)
-  set(CMAKE_CXX_FLAGS "${PINDROP_SAVED_CXX_FLAGS}" PARENT_SCOPE)
-  set(CMAKE_C_FLAGS "${PINDROP_SAVED_C_FLAGS}" PARENT_SCOPE)
-endfunction()
 
 # Include SDL in this project while working around SDL requirement of out of
 # tree builds.
@@ -149,27 +92,34 @@ if(APPLE)
   set(SDL_AUDIO_DRIVER_COREAUDIO 1)
 endif(APPLE)
 if(NOT TARGET SDL2-static AND NOT fpl_ios)
+  set_compiler_flags_for_external_libraries()
+  list(APPEND EXTRA_CFLAGS ${CMAKE_C_FLAGS})
   add_subdirectory(${dependencies_sdl_dir} ${tmp_dir}/sdl)
+  restore_compiler_flags()
 endif()
 set(CMAKE_BINARY_DIR ${BIN_DIR})
 
 # Include libogg.
-pindrop_set_compiler_flags_for_external_libraries()
 if(NOT TARGET libogg AND NOT fpl_ios)
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libogg_cmake_dir}" ${tmp_dir}/libogg)
+  restore_compiler_flags()
 endif()
 
 # Include libvorbis.
 if(NOT TARGET libvorbis AND NOT fpl_ios)
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_libvorbis_cmake_dir}" ${tmp_dir}/libvorbis)
+  restore_compiler_flags()
 endif()
 
 # Include SDL Mixer.
 set(SDL_MIXER_OGG_SUPPORT ON CACHE BOOL "Compile in Ogg Vorbis support")
 if(NOT TARGET sdl_mixer AND NOT fpl_ios)
+  set_compiler_flags_for_external_libraries()
   add_subdirectory("${dependencies_sdl_mixer_cmake_dir}" ${tmp_dir}/sdl_mixer)
+  restore_compiler_flags()
 endif()
-pindrop_restore_compiler_flags()
 
 # Include MathFu in this project with test and benchmark builds disabled.
 set(mathfu_build_benchmarks OFF CACHE BOOL "")
@@ -190,8 +140,7 @@ endif()
 
 # Generate source files for all FlatBuffers schema files under the src
 # directory.
-set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR
-    ${CMAKE_SOURCE_DIR}/${CMAKE_FILES_DIRECTORY}/include/pindrop)
+set(PINDROP_FLATBUFFERS_GENERATED_INCLUDES_DIR ${tmp_dir}/include/pindrop)
 file(GLOB_RECURSE FLATBUFFERS_SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/schemas/*.fbs)
 
 # Generate rules to build the set of output files from the set of input
@@ -205,51 +154,62 @@ build_flatbuffers("${FLATBUFFERS_SCHEMAS}"
                   "")
 
 if(pindrop_async_loading)
-  set(FILE_LOADER_DIR src/asynchronous_loader)
+  set(pindrop_file_loader_dir src/asynchronous_loader)
 else()
-  set(FILE_LOADER_DIR src/synchronous_loader)
+  set(pindrop_file_loader_dir src/synchronous_loader)
 endif()
+
+# Only a small handful of files actually interface with the underlying mixer
+# library. If you are not using a backend that has built in support you can
+# supply your own mixer implementation.
+set(pindrop_mixer_dir src/mixer/${pindrop_mixer} CACHE PATH
+    "The path to the audio mixer backend files.")
 
 # AudioEngine source files.
 set(pindrop_SRCS
+    include/pindrop/audio_engine.h
+    include/pindrop/bus.h
+    include/pindrop/channel.h
+    include/pindrop/listener.h
+    include/pindrop/log.h
     include/pindrop/pindrop.h
+    include/pindrop/version.h
     src/audio_engine.cpp
     src/audio_engine_internal_state.h
-    src/backend.cpp
-    src/backend.h
     src/bus.cpp
     src/bus_internal_state.cpp
     src/bus_internal_state.h
     src/channel.cpp
     src/channel_internal_state.cpp
     src/channel_internal_state.h
-    src/intrusive_list.h
     src/listener.cpp
     src/listener_internal_state.h
+    src/log.cpp
     src/ref_counter.cpp
     src/ref_counter.h
-    src/sound.cpp
-    src/sound.h
     src/sound_bank.cpp
     src/sound_bank.h
     src/sound_collection.cpp
     src/sound_collection.h
-    ${FILE_LOADER_DIR}/file_loader.cpp
-    ${FILE_LOADER_DIR}/file_loader.h)
+    src/version.cpp
+    ${pindrop_mixer_dir}/mixer.cpp
+    ${pindrop_mixer_dir}/mixer.h
+    ${pindrop_mixer_dir}/real_channel.cpp
+    ${pindrop_mixer_dir}/real_channel.h
+    ${pindrop_mixer_dir}/sound.cpp
+    ${pindrop_mixer_dir}/sound.h
+    ${pindrop_file_loader_dir}/file_loader.cpp
+    ${pindrop_file_loader_dir}/file_loader.h)
 
 # Includes for this project.
-include_directories(src include)
-if(pindrop_async_loading)
-  include_directories(src/asynchronous_loader)
-else()
-  include_directories(src/synchronous_loader)
-endif()
+include_directories(src include ${pindrop_mixer_dir} ${pindrop_file_loader_dir})
 if(WIN32)
   include_directories(external/include/windows)
 endif()
 if (pindrop_async_loading)
   include_directories(${dependencies_fplbase_dir}/include)
 endif()
+include_directories(${dependencies_libfplutil_dir}/include)
 include_directories(${dependencies_flatbuffers_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/include)
 include_directories(${dependencies_webp_distr_dir}/src)
@@ -266,20 +226,6 @@ include_directories(${dependencies_libvorbis_distr_dir}/include)
 
 # SDL Mixer includes.
 include_directories(${dependencies_sdl_mixer_distr_dir})
-
-# Compiler flags.
-set(C_FLAGS_WARNINGS "")
-if(MSVC)
-  set(C_FLAGS_WARNINGS "/W4 /WX")
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR
-       CMAKE_COMPILER_IS_CLANGXX)
-  add_definitions(-g)
-  set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -pedantic -Werror -Wextra -Wno-unused-function")
-  # -Wno-unused-function is because of webp encode.h
-endif()
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_FLAGS_WARNINGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${C_FLAGS_WARNINGS}")
 
 if(NOT fpl_ios)
   set(SDL_LIBRARIES SDL2-static)
@@ -340,7 +286,8 @@ if(pindrop_build_tests AND NOT fpl_ios)
 
   include_directories(${GUNIT_INCDIR}
                       ${CMAKE_CURRENT_SOURCE_DIR}
-                      ${dependencies_flatbuffers_dir}/include)
+                      ${dependencies_flatbuffers_dir}/include
+                      ${dependencies_libfplutil_dir}/include)
 
   # Common libraries for tests.
   if(NOT MSVC)
@@ -357,9 +304,9 @@ if(pindrop_build_tests AND NOT fpl_ios)
         "${libs}" ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/${name}_test.cpp
         ${ARGN})
     mathfu_configure_flags(${name}_test)
+    fpl_absolute_include_dir(${dependencies_gtest_dir})
   endfunction()
 
   test_executable(audio_engine "gtest;pindrop;${SDL_LIBRARIES}")
-  test_executable(intrusive_list "gtest")
 endif()
 

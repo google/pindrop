@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PINDROP_BACKEND_H_
-#define PINDROP_BACKEND_H_
+#ifndef PINDROP_MIXER_EXAMPLE_BACKEND_H_
+#define PINDROP_MIXER_EXAMPLE_BACKEND_H_
 
 namespace pindrop {
 
 struct AudioConfig;
 
-class Backend {
+// This class represents the audio mixer backend that does the actual audio
+// mixing.
+//
+// This class represents the mixer interface to the underlying audio mixer
+// backend being used.
+class Mixer {
  public:
-  Backend();
-  ~Backend();
-
+  // Initalize the audio Mixer.
   bool Initialize(const AudioConfig* config);
-
- private:
-  bool initialized_;
 };
 
 }  // namespace pindrop
 
-#endif  // PINDROP_BACKEND_H_
-
+#endif  // PINDROP_MIXER_EXAMPLE_BACKEND_H_

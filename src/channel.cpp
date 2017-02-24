@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pindrop/pindrop.h"
+#include "pindrop/channel.h"
 
 #include "channel_internal_state.h"
 
@@ -34,7 +34,7 @@ void Channel::Stop() {
   // Fade out rather than halting to avoid clicks.  However, SDL_Mixer will
   // not fade out channels with a volume of 0.  Manually halt channels in this
   // case.
-  if (!state_->is_real() || state_->RealChannelGain() == 0.0f) {
+  if (!state_->is_real() || state_->real_channel().Gain() == 0.0f) {
     state_->Halt();
   } else {
     state_->FadeOut(kFadeOutDurationMs);

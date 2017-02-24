@@ -29,7 +29,7 @@ class Resource {
 
   void set_filename(const std::string& filename) { filename_ = filename; }
 
-  const std::string& filename() { return filename_; }
+  const std::string& filename() const { return filename_; }
 
  private:
   virtual void Load() = 0;

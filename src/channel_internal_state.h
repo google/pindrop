@@ -15,19 +15,13 @@
 #ifndef PINDROP_CHANNEL_INTERNAL_STATE_H_
 #define PINDROP_CHANNEL_INTERNAL_STATE_H_
 
-#include "intrusive_list.h"
-#include "mathfu/vector_2.h"
-#include "mathfu/vector_3.h"
-#include "pindrop/pindrop.h"
+#include "fplutil/intrusive_list.h"
+#include "mathfu/vector.h"
+#include "pindrop/channel.h"
+#include "real_channel.h"
+#include "sound.h"
 
 namespace pindrop {
-
-class SoundSource;
-
-typedef int ChannelId;
-
-// Special value representing an invalid stream.
-const ChannelId kInvalidChannelId = -1;
 
 enum ChannelState {
   kChannelStateStopped,
@@ -40,13 +34,11 @@ enum ChannelState {
 class ChannelInternalState {
  public:
   ChannelInternalState()
-      : channel_id_(0),
+      : real_channel_(),
         channel_state_(kChannelStateStopped),
-        handle_(nullptr),
-        sound_source_(nullptr),
-        location_(),
-        priority_node_(),
-        bus_node_() {}
+        collection_(nullptr),
+        sound_(nullptr),
+        location_() {}
 
   // Updates the state enum based on whether this channel is stopped, playing,
   // etc.
@@ -58,19 +50,11 @@ class ChannelInternalState {
   // Remove this channel from all lists that it is a part of.
   void Remove();
 
-  // Get or set the sound handle playing on this channel. Note that when you set
-  // the sound handle, you also add this channel to the bus list that
+  // Get or set the sound collection playing on this channel. Note that when you set
+  // the sound collection, you also add this channel to the bus list that
   // corresponds to that sound collection.
-  void SetHandle(SoundHandle handle);
-  SoundHandle handle() const { return handle_; }
-
-  // Get or set the channel ID. Channel ID's greater than 0 represent real
-  // channels.
-  void set_channel_id(ChannelId channel_id) { channel_id_ = channel_id; }
-  ChannelId channel_id() const { return channel_id_; }
-
-  // Returns true if this is a real channel.
-  bool is_real() const { return channel_id_ != kInvalidChannelId; }
+  void SetSoundCollection(SoundCollection* collection);
+  SoundCollection* sound_collection() const { return collection_; }
 
   // Get the current state of this channel (playing, stopped, paused, etc). This
   // is tracked manually because not all ChannelInternalStates are backed by
@@ -86,7 +70,7 @@ class ChannelInternalState {
   }
 
   // Play a sound on this channel.
-  bool Play(SoundHandle handle);
+  bool Play(SoundCollection* collection);
 
   // Check if this channel is currently playing on a real or virtual channel.
   bool Playing() const;
@@ -128,56 +112,33 @@ class ChannelInternalState {
   // multiplier on the sound collection definition.
   float Priority() const;
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(priority_node_, priority_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 priority_node_,
-                                                 GetInstanceFromPriorityNode);
+  // Returns the real channel.
+  RealChannel& real_channel() { return real_channel_; }
+  const RealChannel& real_channel() const { return real_channel_; }
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(free_node_, free_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 free_node_,
-                                                 GetInstanceFromFreeNode);
+  // Returns true if the real channel is valid.
+  bool is_real() { return real_channel_.Valid(); }
 
-  PINDROP_INTRUSIVE_GET_NODE_ACCESSOR(bus_node_, bus_node);
-  PINDROP_INTRUSIVE_LIST_NODE_GET_CLASS_ACCESSOR(ChannelInternalState,
-                                                 bus_node_,
-                                                 GetInstanceFromBusNode);
+  // The node that tracks the location in the priority list.
+  fplutil::intrusive_list_node priority_node;
 
-  // TODO: Move RealChannel functions to a separate object.
-  // Play the audio on the real channel.
-  bool RealChannelPlay();
+  // The node that tracks the location in the free list.
+  fplutil::intrusive_list_node free_node;
 
-  // Halt the real channel so it may be re-used. However this virtual channel
-  // may still be considered playing.
-  void RealChannelHalt();
-
-  // Pause the real channel.
-  void RealChannelPause();
-
-  // Resume the paused real channel.
-  void RealChannelResume();
-
-  // Check if this channel is currently playing on a real channel.
-  bool RealChannelPlaying() const;
-
-  // Check if this channel is currently paused on a real channel.
-  bool RealChannelPaused() const;
-
-  // Set and query the current gain of the real channel.
-  void SetRealChannelGain(float gain);
-  float RealChannelGain() const;
+  // The node that tracks the list of sounds playing on a given bus.
+  fplutil::intrusive_list_node bus_node;
 
  private:
-  ChannelId channel_id_;
+  RealChannel real_channel_;
 
   // Whether this channel is currently playing, stopped, fading out, etc.
   ChannelState channel_state_;
 
-  // The handle of the sound being played on this channel.
-  SoundHandle handle_;
+  // The collection of the sound being played on this channel.
+  SoundCollection* collection_;
 
   // The sound source that was chosen from the sound collection.
-  SoundSource* sound_source_;
+  Sound* sound_;
 
   // The gain set by the user.
   float user_gain_;
@@ -187,18 +148,8 @@ class ChannelInternalState {
 
   // The location of this channel's sound.
   mathfu::VectorPacked<float, 3> location_;
-
-  // The node that tracks the location in the priority list.
-  IntrusiveListNode priority_node_;
-
-  // The node that tracks the location in the free list.
-  IntrusiveListNode free_node_;
-
-  // The node that tracks the list of sounds playing on a given bus.
-  IntrusiveListNode bus_node_;
 };
 
 }  // namespace pindrop
 
 #endif  // PINDROP_CHANNEL_INTERNAL_STATE_H_
-

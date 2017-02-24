@@ -31,6 +31,20 @@ PINDROP_DIR := $(LOCAL_PATH)
 
 PINDROP_ASYNC_LOADING ?= 0
 
+PINDROP_MIXER ?= sdl_mixer
+
+PINDROP_MIXER_DIR ?= $(PINDROP_DIR)/src/mixer/$(PINDROP_MIXER)
+
+ifneq (0,$(PINDROP_ASYNC_LOADING))
+  PINDROP_FILE_LOADER_DIR ?= $(PINDROP_DIR)/src/asynchronous_loader
+else
+  PINDROP_FILE_LOADER_DIR ?= $(PINDROP_DIR)/src/synchronous_loader
+endif
+
+ifeq ("$(PINDROP_MIXER)",sdl_mixer)
+  PINDROP_SDL_MIXER_MULTISTREAM ?= 0
+endif
+
 PINDROP_GENERATED_OUTPUT_DIR := $(PINDROP_DIR)/gen/include
 
 LOCAL_EXPORT_C_INCLUDES := \
@@ -41,34 +55,35 @@ LOCAL_EXPORT_C_INCLUDES := \
 LOCAL_C_INCLUDES := \
   $(LOCAL_EXPORT_C_INCLUDES) \
   $(PINDROP_DIR)/src \
+  $(PINDROP_FILE_LOADER_DIR) \
+  $(PINDROP_MIXER_DIR) \
   $(DEPENDENCIES_FLATBUFFERS_DIR)/include \
+  $(DEPENDENCIES_FPLUTIL_DIR)/libfplutil/include \
   $(DEPENDENCIES_SDL_DIR) \
   $(DEPENDENCIES_SDL_DIR)/include \
   $(DEPENDENCIES_SDL_MIXER_DIR)
 
+ifneq (0,$(PINDROP_ASYNC_LOADING))
+LOCAL_STATIC_LIBRARIES += libfplbase
+LOCAL_C_INCLUDES += $(DEPENDENCIES_FPLBASE_DIR)/include
+endif
+
 LOCAL_SRC_FILES := \
   src/audio_engine.cpp \
-  src/backend.cpp \
   src/bus.cpp \
   src/bus_internal_state.cpp \
   src/channel.cpp \
   src/channel_internal_state.cpp \
   src/listener.cpp \
+  src/log.cpp \
   src/ref_counter.cpp \
-  src/sound.cpp \
   src/sound_bank.cpp \
-  src/sound_collection.cpp
-
-ifneq (0,$(PINDROP_ASYNC_LOADING))
-LOCAL_SRC_FILES += src/asynchronous_loader/file_loader.cpp
-LOCAL_STATIC_LIBRARIES += libfplbase
-LOCAL_C_INCLUDES += ${PINDROP_DIR}/src/asynchronous_loader \
-                    $(DEPENDENCIES_FPLBASE_DIR)/include
-else
-LOCAL_SRC_FILES += src/synchronous_loader/file_loader.cpp
-LOCAL_C_INCLUDES += ${PINDROP_DIR}/src/synchronous_loader
-endif
-
+  src/sound_collection.cpp \
+  src/version.cpp \
+  $(PINDROP_MIXER_DIR)/mixer.cpp \
+  $(PINDROP_MIXER_DIR)/real_channel.cpp \
+  $(PINDROP_MIXER_DIR)/sound.cpp \
+  $(PINDROP_FILE_LOADER_DIR)/file_loader.cpp
 
 PINDROP_SCHEMA_DIR := $(PINDROP_DIR)/schemas
 PINDROP_SCHEMA_INCLUDE_DIRS :=

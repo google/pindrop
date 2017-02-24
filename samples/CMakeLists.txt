@@ -19,7 +19,8 @@ endif()
 
 add_custom_target(pindrop_sample_assets
   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/build_assets.py
-  --flatc $<TARGET_FILE:flatc> DEPENDS flatc)
+  --flatc $<TARGET_FILE:flatc>
+  --output ${CMAKE_BINARY_DIR}/bin/assets DEPENDS flatc)
 
 set(pindrop_sample_SRCS main.cpp)
 

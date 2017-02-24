@@ -19,8 +19,7 @@
 #include "SDL.h"
 #include "audio_config_generated.h"
 #include "mathfu/constants.h"
-#include "mathfu/vector_2.h"
-#include "mathfu/vector_3.h"
+#include "mathfu/vector.h"
 #include "pindrop/pindrop.h"
 
 const int kScreenWidth = 640;
@@ -195,19 +194,19 @@ bool SampleState::Initialize() {
 
 void SampleState::UpdateIconState(IconState* icon_state, float delta_time) {
   icon_state->location += icon_state->velocity * delta_time;
-  if (icon_state->location.x() < 0) {
-    icon_state->location.x() *= -1;
-    icon_state->velocity.x() *= -1;
+  if (icon_state->location.x < 0) {
+    icon_state->location.x *= -1;
+    icon_state->velocity.x *= -1;
   } else if (icon_state->location[0] > kScreenWidth) {
-    icon_state->location.x() -= icon_state->location[0] - kScreenWidth;
-    icon_state->velocity.x() *= -1;
+    icon_state->location.x -= icon_state->location[0] - kScreenWidth;
+    icon_state->velocity.x *= -1;
   }
-  if (icon_state->location.y() < 0) {
-    icon_state->location.y() *= -1;
-    icon_state->velocity.y() *= -1;
+  if (icon_state->location.y < 0) {
+    icon_state->location.y *= -1;
+    icon_state->velocity.y *= -1;
   } else if (icon_state->location[1] > kScreenHeight) {
-    icon_state->location.y() -= icon_state->location[1] - kScreenHeight;
-    icon_state->velocity.y() *= -1;
+    icon_state->location.y -= icon_state->location[1] - kScreenHeight;
+    icon_state->velocity.y *= -1;
   }
 }
 
@@ -228,8 +227,8 @@ void SampleState::UpdateIcons(float delta_time) {
 void TextureRect(SDL_Rect* rect, const Vector2f& location,
                  SDL_Texture* texture) {
   SDL_QueryTexture(texture, nullptr, nullptr, &rect->w, &rect->h);
-  rect->x = static_cast<int>(location.x() - rect->w / 2);
-  rect->y = static_cast<int>(location.y() - rect->h / 2);
+  rect->x = static_cast<int>(location.x - rect->w / 2);
+  rect->y = static_cast<int>(location.y - rect->h / 2);
 }
 
 void SampleState::DrawIcon(const IconState& icon_state, SDL_Texture* texture) {
@@ -263,8 +262,8 @@ void SampleState::DrawIcons() {
 }
 
 bool RectContains(const SDL_Rect& rect, const Vector2f& point) {
-  return point.x() >= rect.x && point.x() < rect.x + rect.w &&
-         point.y() >= rect.y && point.y() < rect.y + rect.h;
+  return point.x >= rect.x && point.x < rect.x + rect.w &&
+         point.y >= rect.y && point.y < rect.y + rect.h;
 }
 
 void SampleState::HandleInput() {

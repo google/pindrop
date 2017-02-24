@@ -13,13 +13,15 @@
 // limitations under the License.
 
 #include "listener_internal_state.h"
-#include "pindrop/pindrop.h"
+#include "pindrop/listener.h"
 
 namespace pindrop {
 
 void Listener::Clear() { state_ = nullptr; }
 
-bool Listener::Valid() const { return state_ != nullptr && state_->InList(); }
+bool Listener::Valid() const {
+  return state_ != nullptr && state_->node.in_list();
+}
 
 void Listener::SetOrientation(const mathfu::Vector<float, 3>& location,
                               const mathfu::Vector<float, 3>& direction,

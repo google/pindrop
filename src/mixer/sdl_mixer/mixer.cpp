@@ -12,27 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "backend.h"
+#include "mixer.h"
 
-#include "SDL_log.h"
 #include "SDL_mixer.h"
 #include "audio_config_generated.h"
-#include "sound.h"
+#include "pindrop/log.h"
+#include "real_channel.h"
 
 namespace pindrop {
 
-Backend::Backend() : initialized_(false) {}
+Mixer::Mixer() : initialized_(false) {}
 
-Backend::~Backend() {
+Mixer::~Mixer() {
   if (initialized_) {
     Mix_CloseAudio();
   }
 }
 
-bool Backend::Initialize(const AudioConfig* config) {
+bool Mixer::Initialize(const AudioConfig* config) {
   if (initialized_) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                 "SDL_Mixer has already been initialized.\n");
+    CallLogFunc("SDL_Mixer has already been initialized.\n");
     return false;
   }
 
@@ -45,7 +44,7 @@ bool Backend::Initialize(const AudioConfig* config) {
   if (Mix_OpenAudio(config->output_frequency(), AUDIO_S16LSB,
                     config->output_channels(),
                     config->output_buffer_size()) != 0) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not open audio stream\n");
+    CallLogFunc("Could not open audio stream\n");
     return false;
   }
   initialized_ = true;
@@ -58,11 +57,10 @@ bool Backend::Initialize(const AudioConfig* config) {
   // Even without Ogg support we can still play .wav files, so don't return
   // false.
   if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error initializing Ogg support\n");
+    CallLogFunc("Error initializing Ogg support\n");
   }
 
   return true;
 }
 
 }  // namespace pindrop
-

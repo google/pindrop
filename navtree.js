@@ -22,14 +22,6 @@ var NAVTREE =
       ] ]
     ] ],
     [ "API Reference", "pindrop_api_reference.html", [
-      [ "Class List", null, [
-        [ "Class List", "annotated.html", "annotated" ],
-        [ "Class Index", "classes.html", null ],
-        [ "Class Members", "functions.html", [
-          [ "All", "functions.html", null ],
-          [ "Functions", "functions_func.html", null ]
-        ] ]
-      ] ],
       [ "File List", null, [
         [ "File List", "files.html", "files" ]
       ] ]
@@ -41,7 +33,7 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-".html"
+"contributing.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
